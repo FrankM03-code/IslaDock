@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// islaDock: the dock as an island on the bottom edge of the screen.
+// IslaDock: the dock as an island on the bottom edge of the screen.
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 

@@ -1,9 +1,9 @@
-# islaDock
+# IslaDock
 
 **Un dock en forma de isla para GNOME Shell.**
 Creado y diseñado por **Frank Molina**.
 
-En reposo, islaDock es una cápsula pequeña en el borde inferior de la pantalla que
+En reposo, IslaDock es una cápsula pequeña en el borde inferior de la pantalla que
 avisa qué apps están abiertas, qué suena y cuánto falta. Al acercar el mouse se
 convierte en el dock completo.
 
@@ -32,12 +32,12 @@ GNOME Shell 48.
 
 Desde [extensions.gnome.org](https://extensions.gnome.org) (cuando esté publicada), o a mano:
 
-    git clone https://github.com/FrankM03-code/isladock.git
-    cd isladock
+    git clone https://github.com/FrankM03-code/IslaDock.git
+    cd IslaDock
     ./install.sh
 
 Después reinicia GNOME y actívala con `gnome-extensions enable isla-dock@frankm`.
-Los ajustes están en *Extensiones → islaDock → Configuración*.
+Los ajustes están en *Extensiones → IslaDock → Configuración*.
 
 ## Licencia
 

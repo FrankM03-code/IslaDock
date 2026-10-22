@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// One knob for every animation of islaDock (Preferences → "Velocidad de las
+// One knob for every animation of IslaDock (Preferences → "Velocidad de las
 // animaciones"): durations and waits are multiplied by this factor.
 let factor = 1;
 

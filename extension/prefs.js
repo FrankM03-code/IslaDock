@@ -352,7 +352,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
     _aboutPage() {
         const page = new Adw.PreferencesPage({title: 'Acerca de', icon_name: 'help-about-symbolic'});
         const group = new Adw.PreferencesGroup();
-        const title = new Gtk.Label({label: 'islaDock', css_classes: ['title-1'], margin_top: 24});
+        const title = new Gtk.Label({label: 'IslaDock', css_classes: ['title-1'], margin_top: 24});
         const subtitle = new Gtk.Label({label: 'Un dock en forma de isla para GNOME', css_classes: ['dim-label'], margin_bottom: 18});
         const box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
         box.append(title);

@@ -121,7 +121,7 @@ export class Dots {
     destroy() {
         this._ids.forEach(id => this._state.disconnect(id));
         this.actor.destroy();
-        // Nothing of islaDock stays in memory once it is switched off.
+        // Nothing of IslaDock stays in memory once it is switched off.
         _colors.clear();
     }
 }

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// islaDock's Preferences window, centered. Opened from Extension Manager on
+// IslaDock's Preferences window, centered. Opened from Extension Manager on
 // X11 it becomes a child of that app's window and Mutter places it on the left
 // edge (partly off screen): it is moved to the middle of its monitor once shown.
 import Meta from 'gi://Meta';

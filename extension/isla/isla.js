@@ -189,7 +189,7 @@ export class Isla {
         this._hideGnomeDash();
     }
 
-    // GNOME's own dock in the overview and the app grid: away while islaDock
+    // GNOME's own dock in the overview and the app grid: away while IslaDock
     // runs. Height 0 too, or the overview keeps an empty band for it.
     _hideGnomeDash() {
         const dash = Main.overview.dash;
@@ -257,7 +257,7 @@ export class Isla {
 
     // ---------- actors ----------
     _buildActors(resolver) {
-        this._strip = new St.Widget({name: 'islaDockStrip', layout_manager: new StripLayout(this), reactive: false});
+        this._strip = new St.Widget({name: 'IslaDockStrip', layout_manager: new StripLayout(this), reactive: false});
         this._capsule = new St.Widget({
             style_class: 'isla-capsule',
             reactive: true,
