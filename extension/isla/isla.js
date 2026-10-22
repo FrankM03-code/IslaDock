@@ -258,6 +258,8 @@ export class Isla {
     // ---------- actors ----------
     _buildActors(resolver) {
         this._strip = new St.Widget({name: 'IslaDockStrip', layout_manager: new StripLayout(this), reactive: false});
+        // When the shell shuts down it destroys the stage first: nothing may touch it after that.
+        this._strip.connect('destroy', () => this._dropSources(true));
         this._capsule = new St.Widget({
             style_class: 'isla-capsule',
             reactive: true,
@@ -512,19 +514,49 @@ export class Isla {
 
         });
 
+        // Away in the overview, except over the app grid: there the island stays
+        // so the Portal (or an app) is a way out besides Esc.
         this._on(Main.overview, 'showing', () => {
             this._apps.hideTooltip();
-            this._strip.ease({opacity: 0, duration: 150, onComplete: () => this._strip.hide()});
+            this._leavingOverview = false;
+            // The app grid button is set right after 'showing'.
+            this._later('overview', 0, () => this._updateOverview());
         });
         this._on(Main.overview, 'hiding', () => {
-            this._strip.show();
-            this._strip.ease({opacity: 255, duration: 150});
+            this._leavingOverview = true;
+            this._updateOverview();
         });
-        if (Main.overview.visible) {
+        this._on(Main.overview, 'hidden', () => {
+            this._leavingOverview = false;
+            this._updateOverview();
+        });
+        if (Main.overview.dash?.showAppsButton)
+            this._on(Main.overview.dash.showAppsButton, 'notify::checked', () => this._updateOverview());
+        if (Main.overview.visible && !this._inAppGrid()) {
             this._strip.opacity = 0;
             this._strip.hide();
         }
         this._updateAutohide();
+    }
+
+    _inAppGrid() {
+        return Main.overview.visible && !this._leavingOverview && !!Main.overview.dash?.showAppsButton?.checked;
+    }
+
+    _updateOverview() {
+        const show = !Main.overview.visible || this._leavingOverview || this._inAppGrid();
+        if (show) {
+            this._strip.show();
+            this._strip.ease({opacity: 255, duration: 150});
+        } else {
+            this._apps.hideTooltip();
+            this._strip.ease({opacity: 0, duration: 150, onComplete: () => this._strip.hide()});
+        }
+        // Over the app grid the hidden GNOME dash keeps a band for the island, so
+        // the page dots and the last row stay clear of it.
+        if (this._gnomeDash)
+            this._gnomeDash.set_height(this._inAppGrid() ? Math.round(this._capsule.height + BOTTOM * this._sf) : 0);
+        this._checkHide();
     }
 
     // ---------- hiding ----------
@@ -539,7 +571,7 @@ export class Isla {
 
     _shouldHide() {
         const mode = this._settings.get_string('ocultar');
-        if (mode === 'nunca' || this._state.mode !== Mode.COLLAPSED || this.hovered)
+        if (mode === 'nunca' || this._state.mode !== Mode.COLLAPSED || this.hovered || this._inAppGrid())
             return false;
         if (this._state.activities.some(a => a.priority === Priority.TIMER_DONE))
             return false;
@@ -662,6 +694,8 @@ export class Isla {
         const running = this._apps.running.map(({app}) => ({id: app.get_id(), gicon: this._apps.iconOf(app), app}));
         this._state.runningApps = running;
         this._state.emit('apps-changed', running);
+        // The separator next to the music depends on there being dots.
+        this._updateFoldedParts();
         if (this._state.mode === Mode.COLLAPSED)
             this._resize();
     }
@@ -701,6 +735,7 @@ export class Isla {
     _updateFoldedParts() {
         const hasMini = !!this._miniBin.child;
         this._miniBin.visible = hasMini;
+        this._dots.setResting(!hasMini);
         this._miniSep.visible = hasMini && this._dots.count > 0;
         this._more.visible = hasMini && this._state.activities.filter(a => a.mini).length > 1;
     }
@@ -975,14 +1010,19 @@ export class Isla {
         });
     }
 
-    destroy() {
-        this._restoreGnomeDash();
-        this._unwatchWindows();
-        this._signals.forEach(([obj, id]) => obj.disconnect(id));
+    // dying: the stage is being torn down, its actors are already gone (only the others are disconnected).
+    _dropSources(dying = false) {
+        this._signals.forEach(([obj, id]) => !(dying && obj instanceof Clutter.Actor) && obj.disconnect(id));
         this._signals = [];
         for (const id of this._timeouts.values())
             GLib.source_remove(id);
         this._timeouts.clear();
+    }
+
+    destroy() {
+        this._restoreGnomeDash();
+        this._unwatchWindows();
+        this._dropSources();
         this._skin?.disable();
         this._skin = null;
         this._blur.configure(false);

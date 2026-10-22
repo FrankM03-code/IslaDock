@@ -36,13 +36,18 @@ export class Progress {
         this._ownerId = bus.signal_subscribe('org.freedesktop.DBus', 'org.freedesktop.DBus', 'NameOwnerChanged',
             '/org/freedesktop/DBus', null, Gio.DBusSignalFlags.NONE, (_c, _s, _p, _i, _sig, params) => {
                 const [name, , owner] = params.deepUnpack();
-                if (owner)
+                // This fires for every process that comes and goes: only redo the panel when one of ours left.
+                if (owner || !name.startsWith(':'))
                     return;
+                let dropped = false;
                 for (const [id, e] of this._entries) {
-                    if (e.sender === name)
+                    if (e.sender === name) {
                         this._drop(id);
+                        dropped = true;
+                    }
                 }
-                this._refresh();
+                if (dropped)
+                    this._refresh();
             });
     }
 

@@ -17,6 +17,11 @@ import {Timer} from './isla/timer.js';
 import {Progress} from './isla/progress.js';
 import {Stack} from './isla/stack/stack.js';
 import {Folders} from './isla/stack/folders.js';
+import {Power} from './isla/power/power.js';
+import {FloatingNotices} from './isla/floating.js';
+import {TopBar} from './isla/topbar.js';
+import {OverviewBlur} from './isla/overviewBlur.js';
+import {CapsLock} from './isla/capslock.js';
 import {IslaState} from './isla/state.js';
 
 // Modules that a setting can switch off: [key or null, factory].
@@ -31,7 +36,12 @@ const MODULES = {
     progress: ['isla-progreso', ctx => new Progress(ctx)],
     stack: [null, ctx => new Stack(ctx)],
     folders: [null, ctx => new Folders(ctx)],
+    topbar: ['ocultar-barra-superior', () => new TopBar()],
+    power: [null, ctx => new Power(ctx)],
+    floating: ['avisos-flotantes', ctx => new FloatingNotices(ctx)],
     prefsWindow: [null, ctx => new PrefsWindow(ctx)],
+    overviewBlur: ['desenfoque-cajon', () => new OverviewBlur()],
+    capsLock: [null, ctx => new CapsLock(ctx)],
 };
 
 export default class IslaDockExtension extends Extension {
@@ -57,7 +67,7 @@ export default class IslaDockExtension extends Extension {
         this._state = new IslaState();
         this._isla = new Isla({settings: this._settings, resolver: this._resolver, state: this._state});
         this._ctx = {state: this._state, settings: this._settings, capsule: this._isla.capsule, title: this.metadata.name,
-            resolver: this._resolver};
+            resolver: this._resolver, dir: this.dir};
         for (const [name, [key]] of Object.entries(MODULES)) {
             this._sync(name);
             if (key)

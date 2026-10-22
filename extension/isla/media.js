@@ -44,7 +44,9 @@ export class Media {
 
         const bus = Gio.DBus.session;
         this._ownerId = bus.signal_subscribe('org.freedesktop.DBus', 'org.freedesktop.DBus', 'NameOwnerChanged',
-            '/org/freedesktop/DBus', null, Gio.DBusSignalFlags.NONE, (_c, _s, _p, _i, _sig, params) => {
+            // Only the players' names reach us (the bus filters), not every process that comes and goes.
+            '/org/freedesktop/DBus', 'org.mpris.MediaPlayer2', Gio.DBusSignalFlags.MATCH_ARG0_NAMESPACE,
+            (_c, _s, _p, _i, _sig, params) => {
                 const [name, , owner] = params.deepUnpack();
                 if (!name.startsWith(MPRIS_PREFIX))
                     return;

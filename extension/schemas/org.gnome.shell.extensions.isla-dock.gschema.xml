@@ -82,12 +82,28 @@
       <summary>Mostrar la música que suena</summary>
     </key>
     <key name="isla-avisos" type="b">
-      <default>true</default>
+      <default>false</default>
       <summary>Mostrar las notificaciones en la isla</summary>
     </key>
     <key name="isla-rueda-volumen" type="b">
       <default>true</default>
       <summary>La rueda del mouse cambia el volumen</summary>
+    </key>
+    <key name="desenfoque-cajon" type="b">
+      <default>true</default>
+      <summary>Fondo de pantalla desenfocado detrás del cajón de aplicaciones y de Actividades</summary>
+    </key>
+    <key name="cafeina-activa" type="b">
+      <default>false</default>
+      <summary>Cafeína encendida (se recuerda al reiniciar GNOME)</summary>
+    </key>
+    <key name="cafeina-insignia" type="b">
+      <default>true</default>
+      <summary>Tacita en la esquina de la isla mientras Cafeína esté encendida</summary>
+    </key>
+    <key name="mayus-insignia" type="b">
+      <default>true</default>
+      <summary>Símbolo de mayúsculas en la esquina de la isla mientras estén activas</summary>
     </key>
     <key name="isla-vistas-previas" type="b">
       <default>true</default>
@@ -135,6 +151,18 @@
       <range min="4" max="32"/>
       <default>16</default>
       <summary>Máximo de mosaicos en la cuadrícula</summary>
+    </key>
+    <key name="ocultar-barra-superior" type="b">
+      <default>true</default>
+      <summary>Quitar la barra superior de GNOME (sus controles pasan al botón Energía)</summary>
+    </key>
+    <key name="mostrar-energia" type="b">
+      <default>true</default>
+      <summary>Botón Energía al final del dock</summary>
+    </key>
+    <key name="avisos-flotantes" type="b">
+      <default>true</default>
+      <summary>Notificaciones flotando arriba, solas (en lugar de los avisos de GNOME)</summary>
     </key>
     <key name="carpetas-archivos" type="b">
       <default>true</default>

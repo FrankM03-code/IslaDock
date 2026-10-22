@@ -283,6 +283,8 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         ], 'Al abrir la isla'));
         look.add(switchRow(settings, 'desenfoque', 'Desenfocar lo que hay detrás', 'Apágalo si quieres la isla aún más liviana'));
         look.add(this._transparencyRow(settings));
+        look.add(switchRow(settings, 'desenfoque-cajon', 'Fondo desenfocado en el cajón de aplicaciones',
+            'Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades'));
         look.add(switchRow(settings, 'isla-respiracion', 'Respiración', 'En reposo, el fondo late muy despacio'));
         look.add(comboRow(settings, 'ocultar', 'Esconder la isla', [
             ['nunca', 'Nunca'],
@@ -296,12 +298,20 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             description: 'Clic largo sobre la isla: No molestar. Arrastrar hacia arriba: aplicaciones.',
         });
         functions.add(switchRow(settings, 'isla-musica', 'Música', 'Lo que suena, con sus botones (Shift + rueda cambia de canción)'));
-        functions.add(switchRow(settings, 'isla-avisos', 'Avisos', 'Las notificaciones asoman en la isla unos segundos'));
+        functions.add(switchRow(settings, 'avisos-flotantes', 'Notificaciones flotantes',
+            'Cada notificación aparece sola arriba en el centro, sin isla ni barra, y se va sola'));
+        functions.add(switchRow(settings, 'isla-avisos', 'Avisos en la isla', 'Las notificaciones asoman también en la isla unos segundos'));
         functions.add(switchRow(settings, 'isla-rueda-volumen', 'La rueda cambia el volumen'));
         functions.add(switchRow(settings, 'isla-vistas-previas', 'Vista en miniatura de las ventanas',
             'Al dejar el mouse sobre una app abierta (Firefox, Archivos…) aparece lo que tiene en pantalla'));
         functions.add(switchRow(settings, 'isla-progreso', 'Progreso de tareas',
             'Descargas, copias… solo de las apps que lo publican (como en Dash to Dock)'));
+        functions.add(switchRow(settings, 'mayus-insignia', 'Símbolo de mayúsculas en la isla',
+            'Mientras estén activas, un pequeño ⇪ en la esquina de la isla'));
+        functions.add(switchRow(settings, 'cafeina-activa', 'Cafeína',
+            'La pantalla no se apaga ni el equipo se suspende. También en el panel Energía'));
+        functions.add(switchRow(settings, 'cafeina-insignia', 'Tacita de Cafeína en la isla',
+            'Mientras Cafeína esté encendida, una tacita en la esquina izquierda de la isla'));
         functions.add(switchRow(settings, 'no-molestar', 'No molestar', 'También con un clic largo sobre la isla'));
         page.add(functions);
 
@@ -342,6 +352,11 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         extras.add(switchRow(settings, 'mostrar-papelera', 'Papelera', 'Clic derecho para vaciarla'));
         extras.add(switchRow(settings, 'mostrar-aplicaciones', 'Aplicaciones (botón Portal)', 'Ver y buscar todo lo que tienes instalado'));
         extras.add(switchRow(settings, 'portal-giro', 'El aro del Portal gira'));
+        extras.add(switchRow(settings, 'mostrar-energia', 'Energía',
+            'Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína, volumen, captura, bloquear, apagar… ' +
+            'Clic derecho o mantener pulsado: suspender'));
+        extras.add(switchRow(settings, 'ocultar-barra-superior', 'Quitar la barra superior de GNOME',
+            'Desaparece del todo; sus controles quedan en el botón Energía. Las esquinas activas siguen funcionando'));
         dock.add(extras);
         dock.add(this._stackGroup(window, settings));
         dock.add(this._foldersGroup(window, settings));

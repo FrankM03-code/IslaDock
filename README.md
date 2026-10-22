@@ -11,7 +11,7 @@ convierte en el dock completo.
 
 - **Isla que se expande**: puntos de color por cada app abierta, respiración suave en reposo.
 - **Música** (MPRIS): barras que se mueven mientras suena; carátula y controles al abrir la isla.
-- **Avisos discretos**: las notificaciones asoman en la isla unos segundos.
+- **Notificaciones flotantes**: cada notificación aparece sola arriba en el centro, con el aspecto de la isla, y se va sola (o, si prefieres, asoman en la isla).
 - **No molestar** con un clic largo sobre la isla.
 - **Gestos**: rueda = volumen, Shift + rueda = cambiar canción, clic central = pausa,
   arrastrar hacia arriba = aplicaciones.
@@ -21,7 +21,12 @@ convierte en el dock completo.
 - **Progreso de tareas** de las apps que lo publican.
 - **Pila de descargas**: tus últimos archivos en cascada diagonal o en cuadrícula.
 - **Carpetas de Archivos**: clic en Archivos y tienes a mano Descargas, Documentos, Imágenes, Música, Vídeos y las que añadas.
-- **Botón Portal** para ver todas las aplicaciones.
+- **Botón Portal** para ver todas las aplicaciones; la isla se queda visible en el cajón de aplicaciones.
+- **Fondo desenfocado en el cajón**: tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades.
+- **Panel Energía**: red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, volumen, captura, bloquear, cerrar sesión, reiniciar y apagar.
+- **Cafeína**: la pantalla no se apaga ni el equipo se suspende; una tacita en la isla mientras está activa.
+- **Mayúsculas**: para teclados sin luz de Bloq Mayús, un pequeño ⇪ en la isla mientras están activas.
+- **Sin barra superior** (opcional, encendido por defecto): todo queda en la isla y el panel Energía.
 - **Pieles**: Clásica (blanca u oscura), Vidrio oscuro (vidrio ahumado con efecto lupa) y Aurora, con transparencia ajustable.
 - Tus propios íconos: elige tema o pon archivos en `~/.icons/isla-dock`.
 

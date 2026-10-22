@@ -50,6 +50,7 @@ export class AppsRow extends Signals.EventEmitter {
         this._layout = new RowLayout(0);
         this.actor = new St.Widget({style_class: 'isla-apps', layout_manager: this._layout, y_align: Clutter.ActorAlign.END});
         this.actor._delegate = this;   // drop target for reordering
+        this.actor.connect('destroy', () => this._dropSources(true));
         this._tooltip = new St.Label({style_class: 'isla-tooltip', visible: false, opacity: 0});
         Main.layoutManager.uiGroup.add_child(this._tooltip);
         this._menuManager = new PopupMenu.PopupMenuManager(this.actor);
@@ -60,7 +61,7 @@ export class AppsRow extends Signals.EventEmitter {
         this._on(this._appSystem, 'app-state-changed', () => this._later('apps', 50, () => this._rebuild()));
         this._on(this._appSystem, 'installed-changed', () => this._refreshIcons());
         this._on(this._resolver, 'changed', () => this._refreshIcons());
-        for (const key of ['mostrar-descargas', 'mostrar-papelera', 'mostrar-aplicaciones'])
+        for (const key of ['mostrar-descargas', 'mostrar-papelera', 'mostrar-aplicaciones', 'mostrar-energia'])
             this._on(this._settings, `changed::${key}`, () => this._rebuild());
         for (const key of ['tamano-base', 'magnificacion', 'desaturar-en-reposo'])
             this._on(this._settings, `changed::${key}`, () => this.configure());
@@ -202,13 +203,20 @@ export class AppsRow extends Signals.EventEmitter {
         if (entries.length && extras.length)
             entries.push({kind: 'separator', key: 'sep-2'});
         entries.push(...extras);
+        // Energía: last, after its own thin line.
+        if (this._settings.get_boolean('mostrar-energia')) {
+            if (entries.length)
+                entries.push({kind: 'separator', key: 'sep-3'});
+            entries.push({kind: 'power', key: 'power'});
+        }
         return entries;
     }
 
     _createItem(entry) {
         if (entry.kind === 'separator')
             return new DockSeparator();
-        const label = {app: entry.app?.get_name(), downloads: 'Descargas', trash: 'Papelera', apps: 'Aplicaciones'}[entry.kind];
+        const label = {app: entry.app?.get_name(), downloads: 'Descargas', trash: 'Papelera', apps: 'Aplicaciones',
+            power: 'Energía'}[entry.kind];
         const item = new DockItem({kind: entry.kind, key: entry.key, app: entry.app ?? null, label});
         item.connect('activate', (_i, button) => this._onActivate(item, button));
         item.connect('hover-changed', (_i, hover) => this._onItemHover(item, hover));
@@ -318,6 +326,12 @@ export class AppsRow extends Signals.EventEmitter {
                 Main.overview.hide();
             else
                 Main.overview.showApps();
+            return;
+        }
+        // Energía: the panel with a click, suspend with a right click or a long press.
+        if (item.kind === 'power') {
+            this._hideTooltip();
+            this._state.command(button === 3 ? 'power-suspend' : 'power-toggle', item);
             return;
         }
         if (button === 3) {
@@ -465,7 +479,8 @@ export class AppsRow extends Signals.EventEmitter {
         if (!(source instanceof DockItem) || source.kind !== 'app' || !this._items || !this._appItems.includes(source))
             return DND.DragMotionResult.CONTINUE;
         const children = this.actor.get_children();
-        const end = children.findIndex(a => a.kind === 'downloads' || a.kind === 'trash' || a.kind === 'apps' || a.key === 'sep-2');
+        const end = children.findIndex(a => a.kind === 'downloads' || a.kind === 'trash' || a.kind === 'apps' || a.kind === 'power' ||
+            a.key === 'sep-2' || a.key === 'sep-3');
         const limit = end < 0 ? children.length : end;
         let index = 0;
         for (let i = 0; i < limit; i++) {
@@ -533,7 +548,7 @@ export class AppsRow extends Signals.EventEmitter {
         this._appItems.forEach((item, i) => {
             const d = this._hovered < 0 ? Infinity : Math.abs(i - this._hovered);
             // The Portal keeps its size so it stays centered in the island.
-            const zoom = item.kind === 'apps' ? 1 : d < ZOOM.length ? ZOOM[d] : 1;
+            const zoom = item.kind === 'apps' || item.kind === 'power' ? 1 : d < ZOOM.length ? ZOOM[d] : 1;
             item.setSize(Math.round(base * zoom));
         });
         if (this._tooltipItem)
@@ -628,12 +643,17 @@ export class AppsRow extends Signals.EventEmitter {
         });
     }
 
-    destroy() {
-        this._signals.forEach(([obj, id]) => obj.disconnect(id));
+    // dying: the stage is being torn down, its actors are already gone (only the others are disconnected).
+    _dropSources(dying = false) {
+        this._signals.forEach(([obj, id]) => !(dying && obj instanceof Clutter.Actor) && obj.disconnect(id));
         this._signals = [];
         for (const id of this._timeouts.values())
             GLib.source_remove(id);
         this._timeouts.clear();
+    }
+
+    destroy() {
+        this._dropSources();
         this._trashMonitor?.cancel();
         this._tooltip.destroy();
         this.actor.destroy();

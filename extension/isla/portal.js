@@ -128,7 +128,6 @@ class IslaPortal extends St.Widget {
     // The tile size in px: everything follows the 52 px design.
     setSize(px) {
         const u = px / DESIGN;
-        this._u = u;
         // Inside the 26 px inner circle; even sizes keep it centered.
         this._tux.icon_size = 2 * Math.round(16 * u / 2);
     }

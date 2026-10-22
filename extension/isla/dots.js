@@ -3,6 +3,8 @@
 // One colored dot per open app, in the folded island. The color is the main
 // color of the app's icon, computed once per app (16×16, ignoring transparent,
 // white and black pixels). An app with an unread notice gets a ring.
+// With no app open and nothing else to show, three white dots keep the island
+// from being an empty pill.
 import Clutter from 'gi://Clutter';
 import GdkPixbuf from 'gi://GdkPixbuf';
 import Gio from 'gi://Gio';
@@ -10,8 +12,10 @@ import St from 'gi://St';
 
 const DOT = 8, GAP = 8;
 const FALLBACK = [128, 134, 148];
+const RESTING = 3;
 
 const _colors = new Map();     // app id -> [r, g, b]
+let _theme = null;
 
 // Average color of an image, leaving out transparent, almost white and almost
 // black pixels; colorful pixels count more than grey ones. null if none is left.
@@ -44,7 +48,9 @@ function iconPath(gicon) {
         return gicon.get_file().get_path();
     if (!gicon)
         return null;
-    return new St.IconTheme().lookup_by_gicon(gicon, 32, 0)?.get_filename() ?? null;
+    // One theme for every lookup: a new one would read the theme's folders again each time.
+    _theme ??= new St.IconTheme();
+    return _theme.lookup_by_gicon(gicon, 32, 0)?.get_filename() ?? null;
 }
 
 export function iconColor(id, gicon) {
@@ -89,6 +95,14 @@ export class Dots {
         return this._running.length;
     }
 
+    // The three white dots, when nothing else is in the folded island.
+    setResting(on) {
+        if (this._resting === on)
+            return;
+        this._resting = on;
+        this._update();
+    }
+
     setScale(f) {
         this._f = f;
         this.actor.style = `spacing: ${Math.round(GAP * f)}px;`;
@@ -98,13 +112,24 @@ export class Dots {
     _update() {
         const f = this._f ?? 1;
         const size = Math.round(DOT * f);
+        const resting = this._resting && !this._running.length;
+        const wanted = resting ? RESTING : this._running.length;
         const dots = this.actor.get_children();
-        while (dots.length > this._running.length)
+        while (dots.length > wanted)
             dots.pop().destroy();
-        while (dots.length < this._running.length) {
+        while (dots.length < wanted) {
             const dot = new St.Widget({style_class: 'isla-dot', y_align: Clutter.ActorAlign.CENTER});
             this.actor.add_child(dot);
             dots.push(dot);
+        }
+        if (resting) {
+            const style = `width: ${size}px; height: ${size}px; border-radius: ${size}px; background-color: rgba(255, 255, 255, 0.9);`;
+            dots.forEach(dot => {
+                dot._color = [255, 255, 255];
+                if (dot.style !== style)
+                    dot.style = style;
+            });
+            return;
         }
         this._running.forEach(({id, gicon}, i) => {
             const color = iconColor(id, gicon);
@@ -123,5 +148,6 @@ export class Dots {
         this.actor.destroy();
         // Nothing of IslaDock stays in memory once it is switched off.
         _colors.clear();
+        _theme = null;
     }
 }

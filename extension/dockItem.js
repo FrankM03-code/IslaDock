@@ -4,6 +4,7 @@
 // indicator under it, magnification, the "calm until hovered" effect and the
 // launch bounce.
 import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
@@ -22,6 +23,9 @@ const BOUNCE_HEIGHT = 18;
 const BOUNCE_TIME = 500;      // one jump (up + down)
 const REST_DESATURATION = 0.6;
 const REST_OPACITY = 245;
+const LONG_PRESS = 600;
+const POWER_CIRCLE = 38 / 48;      // the Energía circle, of the tile
+const POWER_ICON = 22 / 38;        // its symbol, of the circle
 
 // Holds the tile at its full (magnified) size and keeps it centered and
 // standing on the bottom edge while its own width is animated.
@@ -53,7 +57,7 @@ export const DockItem = GObject.registerClass({
         'drag-ended': {},
     },
 }, class IslaItem extends St.Button {
-    // kind: 'app' | 'downloads' | 'trash'
+    // kind: 'app' | 'downloads' | 'trash' | 'apps' | 'power'
     _init({kind, key, app = null, label = ''}) {
         super._init({
             style_class: 'isla-item',
@@ -89,6 +93,19 @@ export const DockItem = GObject.registerClass({
             this.connect('key-focus-in', () => this.portal.setFocused(true));
             this.connect('key-focus-out', () => this.portal.setFocused(false));
         }
+        // Energía: a grey circle with the shutdown symbol (sized in configure()).
+        if (kind === 'power') {
+            this._power = new St.Widget({style_class: 'isla-energia-boton', layout_manager: new Clutter.BinLayout(),
+                x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
+            this._powerIcon = new St.Icon({icon_name: 'system-shutdown-symbolic', x_align: Clutter.ActorAlign.CENTER,
+                y_align: Clutter.ActorAlign.CENTER});
+            this._power.add_child(this._powerIcon);
+            this._tile.add_child(this._power);
+            this._icon.hide();
+            this.can_focus = true;
+            this.accessible_name = 'Energía';
+            this._watchLongPress();
+        }
         this._indicator = new St.Widget({
             style_class: 'isla-indicator',
             x_align: Clutter.ActorAlign.CENTER,
@@ -106,6 +123,11 @@ export const DockItem = GObject.registerClass({
             this.emit('hover-changed', this.hover);
         });
         this.connect('clicked', (_b, button) => {
+            // A long press already did its job: this is just its release.
+            if (this._longDone) {
+                this._longDone = false;
+                return;
+            }
             if (this.portal && button === 1)
                 this.portal.burst();
             this.emit('activate', button);
@@ -132,6 +154,32 @@ export const DockItem = GObject.registerClass({
 
     get tile() {
         return this._tile;
+    }
+
+    // Held for 600 ms: 'activate' with button 3 (what the right click does).
+    _watchLongPress() {
+        const stop = () => {
+            if (this._longId) {
+                GLib.source_remove(this._longId);
+                this._longId = 0;
+            }
+        };
+        this.connect('button-press-event', (_a, event) => {
+            stop();
+            this._longDone = false;
+            if (event.get_button() !== 1)
+                return Clutter.EVENT_PROPAGATE;
+            this._longId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, LONG_PRESS, () => {
+                this._longId = 0;
+                this._longDone = true;
+                this.emit('activate', 3);
+                return GLib.SOURCE_REMOVE;
+            });
+            return Clutter.EVENT_PROPAGATE;
+        });
+        this.connect('button-release-event', stop);
+        this.connect('leave-event', stop);
+        this.connect('destroy', stop);
     }
 
 
@@ -200,7 +248,11 @@ export const DockItem = GObject.registerClass({
         return this._tile;
     }
 
+    // Same icon again (every app that opens or closes refreshes the row): nothing to reload.
     setGIcon(gicon) {
+        const current = this._icon.gicon;
+        if (current && gicon && current.equal(gicon))
+            return;
         this._icon.gicon = gicon;
     }
 
@@ -212,6 +264,12 @@ export const DockItem = GObject.registerClass({
         this._tile.set_size(tilePx, tilePx);
         this._icon.icon_size = p.max;
         this.portal?.setSize(tilePx);
+        if (this._power) {
+            const d = Math.round(tilePx * POWER_CIRCLE);
+            this._power.set_size(d, d);
+            this._power.style = `border-radius: ${d / 2}px;`;
+            this._powerIcon.icon_size = Math.round(p.max * POWER_CIRCLE * POWER_ICON);
+        }
         this._holder.set_height(p.base * sf);
 
         this._indicator.set_size(INDICATOR_WIDTH * sf, INDICATOR_HEIGHT * sf);

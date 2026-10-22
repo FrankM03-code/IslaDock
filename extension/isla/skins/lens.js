@@ -118,7 +118,10 @@ class IslaLens extends St.Widget {
             if (bg)
                 bg.translation_y = -this.translation_y;
         });
-        this.connect('destroy', () => this._drop());
+        this.connect('destroy', () => {
+            this._gone = true;
+            this._drop();
+        });
     }
 
     _blur() {
@@ -159,12 +162,17 @@ class IslaLens extends St.Widget {
 
     // buttons: [[cx, cy, r, focus], ...] in stage coordinates.
     setButtons(buttons) {
+        if (this._gone)
+            return;
         this._buttons = buttons.slice(0, MAX_BUTTONS);
         this._sendButtons();
     }
 
     // In stage coordinates; null when the pointer is away.
     setMouse(point) {
+        // The Shell shutting down destroys the lens before the island's last leave-event.
+        if (this._gone)
+            return;
         this._mouse = point ?? [-1000, -1000];
         this._sendMouse();
     }

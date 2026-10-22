@@ -292,3 +292,127 @@
   width: 11px; height: 11px; border-radius: 6px;
   background-color: #2F7DE1; border: 1.5px solid rgba(255, 255, 255, 0.95);
 }
+
+/* ---------- Energía (panel-energia-dock-spec.md) ---------- */
+.isla-energia-boton { background-color: #505054; color: #d8d8dc; }
+.isla-item:hover .isla-energia-boton,
+.isla-item:focus .isla-energia-boton { background-color: #5c5c60; color: #ffffff; }
+
+.isla-pd-panel {
+  background-color: #2c2c2e;
+  border: 1px solid rgba(85, 85, 85, 0.75);
+  border-radius: 18px;
+  padding: 10px;
+  color: #e4e4e8;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.isla-pd-fila { spacing: 6px; }
+.isla-pd-btn {
+  width: 34px; height: 34px; border-radius: 17px;
+  background-color: #3d3d40; color: #e4e4e8;
+  transition-duration: 120ms;
+}
+.isla-pd-btn:hover, .isla-pd-btn:focus { background-color: #4a4a4e; }
+.isla-pd-btn:checked { background-color: #3584e4; color: #ffffff; }
+.isla-pd-btn:checked:hover, .isla-pd-btn:checked:focus { background-color: #4a90e8; }
+.isla-pd-icono { icon-size: 16px; }
+.isla-pd-btn.isla-pd-bloquear { background-color: #3d3420; color: #f5c26b; }
+.isla-pd-btn.isla-pd-bloquear:hover, .isla-pd-btn.isla-pd-bloquear:focus { background-color: #c98a1e; color: #ffffff; }
+.isla-pd-btn.isla-pd-salir { background-color: #2f2b45; color: #b3a9f5; }
+.isla-pd-btn.isla-pd-salir:hover, .isla-pd-btn.isla-pd-salir:focus { background-color: #6d5fd6; color: #ffffff; }
+.isla-pd-btn.isla-pd-reiniciar { background-color: #1f3a33; color: #6fd6b0; }
+.isla-pd-btn.isla-pd-reiniciar:hover, .isla-pd-btn.isla-pd-reiniciar:focus { background-color: #1d9e75; color: #ffffff; }
+.isla-pd-btn.isla-pd-apagar { background-color: #45242a; color: #ff8f8f; }
+.isla-pd-btn.isla-pd-apagar:hover, .isla-pd-btn.isla-pd-apagar:focus { background-color: #d93a3a; color: #ffffff; }
+.isla-pd-volumen { spacing: 8px; padding: 10px 4px 0 8px; }
+.isla-pd-volumen-boton { color: #aaaaaa; border-radius: 9px; padding: 2px; }
+.isla-pd-volumen-boton:hover, .isla-pd-volumen-boton:focus { color: #ffffff; }
+.isla-pd-volumen-icono { icon-size: 15px; }
+.slider.isla-pd-slider {
+  height: 20px;
+  -barlevel-height: 4px;
+  -barlevel-background-color: #48484c;
+  -barlevel-active-background-color: #3584e4;
+  -barlevel-border-width: 0;
+  -slider-handle-radius: 7px;
+  -slider-handle-border-width: 0;
+  color: #f2f2f4;
+}
+.isla-pd-sep { height: 1px; background-color: #48484c; margin: 9px 0; }
+.isla-pd-tooltip {
+  background-color: #111111; color: #eeeeee;
+  font-size: 11px; padding: 3px 7px; border-radius: 6px;
+}
+
+/* ---------- Notificaciones flotantes ---------- */
+.isla-flotantes { spacing: 8px; }
+.isla-flotante {
+  width: 380px;
+  background-color: rgba(44, 44, 46, 0.97);
+  border: 1px solid rgba(85, 85, 85, 0.75);
+  border-radius: 18px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transition-duration: 120ms;
+}
+.isla-flotante:hover { background-color: rgba(52, 52, 55, 0.98); }
+.isla-flotante-caja { spacing: 12px; }
+.isla-flotante-icono { icon-size: 32px; }
+.isla-flotante-titulo { font-size: 13px; font-weight: bold; color: #f2f2f4; }
+.isla-flotante-cuerpo { font-size: 12px; color: #b4b4b8; max-height: 34px; }
+.isla-flotante-cerrar {
+  width: 20px; height: 20px; border-radius: 10px;
+  background-color: #3d3d40; color: #e4e4e8;
+}
+.isla-flotante-cerrar:hover { background-color: #d93a3a; color: #ffffff; }
+
+/* Energía over a light island (Clásica, clara) */
+.isla-pd-panel.clara { color: #1E1E1E; }
+.isla-pd-panel.clara .isla-pd-btn { background-color: rgba(30, 30, 30, 0.07); color: #2A2A2E; }
+.isla-pd-panel.clara .isla-pd-btn:hover,
+.isla-pd-panel.clara .isla-pd-btn:focus { background-color: rgba(30, 30, 30, 0.14); }
+.isla-pd-panel.clara .isla-pd-btn:checked { background-color: #2F7DE1; color: #ffffff; }
+.isla-pd-panel.clara .isla-pd-btn:checked:hover,
+.isla-pd-panel.clara .isla-pd-btn:checked:focus { background-color: #4A90E8; }
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-bloquear { background-color: #FBEBCB; color: #B07410; }
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-salir { background-color: #E8E4FC; color: #5B4CC4; }
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-reiniciar { background-color: #D6F2E8; color: #14805E; }
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-apagar { background-color: #FBDDDD; color: #C42B2B; }
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-bloquear:hover,
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-bloquear:focus { background-color: #C98A1E; color: #ffffff; }
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-salir:hover,
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-salir:focus { background-color: #6D5FD6; color: #ffffff; }
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-reiniciar:hover,
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-reiniciar:focus { background-color: #1D9E75; color: #ffffff; }
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-apagar:hover,
+.isla-pd-panel.clara .isla-pd-btn.isla-pd-apagar:focus { background-color: #D93A3A; color: #ffffff; }
+.isla-pd-panel.clara .isla-pd-volumen-boton { color: #6B6B70; }
+.isla-pd-panel.clara .isla-pd-volumen-boton:hover,
+.isla-pd-panel.clara .isla-pd-volumen-boton:focus { color: #1E1E1E; }
+.isla-pd-panel.clara .slider.isla-pd-slider {
+  -barlevel-background-color: rgba(30, 30, 30, 0.14);
+  -barlevel-active-background-color: #2F7DE1;
+  color: #2F7DE1;
+}
+.isla-pd-panel.clara .isla-pd-sep { background-color: rgba(30, 30, 30, 0.12); }
+.isla-pd-tooltip.clara {
+  background-color: rgba(255, 255, 255, 0.96); color: #1E2028;
+  border: 1px solid rgba(30, 32, 40, 0.10);
+}
+
+/* Floating notifications over a light island */
+.isla-flotante.clara .isla-flotante-titulo { color: #1E1E1E; }
+.isla-flotante.clara .isla-flotante-cuerpo { color: rgba(30, 30, 30, 0.66); }
+.isla-flotante.clara .isla-flotante-cerrar { background-color: rgba(30, 30, 30, 0.10); color: #2A2A2E; }
+.isla-flotante.clara .isla-flotante-cerrar:hover { background-color: #D93A3A; color: #ffffff; }
+.isla-flotante.clara .isla-flotante-icono { color: #2A2A2E; }
+
+/* Badges on the island's corners: Mayúsculas (right), Cafeína (left) */
+.isla-insignia {
+  width: 20px; height: 20px; border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.isla-insignia-icono { icon-size: 12px; color: #ffffff; }
+.isla-insignia-mayus { background-color: #2F7DE1; }
+.isla-insignia-cafeina { background-color: #B5651D; }
