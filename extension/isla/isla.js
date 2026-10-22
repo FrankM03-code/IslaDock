@@ -428,7 +428,7 @@ export class Isla {
         this._windowBehind = null;
         this._updateBlurBehind();
         this._place();
-        this._updateBreathing();
+        this._updateBreathing(true);
     }
 
     // The blur is a copy of the wallpaper: over a window it would show the
@@ -454,6 +454,7 @@ export class Isla {
                 this._resize();
             });
         this._on(this._settings, 'changed::isla-respiracion', () => this._updateBreathing());
+        this._on(this._settings, 'changed::isla-transparencia', () => this._updateBreathing(true));
         this._on(this._settings, 'changed::ocultar', () => this._updateAutohide());
         // The blurred wallpaper copy must not slide with the island.
         this._on(this._capsule, 'notify::translation-y', () => (this._blur.slide = this._capsule.translation_y));
@@ -850,19 +851,24 @@ export class Isla {
     }
 
     // ---------- breathing (A2) ----------
-    _updateBreathing() {
+    // The background's own opacity: 'isla-transparencia' (0 = solid) lets more of
+    // what is behind show through, for every skin.
+    get _bgOpacity() {
+        return Math.round(255 * (1 - this._settings.get_double('isla-transparencia')));
+    }
+
+    _updateBreathing(force = false) {
         const on = this._settings.get_boolean('isla-respiracion') && St.Settings.get().enable_animations &&
             this._state.mode === Mode.COLLAPSED && !this._state.dnd && this._state.activities.length === 0;
-        if (on === !!this._breathing)
+        if (on === !!this._breathing && !force)
             return;
         this._breathing = on;
         this._bg.remove_transition('opacity');
+        const base = this._bgOpacity;
+        this._bg.opacity = base;
         if (on) {
-            this._bg.opacity = 255;
-            this._bg.ease({opacity: Math.round(255 * 0.85), duration: 2000, mode: Clutter.AnimationMode.EASE_IN_OUT_SINE,
+            this._bg.ease({opacity: Math.round(base * 0.85), duration: 2000, mode: Clutter.AnimationMode.EASE_IN_OUT_SINE,
                 autoReverse: true, repeatCount: -1});
-        } else {
-            this._bg.opacity = 255;
         }
     }
 

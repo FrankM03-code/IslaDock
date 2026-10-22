@@ -184,6 +184,20 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         return group;
     }
 
+    // Background transparency: a slider from solid to almost clear.
+    _transparencyRow(settings) {
+        const row = new Adw.ActionRow({title: 'Transparencia de la isla', subtitle: 'Hacia la derecha se ve más lo que hay detrás'});
+        const scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 0.9, 0.05);
+        scale.set_size_request(220, -1);
+        scale.valign = Gtk.Align.CENTER;
+        scale.draw_value = false;
+        scale.add_mark(0, Gtk.PositionType.BOTTOM, 'Sólida');
+        scale.add_mark(0.9, Gtk.PositionType.BOTTOM, 'Transparente');
+        settings.bind('isla-transparencia', scale.adjustment, 'value', Gio.SettingsBindFlags.DEFAULT);
+        row.add_suffix(scale);
+        return row;
+    }
+
     // Animation speed: a slider from quick to slow.
     _speedRow(settings) {
         const row = new Adw.ActionRow({title: 'Velocidad de las animaciones', subtitle: 'Hacia la derecha, más calmadas'});
@@ -268,6 +282,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             ['centro', 'Desde el centro hacia los lados'],
         ], 'Al abrir la isla'));
         look.add(switchRow(settings, 'desenfoque', 'Desenfocar lo que hay detrás', 'Apágalo si quieres la isla aún más liviana'));
+        look.add(this._transparencyRow(settings));
         look.add(switchRow(settings, 'isla-respiracion', 'Respiración', 'En reposo, el fondo late muy despacio'));
         look.add(comboRow(settings, 'ocultar', 'Esconder la isla', [
             ['nunca', 'Nunca'],

@@ -21,7 +21,7 @@ convierte en el dock completo.
 - **Progreso de tareas** de las apps que lo publican.
 - **Pila de descargas**: tus últimos archivos en cascada diagonal o en cuadrícula.
 - **Botón Portal** para ver todas las aplicaciones.
-- **Pieles**: Clásica, Vidrio oscuro (vidrio ahumado con efecto lupa) y Aurora.
+- **Pieles**: Clásica (blanca u oscura), Vidrio oscuro (vidrio ahumado con efecto lupa) y Aurora, con transparencia ajustable.
 - Tus propios íconos: elige tema o pon archivos en `~/.icons/isla-dock`.
 
 ## Requisitos

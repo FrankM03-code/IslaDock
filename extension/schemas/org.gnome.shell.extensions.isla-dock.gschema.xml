@@ -68,6 +68,11 @@
       <default>false</default>
       <summary>Isla oscura</summary>
     </key>
+    <key name="isla-transparencia" type="d">
+      <range min="0" max="0.9"/>
+      <default>0</default>
+      <summary>Transparencia del fondo de la isla (0 = sólida)</summary>
+    </key>
     <key name="isla-respiracion" type="b">
       <default>true</default>
       <summary>Respiración en reposo</summary>
