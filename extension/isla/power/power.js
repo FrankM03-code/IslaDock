@@ -7,7 +7,8 @@
 //   row 2  captura · configuración · bloquear · cerrar sesión · reiniciar · apagar
 // It looks like the island itself: the same background color and see-through
 // amount ('isla-transparencia'), the same edge and, when the island is blurred,
-// the same blurred wallpaper behind; light buttons over a light island, the
+// the same blurred wallpaper behind; Aurora's halo and Vidrio oscuro's lens
+// too (skin.floatingLook); light buttons over a light island, the
 // design's greys over a dark one.
 // Esc, a click outside, the button again or an action close it. The system
 // actions go through GNOME's SystemActions (its own confirmation dialogs).
@@ -22,8 +23,7 @@ import * as SystemActions from 'resource:///org/gnome/shell/misc/systemActions.j
 import * as Volume from 'resource:///org/gnome/shell/ui/status/volume.js';
 import {Slider} from 'resource:///org/gnome/shell/ui/slider.js';
 
-import {BlurLayer} from '../blur.js';
-import {islandLook} from '../look.js';
+import {dressFrame, islandLook} from '../look.js';
 import {createToggles, openSettings} from './services.js';
 import {Mode} from '../state.js';
 import {ms} from '../timing.js';
@@ -257,14 +257,7 @@ export class Power {
         }
         if (look.style)
             content.style = look.style;
-        if (look.blur) {
-            const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-            const blur = new BlurLayer(Main.layoutManager.primaryIndex);
-            panel.add_child(blur);
-            if (!blur.configure(true, RADIUS, 'all', sf, look.blur))
-                blur.destroy();
-        }
-        panel.add_child(content);
+        dressFrame(look, panel, content, RADIUS);
         Main.layoutManager.addTopChrome(panel);
         Main.layoutManager.addTopChrome(this._tooltip);
         this._place();

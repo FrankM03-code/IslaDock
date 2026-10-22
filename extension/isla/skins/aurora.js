@@ -47,6 +47,23 @@ export class AuroraSkin extends SkinBase {
         };
     }
 
+    // The Energía panel wears the same halo: it follows the island's (opacity, flow).
+    floatingLook() {
+        return {
+            layers: radius => {
+                const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+                const halo = new St.DrawingArea({style_class: 'isla-aurora-halo', reactive: false});
+                halo._around = SPREAD * sf;
+                halo.connect('repaint', area => this._paint(area, radius, 4));
+                halo.add_effect(haloBlur(sf));
+                this._halo.bind_property('opacity', halo, 'opacity', GObject.BindingFlags.SYNC_CREATE);
+                this._extra.add(halo);
+                halo.connect('destroy', () => this._extra?.delete(halo));
+                return [halo];
+            },
+        };
+    }
+
     enable() {
         this._phase = 0;
         this._cycle = 12000;
@@ -54,15 +71,10 @@ export class AuroraSkin extends SkinBase {
         this._grow = 4;
         const halo = new St.DrawingArea({style_class: 'isla-aurora-halo', opacity: 140});
         halo._around = SPREAD;
-        halo.connect('repaint', area => this._paint(area));
-        const blur = new Shell.BlurEffect({mode: Shell.BlurMode.ACTOR, brightness: 1});
-        const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        if (GObject.Object.find_property.call(Shell.BlurEffect, 'radius'))
-            blur.radius = 10 * sf;
-        else
-            blur.sigma = 5 * sf;
-        halo.add_effect(blur);
+        halo.connect('repaint', area => this._paint(area, RADIUS, this._grow));
+        halo.add_effect(haloBlur(St.ThemeContext.get_for_stage(global.stage).scale_factor));
         this._halo = this.addLayer(halo, 'around');
+        this._extra = new Set();
         this._timeline = new Clutter.Timeline({actor: halo, duration: 1000, repeat_count: -1});
         this._timeline.connect('new-frame', () => this._tick());
         this.connect(halo, 'notify::mapped', () => this._run());
@@ -82,6 +94,7 @@ export class AuroraSkin extends SkinBase {
         this._cycle += (this._cycleTarget - this._cycle) * Math.min(1, dt / 600);
         this._phase = (this._phase + dt / this._cycle) % 1;
         this._halo.queue_repaint();
+        this._extra.forEach(h => h.queue_repaint());
     }
 
     _run() {
@@ -95,13 +108,13 @@ export class AuroraSkin extends SkinBase {
         }
     }
 
-    _paint(area) {
+    _paint(area, radius, grow) {
         const cr = area.get_context();
         const [w, h] = area.get_surface_size();
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        const inset = (SPREAD - this._grow) * sf;
+        const inset = (SPREAD - grow) * sf;
         const x0 = inset, y0 = inset, x1 = w - inset, y1 = h - inset;
-        const r = Math.min((RADIUS + this._grow) * sf, (y1 - y0) / 2);
+        const r = Math.min((radius + grow) * sf, (y1 - y0) / 2);
         cr.newPath();
         cr.arc(x1 - r, y0 + r, r, -Math.PI / 2, 0);
         cr.arc(x1 - r, y1 - r, r, 0, Math.PI / 2);
@@ -167,8 +180,18 @@ export class AuroraSkin extends SkinBase {
     disable() {
         this._timeline?.stop();
         this._timeline = null;
+        this._extra.forEach(h => h.destroy());
+        this._extra = null;
         this._halo = null;
         super.disable();
     }
 }
 
+function haloBlur(sf) {
+    const blur = new Shell.BlurEffect({mode: Shell.BlurMode.ACTOR, brightness: 1});
+    if (GObject.Object.find_property.call(Shell.BlurEffect, 'radius'))
+        blur.radius = 10 * sf;
+    else
+        blur.sigma = 5 * sf;
+    return blur;
+}

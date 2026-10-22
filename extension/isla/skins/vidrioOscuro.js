@@ -65,6 +65,30 @@ export class VidrioOscuroSkin extends SkinBase {
         };
     }
 
+    // The Energía panel: its own lens and shadow while the island is a lens; flat glass otherwise.
+    floatingLook() {
+        if (this._flat)
+            return {style: 'background-color: rgba(18, 18, 22, 0.82); border: 1px solid rgba(255, 255, 255, 0.26);'};
+        return {
+            style: 'background-color: transparent; border-width: 0; box-shadow: none;',
+            layers: radius => {
+                const shadow = new St.Widget({style_class: 'isla-vo-sombra', style: `border-radius: ${radius}px;`});
+                shadow._around = 0;
+                try {
+                    const lens = new Lens({monitorIndex: Main.layoutManager.primaryIndex, margin: MARGIN, scale: this._sf});
+                    const s = this.isla._settings;
+                    lens.configure({tint: s.get_double('glass-tint'), strength: s.get_double('glass-strength')});
+                    lens.setRadius(radius * this._sf);
+                    return [shadow, lens];
+                } catch (e) {
+                    console.warn(`isla-dock: panel sin lente (${e.message})`);
+                    shadow.style += ' background-color: rgba(18, 18, 22, 0.82);';
+                    return [shadow];
+                }
+            },
+        };
+    }
+
     enable() {
         const isla = this.isla;
         const settings = isla._settings;

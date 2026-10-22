@@ -79,6 +79,13 @@ export class SkinBase {
         };
     }
 
+    // How the pieces floating apart (the Energía panel) wear the skin, beyond the
+    // island's background: {style (CSS that replaces it), layers(radius) -> actors
+    // to put under the panel, each with actor._around in px}, or null.
+    floatingLook() {
+        return null;
+    }
+
     // Hooks.
     enable() {}
     onResize(_box) {}

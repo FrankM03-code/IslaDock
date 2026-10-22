@@ -7,17 +7,18 @@
 // what the notification points to; the × or a right click dismisses it.
 // Same rules as GNOME's banners: none in do-not-disturb, none for low urgency,
 // critical ones stay until they are dealt with. The cards look like the island
-// (its color, transparency, edge and blur), so the set reads as one.
+// (its color, transparency, edge and blur, Aurora's halo, Vidrio oscuro's
+// lens), so the set reads as one.
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
+import Meta from 'gi://Meta';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
-import {BlurLayer} from './blur.js';
-import {islandLook} from './look.js';
+import {dressFrame, islandLook} from './look.js';
 import {ms} from './timing.js';
 
 const MAX_CARDS = 3;
@@ -154,9 +155,20 @@ export class FloatingNotices {
         const top = mon.y + (panel.visible ? panel.height : 0) + TOP_GAP * sf;
         const [w] = this._box.get_size();
         this._box.set_position(Math.round(mon.x + (mon.width - w) / 2), Math.round(top));
+        // Vidrio oscuro's lenses read their place on screen when allocated: once the box has moved.
+        if (!this._later) {
+            this._later = global.compositor.get_laters().add(Meta.LaterType.BEFORE_REDRAW, () => {
+                this._later = 0;
+                this._cards.forEach(c => c.actor.get_children().forEach(a => a.queue_relayout()));
+                return false;
+            });
+        }
     }
 
     destroy() {
+        if (this._later)
+            global.compositor.get_laters().remove(this._later);
+        this._later = 0;
         this._trayIds.forEach(id => Main.messageTray.disconnect(id));
         this._trayIds = [];
         for (const source of [...this._sources.keys()])
@@ -186,13 +198,7 @@ class Card {
             actor.add_style_class_name('clara');
         if (look.style)
             actor.style = look.style;
-        if (look.blur) {
-            const blur = new BlurLayer(Main.layoutManager.primaryIndex);
-            this.actor.add_child(blur);
-            if (!blur.configure(true, RADIUS, 'all', St.ThemeContext.get_for_stage(global.stage).scale_factor, look.blur))
-                blur.destroy();
-        }
-        this.actor.add_child(actor);
+        dressFrame(look, this.actor, actor, RADIUS);
         const box = new St.BoxLayout({style_class: 'isla-flotante-caja', x_expand: true});
         this._icon = new St.Icon({style_class: 'isla-flotante-icono', fallback_icon_name: 'dialog-information-symbolic',
             y_align: Clutter.ActorAlign.CENTER});

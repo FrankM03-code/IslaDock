@@ -5,12 +5,27 @@
 // background as painted (color × its opacity, which carries
 // 'isla-transparencia'), its edge, its shadow, whether it is light, and the
 // blur behind it when the island has one.
+import Clutter from 'gi://Clutter';
 import St from 'gi://St';
+
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+
+import {BlurLayer} from './blur.js';
 
 const css = (c, alpha = c.alpha / 255) => `rgba(${c.red}, ${c.green}, ${c.blue}, ${alpha.toFixed(3)})`;
 
-// -> {light, style (CSS for the widget), blur (a skin's blur look, or null)}
+// -> {light, style (CSS for the widget), blur (a skin's blur look, or null),
+//     layers(radius) (the skin's own pieces: Aurora's halo, Vidrio oscuro's lens) or null}
 export function islandLook(state) {
+    const look = baseLook(state);
+    const extra = state.skin?.floatingLook?.();
+    if (extra?.style)
+        look.style = extra.style;
+    look.layers = extra?.layers ?? null;
+    return look;
+}
+
+function baseLook(state) {
     const skin = state.skin;
     const isla = skin?.isla;
     const style = skin?.getStackStyle?.();
@@ -33,4 +48,23 @@ export function islandLook(state) {
         rule += ` box-shadow: 0 6px 20px ${style.shadow};`;
     const blurred = !!isla._blur?.visible && !!isla._blurOk;
     return {light, style: rule, blur: blurred ? skin.blur : null};
+}
+
+// Fills a frame (St.Widget with a BinLayout): the blur, the skin's layers
+// (bound to the content, `_around` px bigger on each side) and the content on top.
+export function dressFrame(look, frame, content, radius) {
+    const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+    if (look.blur) {
+        const blur = new BlurLayer(Main.layoutManager.primaryIndex);
+        frame.add_child(blur);
+        if (!blur.configure(true, radius, 'all', sf, look.blur))
+            blur.destroy();
+    }
+    for (const layer of look.layers?.(radius) ?? []) {
+        const m = layer._around ?? 0;
+        layer.add_constraint(new Clutter.BindConstraint({source: content, coordinate: Clutter.BindCoordinate.POSITION, offset: -m}));
+        layer.add_constraint(new Clutter.BindConstraint({source: content, coordinate: Clutter.BindCoordinate.SIZE, offset: 2 * m}));
+        frame.add_child(layer);
+    }
+    frame.add_child(content);
 }

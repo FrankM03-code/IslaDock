@@ -231,9 +231,15 @@ class IslaLens extends St.Widget {
         const strip = this.get_parent();
         if (!actor || !mon || !strip)
             return;
-        // The part of the wallpaper under the lens shows here.
+        // The part of the wallpaper under the lens shows here. The parent may sit
+        // inside other actors (a floating notification): add up the whole chain.
+        let [x, y] = [box.x1, box.y1];
+        for (let a = strip; a && a !== global.stage; a = a.get_parent()) {
+            x += a.x;
+            y += a.y;
+        }
         const b = new Clutter.ActorBox();
-        b.set_origin(-(strip.x + box.x1 - mon.x), -(strip.y + box.y1 - mon.y));
+        b.set_origin(-(x - mon.x), -(y - mon.y));
         b.set_size(mon.width, mon.height);
         actor.allocate(b);
     }
