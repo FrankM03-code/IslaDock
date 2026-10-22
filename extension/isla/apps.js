@@ -303,6 +303,14 @@ export class AppsRow extends Signals.EventEmitter {
     }
 
     // ---------- clicks ----------
+    // The app that opens folders (Archivos, or the one chosen for them).
+    _isFolderApp(item) {
+        if (item.kind !== 'app' || !item.app || !this._settings.get_boolean('carpetas-archivos'))
+            return false;
+        const id = Gio.AppInfo.get_default_for_type('inode/directory', false)?.get_id() ?? 'org.gnome.Nautilus.desktop';
+        return item.app.get_id() === id;
+    }
+
     _onActivate(item, button) {
         // All installed apps, with GNOME's own search on top.
         if (item.kind === 'apps') {
@@ -322,7 +330,17 @@ export class AppsRow extends Signals.EventEmitter {
             this._state.command('stack-toggle', item);
             return;
         }
+        // Archivos: the home folders with a left click, the app itself with the middle one.
+        if (button === 1 && this._isFolderApp(item)) {
+            this._hideTooltip();
+            this._state.command('folders-toggle', item);
+            return;
+        }
         Main.overview.hide();
+        if (button === 2 && this._isFolderApp(item)) {
+            item.app.activate();
+            return;
+        }
         if (item.kind === 'downloads') {
             this._launch(GLib.filename_to_uri(this._downloadsDir(), null));
             return;

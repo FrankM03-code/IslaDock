@@ -344,6 +344,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         extras.add(switchRow(settings, 'portal-giro', 'El aro del Portal gira'));
         dock.add(extras);
         dock.add(this._stackGroup(window, settings));
+        dock.add(this._foldersGroup(window, settings));
 
         window.add(this._aboutPage());
     }
@@ -370,6 +371,69 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         info.add(row('Licencia', 'GNU GPL 2.0 o posterior'));
         page.add(info);
         return page;
+    }
+
+    // ---------- Carpetas de Archivos ----------
+    _foldersGroup(window, settings) {
+        const group = new Adw.PreferencesGroup({
+            title: 'Carpetas de Archivos',
+            description: 'Clic en Archivos: tus carpetas, como la pila de descargas. Clic central: abre Archivos. ' +
+                'Clic derecho sobre una carpeta añadida: quitarla.',
+        });
+        group.add(switchRow(settings, 'carpetas-archivos', 'Mostrar las carpetas al hacer clic en Archivos'));
+
+        const fixed = [
+            [GLib.UserDirectory.DIRECTORY_DOWNLOAD, 'folder-download-symbolic'],
+            [GLib.UserDirectory.DIRECTORY_DOCUMENTS, 'folder-documents-symbolic'],
+            [GLib.UserDirectory.DIRECTORY_PICTURES, 'folder-pictures-symbolic'],
+            [GLib.UserDirectory.DIRECTORY_MUSIC, 'folder-music-symbolic'],
+            [GLib.UserDirectory.DIRECTORY_VIDEOS, 'folder-videos-symbolic'],
+        ];
+        for (const [dir, icon] of fixed) {
+            const path = GLib.get_user_special_dir(dir);
+            if (!path)
+                continue;
+            const row = new Adw.ActionRow({title: GLib.path_get_basename(path), subtitle: 'Siempre está'});
+            row.add_prefix(new Gtk.Image({icon_name: icon}));
+            group.add(row);
+        }
+
+        // The added ones, each with its own "Quitar".
+        let rows = [];
+        const sync = () => {
+            rows.forEach(r => group.remove(r));
+            rows = settings.get_strv('carpetas-extra').map(path => {
+                const row = new Adw.ActionRow({title: GLib.path_get_basename(path) || path, subtitle: path});
+                row.add_prefix(new Gtk.Image({icon_name: 'folder-symbolic'}));
+                const remove = new Gtk.Button({icon_name: 'user-trash-symbolic', valign: Gtk.Align.CENTER, tooltip_text: 'Quitar de la lista'});
+                remove.add_css_class('flat');
+                remove.connect('clicked', () =>
+                    settings.set_strv('carpetas-extra', settings.get_strv('carpetas-extra').filter(p => p !== path)));
+                row.add_suffix(remove);
+                group.add(row);
+                return row;
+            });
+            group.remove(add);
+            group.add(add);
+        };
+        const add = new Adw.ActionRow({title: 'Añadir otra carpeta', activatable: true});
+        add.add_prefix(new Gtk.Image({icon_name: 'list-add-symbolic'}));
+        add.connect('activated', () => {
+            const dialog = new Gtk.FileDialog({title: 'Carpeta para añadir a Archivos', modal: true});
+            dialog.select_folder(window, null, (d, res) => {
+                try {
+                    const path = d.select_folder_finish(res)?.get_path();
+                    const list = settings.get_strv('carpetas-extra');
+                    if (path && !list.includes(path))
+                        settings.set_strv('carpetas-extra', [...list, path]);
+                } catch {}
+            });
+        });
+        group.add(add);
+        sync();
+        const id = settings.connect('changed::carpetas-extra', sync);
+        group.connect('destroy', () => settings.disconnect(id));
+        return group;
     }
 
     // ---------- Downloads stack ----------

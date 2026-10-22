@@ -19,8 +19,9 @@ const IN_TIME = 160;
 const OUT_TIME = 120;
 
 export class GridView {
-    constructor({style, sf, on}) {
+    constructor({style, sf, on, labels = null}) {
         this._style = style;
+        this._labels = labels;
         this._sf = sf;
         this._on = on;
         this._tiles = [];
@@ -37,7 +38,7 @@ export class GridView {
         const footer = new St.BoxLayout({style: 'spacing: 10px;'});
         this._count = new St.Label({x_expand: true, y_align: Clutter.ActorAlign.CENTER,
             style: `font-size: 12px; color: ${s.textSecondary};`});
-        this._folderButton = new St.Button({label: 'Abrir carpeta', can_focus: true, reactive: true, track_hover: true,
+        this._folderButton = new St.Button({label: labels?.folder ?? 'Abrir carpeta', can_focus: true, reactive: true, track_hover: true,
             style: this._buttonStyle(false)});
         this._folderButton.connect('notify::hover', () => this._lightButton());
         this._folderButton.connect('key-focus-in', () => this._lightButton());
@@ -124,9 +125,10 @@ export class GridView {
     fill(files, total, max) {
         const focused = this._tiles.findIndex(t => t.has_key_focus());
         this._grid.destroy_all_children();
-        this._tiles = files.slice(0, max).map((entry, i) => this._tile(entry, i === 0));
+        const accent = this._labels?.accent ?? true;
+        this._tiles = files.slice(0, max).map((entry, i) => this._tile(entry, accent && i === 0));
         this._tiles.forEach((tile, i) => this._layout.attach(tile, i % COLUMNS, Math.floor(i / COLUMNS), 1, 1));
-        this._count.text = `Recientes: ${total}`;
+        this._count.text = this._labels?.count ? this._labels.count(total) : `Recientes: ${total}`;
         if (focused >= 0)
             this.focus(Math.min(focused, this._tiles.length - 1));
     }

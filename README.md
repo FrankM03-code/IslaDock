@@ -20,6 +20,7 @@ convierte en el dock completo.
 - **Vista previa de ventanas** al dejar el mouse sobre una app (se puede apagar).
 - **Progreso de tareas** de las apps que lo publican.
 - **Pila de descargas**: tus últimos archivos en cascada diagonal o en cuadrícula.
+- **Carpetas de Archivos**: clic en Archivos y tienes a mano Descargas, Documentos, Imágenes, Música, Vídeos y las que añadas.
 - **Botón Portal** para ver todas las aplicaciones.
 - **Pieles**: Clásica (blanca u oscura), Vidrio oscuro (vidrio ahumado con efecto lupa) y Aurora, con transparencia ajustable.
 - Tus propios íconos: elige tema o pon archivos en `~/.icons/isla-dock`.

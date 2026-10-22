@@ -136,6 +136,14 @@
       <default>16</default>
       <summary>Máximo de mosaicos en la cuadrícula</summary>
     </key>
+    <key name="carpetas-archivos" type="b">
+      <default>true</default>
+      <summary>Clic en Archivos: mostrar las carpetas personales</summary>
+    </key>
+    <key name="carpetas-extra" type="as">
+      <default>[]</default>
+      <summary>Carpetas añadidas a la lista de Archivos (rutas)</summary>
+    </key>
     <key name="stack-show-aviso" type="b">
       <default>true</default>
       <summary>Avisar en la isla cuando termina una descarga</summary>

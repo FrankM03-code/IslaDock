@@ -139,8 +139,10 @@ class IslaStackCell extends St.Button {
 
 export class CascadeView {
     // files: newest first · max: cells at most · on: {open(entry), menu(entry, cell), folder()}
-    constructor({style, sf, on}) {
+    // labels: {folder, accent} to word it for something other than downloads.
+    constructor({style, sf, on, labels = null}) {
         this._style = style;
+        this._labels = labels;
         this._sf = sf;
         this._on = on;
         this.actor = new St.Widget({reactive: true});
@@ -153,12 +155,14 @@ export class CascadeView {
         this.actor.destroy_all_children();
         const more = total > Math.min(files.length, max);
         const shown = files.slice(0, more ? Math.max(1, max - 1) : max);
-        const cells = shown.map((entry, i) => new Cell({entry, style: this._style, sf: this._sf, newest: i === 0,
-            detail: entry.partial ? 'descargando' : relativeTime(entry.time)}));
+        const accent = this._labels?.accent ?? true;
+        const cells = shown.map((entry, i) => new Cell({entry, style: this._style, sf: this._sf, newest: accent && i === 0,
+            detail: entry.detail ?? (entry.partial ? 'descargando' : relativeTime(entry.time))}));
         if (more || !shown.length) {
             const rest = total - shown.length;
+            const folder = this._labels?.folder ?? 'Abrir carpeta';
             cells.push(new Cell({entry: null, style: this._style, sf: this._sf, newest: false,
-                label: rest > 0 ? `Abrir carpeta · ${rest} más` : 'Abrir carpeta', iconName: 'folder-open-symbolic'}));
+                label: rest > 0 ? `${folder} · ${rest} más` : folder, iconName: 'folder-open-symbolic'}));
         }
         const sf = this._sf;
         const n = cells.length;

@@ -16,6 +16,7 @@ import {Search} from './isla/search.js';
 import {Timer} from './isla/timer.js';
 import {Progress} from './isla/progress.js';
 import {Stack} from './isla/stack/stack.js';
+import {Folders} from './isla/stack/folders.js';
 import {IslaState} from './isla/state.js';
 
 // Modules that a setting can switch off: [key or null, factory].
@@ -29,6 +30,7 @@ const MODULES = {
     previews: ['isla-vistas-previas', ctx => new Previews(ctx)],
     progress: ['isla-progreso', ctx => new Progress(ctx)],
     stack: [null, ctx => new Stack(ctx)],
+    folders: [null, ctx => new Folders(ctx)],
     prefsWindow: [null, ctx => new PrefsWindow(ctx)],
 };
 
@@ -54,7 +56,8 @@ export default class IslaDockExtension extends Extension {
         }
         this._state = new IslaState();
         this._isla = new Isla({settings: this._settings, resolver: this._resolver, state: this._state});
-        this._ctx = {state: this._state, settings: this._settings, capsule: this._isla.capsule, title: this.metadata.name};
+        this._ctx = {state: this._state, settings: this._settings, capsule: this._isla.capsule, title: this.metadata.name,
+            resolver: this._resolver};
         for (const [name, [key]] of Object.entries(MODULES)) {
             this._sync(name);
             if (key)

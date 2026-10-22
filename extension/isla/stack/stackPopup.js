@@ -1,8 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// The open stack: picks the view, places it over the Downloads button inside
-// the work area, holds the island open and takes the keyboard. Esc, a click
-// outside it, the overview or a skin change close it.
+// The open stack: picks the view, places it over its button (Descargas, or
+// Archivos for the folders) inside the work area, holds the island open and
+// takes the keyboard. Esc, a click outside it, the overview or a skin change
+// close it. A model may bring its own labels, menu and folder action.
 import Clutter from 'gi://Clutter';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
@@ -17,8 +18,9 @@ import * as FileActions from './fileActions.js';
 import {Mode} from '../state.js';
 
 export class StackPopup {
-    constructor({state, settings, model, capsule}) {
+    constructor({state, settings, model, capsule, holdId = 'stack'}) {
         this._state = state;
+        this._holdId = holdId;
         this._capsule = capsule;
         this._settings = settings;
         this._model = model;
@@ -67,12 +69,15 @@ export class StackPopup {
             menu: (entry, actor) => this._openMenu(entry, actor),
             folder: () => {
                 this.close();
-                FileActions.openFolder(this._model.folder);
+                if (this._model.openMain)
+                    this._model.openMain();
+                else
+                    FileActions.openFolder(this._model.folder);
             },
         };
         this._kindShown = this._kind();
         const View = this._kindShown === 'cascade' ? CascadeView : GridView;
-        const view = this._view = new View({style, sf, on});
+        const view = this._view = new View({style, sf, on, labels: this._model.labels});
         this._anchor = anchor;
         Main.layoutManager.addTopChrome(view.actor);
         view.fill(this._model.files, this._model.total, this._max(this._kindShown));
@@ -82,10 +87,12 @@ export class StackPopup {
         this._grab = Main.pushModal(view.actor, {actionMode: Shell.ActionMode.POPUP});
         view.focus(0);
         view.animateIn();
-        this._state.hold('stack');
+        this._state.hold(this._holdId);
         this._state.command('hide-tooltip');
-        this._model.markSeen();
-        this._model.emit('seen');
+        if (this._model.markSeen) {
+            this._model.markSeen();
+            this._model.emit('seen');
+        }
     }
 
     _place() {
@@ -150,6 +157,18 @@ export class StackPopup {
         Main.uiGroup.add_child(menu.actor);
         this._menuManager = new PopupMenu.PopupMenuManager(this._view.actor);
         this._menuManager.addMenu(menu);
+        if (this._model.fillMenu)
+            this._model.fillMenu(menu, entry, () => this.close());
+        else
+            this._fillFileMenu(menu, entry);
+        menu.connect('open-state-changed', (_m, open) => {
+            if (!open)
+                this._view?.focus(0);
+        });
+        menu.open(BoxPointer.PopupAnimation.FULL);
+    }
+
+    _fillFileMenu(menu, entry) {
         menu.addAction('Abrir', () => {
             this.close();
             FileActions.launch(entry.uri);
@@ -164,11 +183,6 @@ export class StackPopup {
             this.close();
             FileActions.confirmTrash(entry);
         });
-        menu.connect('open-state-changed', (_m, open) => {
-            if (!open)
-                this._view?.focus(0);
-        });
-        menu.open(BoxPointer.PopupAnimation.FULL);
     }
 
     _closeMenu() {
@@ -198,7 +212,7 @@ export class StackPopup {
             view.animateOut(done);
         else
             done();
-        this._state.release('stack');
+        this._state.release(this._holdId);
     }
 
     destroy() {
