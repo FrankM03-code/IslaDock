@@ -168,11 +168,15 @@ class PowerModeToggle extends Signals.EventEmitter {
         Gio.DBusProxy.new_for_bus(Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, null,
             'net.hadess.PowerProfiles', '/net/hadess/PowerProfiles', 'net.hadess.PowerProfiles', null, (_o, res) => {
                 try {
-                    this._proxy = Gio.DBusProxy.new_for_bus_finish(res);
+                    const proxy = Gio.DBusProxy.new_for_bus_finish(res);
+                    // Switched off before the answer came.
+                    if (this._destroyed)
+                        return;
+                    this._proxy = proxy;
                     this._proxyId = this._proxy.connect('g-properties-changed', () => this.emit('changed'));
                     this.emit('changed');
                 } catch (e) {
-                    console.log(`isla-dock: sin modos de energía: ${e.message}`);
+                    console.debug(`isla-dock: sin modos de energía: ${e.message}`);
                 }
             });
         this.settings = () => openSettings('power');
@@ -225,6 +229,7 @@ class PowerModeToggle extends Signals.EventEmitter {
     }
 
     destroy() {
+        this._destroyed = true;
         if (this._proxyId)
             this._proxy.disconnect(this._proxyId);
         this._proxy = null;
