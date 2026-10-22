@@ -77,28 +77,16 @@ export class VidrioOscuroSkin extends SkinBase {
         this._later = 0;
 
         // Shadow and lens of the island; the same for the music card.
+        // The card's lens (a second wallpaper copy) only exists while the card shows.
         for (const target of ['capsule', 'card']) {
             const shadow = new St.Widget({style_class: 'isla-vo-sombra'});
             shadow._around = 0;
             shadow._target = target;
             this.addLayer(shadow, 'around');
-            let lens = null;
-            try {
-                lens = new Lens({monitorIndex: Main.layoutManager.primaryIndex, margin: MARGIN, scale: sf});
-                lens._target = target;
-                this.addLayer(lens, 'around');
-                this._lenses.push(lens);
-            } catch (e) {
-                console.warn(`isla-dock: vidrio oscuro sin lente (${e.message})`);
-            }
-            if (target === 'card') {
+            if (target === 'card')
                 this._cardShadow = shadow;
-                this._cardLens = lens;
-            } else {
-                this._lens = lens;
-            }
         }
-        this._applyLook();
+        this._lens = this._makeLens('capsule');
         for (const key of ['glass-tint', 'glass-strength'])
             this.connect(settings, `changed::${key}`, () => this._applyLook());
         this.connect(settings, 'changed::glass-refraction', () => this._updateMode(true));
@@ -110,8 +98,14 @@ export class VidrioOscuroSkin extends SkinBase {
         // The card's glass follows the card.
         const card = isla.card;
         const followCard = () => {
-            for (const actor of [this._cardShadow, this._cardLens].filter(Boolean))
-                actor.visible = card.visible;
+            this._cardShadow.visible = card.visible;
+            if (card.visible && !this._cardLens) {
+                this._cardLens = this._makeLens('card');
+                this._cardLens?.setRadius(Math.min(RADIUS * sf, card.height / 2 || RADIUS * sf));
+            } else if (!card.visible && this._cardLens) {
+                this._dropLens(this._cardLens);
+                this._cardLens = null;
+            }
             this._fade(false);
             this._queueButtons();
         };
@@ -136,6 +130,26 @@ export class VidrioOscuroSkin extends SkinBase {
         }
         this._queueButtons();
         this._updateMode(false);
+    }
+
+    _makeLens(target) {
+        try {
+            const lens = new Lens({monitorIndex: Main.layoutManager.primaryIndex, margin: MARGIN, scale: this._sf});
+            lens._target = target;
+            this.addLayer(lens, 'around');
+            this._lenses.push(lens);
+            this._applyLook();
+            return lens;
+        } catch (e) {
+            console.warn(`isla-dock: vidrio oscuro sin lente (${e.message})`);
+            return null;
+        }
+    }
+
+    _dropLens(lens) {
+        this._lenses = this._lenses.filter(l => l !== lens);
+        this._layers = this._layers.filter(l => l !== lens);
+        lens.destroy();
     }
 
     _applyLook() {
