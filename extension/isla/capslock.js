@@ -11,7 +11,7 @@ export class CapsLock {
     constructor({settings, capsule, dir}) {
         this._settings = settings;
         this._badge = new IslandBadge(capsule, new Gio.FileIcon({file: dir.get_child('icons').get_child('isla-mayus-symbolic.svg')}),
-            'right', 'isla-insignia-mayus');
+            'isla-insignia-mayus');
         this._keymap = Clutter.get_default_backend().get_default_seat().get_keymap();
         this._on = this._keymap.get_caps_lock_state();
         this._keymapId = this._keymap.connect('state-changed', () => {

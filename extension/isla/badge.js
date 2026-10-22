@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// A small round badge on one of the island's top corners, half outside it,
-// that pops in and out (Mayúsculas on the right, Cafeína on the left).
+// A small round badge on the island's top right corner, half outside it,
+// that pops in and out (Mayúsculas).
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
 import {ms} from './timing.js';
 
 export class IslandBadge {
-    // side: 'right' or 'left'; styleClass adds its color.
-    constructor(capsule, gicon, side, styleClass) {
+    // styleClass adds its color.
+    constructor(capsule, gicon, styleClass) {
         this._badge = new St.Bin({style_class: `isla-insignia ${styleClass}`, reactive: false, visible: false,
             child: new St.Icon({gicon, style_class: 'isla-insignia-icono'})});
         // The capsule's layout calls _allocateIn with its own box.
@@ -17,8 +17,7 @@ export class IslandBadge {
             const [, w] = this._badge.get_preferred_width(-1);
             const [, h] = this._badge.get_preferred_height(w);
             const b = new Clutter.ActorBox();
-            const x = side === 'left' ? box.x1 - w * 0.3 : box.x2 - w * 0.7;
-            b.set_origin(Math.round(x), Math.round(box.y1 - h * 0.4));
+            b.set_origin(Math.round(box.x2 - w * 0.7), Math.round(box.y1 - h * 0.4));
             b.set_size(w, h);
             this._badge.allocate(b);
         };

@@ -97,10 +97,6 @@
       <default>false</default>
       <summary>Cafeína encendida (se recuerda al reiniciar GNOME)</summary>
     </key>
-    <key name="cafeina-insignia" type="b">
-      <default>true</default>
-      <summary>Tacita en la esquina de la isla mientras Cafeína esté encendida</summary>
-    </key>
     <key name="mayus-insignia" type="b">
       <default>true</default>
       <summary>Símbolo de mayúsculas en la esquina de la isla mientras estén activas</summary>

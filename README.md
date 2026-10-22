@@ -24,7 +24,7 @@ convierte en el dock completo.
 - **Botón Portal** para ver todas las aplicaciones; la isla se queda visible en el cajón de aplicaciones.
 - **Fondo desenfocado en el cajón**: tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades.
 - **Panel Energía**: red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, volumen, captura, bloquear, cerrar sesión, reiniciar y apagar.
-- **Cafeína**: la pantalla no se apaga ni el equipo se suspende; una tacita en la isla mientras está activa.
+- **Cafeína**: la pantalla no se apaga ni el equipo se suspende (en el panel Energía).
 - **Mayúsculas**: para teclados sin luz de Bloq Mayús, un pequeño ⇪ en la isla mientras están activas.
 - **Sin barra superior** (opcional, encendido por defecto): todo queda en la isla y el panel Energía.
 - **Pieles**: Clásica (blanca u oscura), Vidrio oscuro (vidrio ahumado con efecto lupa) y Aurora, con transparencia ajustable.

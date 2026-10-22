@@ -23,7 +23,6 @@ import * as Volume from 'resource:///org/gnome/shell/ui/status/volume.js';
 import {Slider} from 'resource:///org/gnome/shell/ui/slider.js';
 
 import {BlurLayer} from '../blur.js';
-import {IslandBadge} from '../badge.js';
 import {islandLook} from '../look.js';
 import {createToggles, openSettings} from './services.js';
 import {Mode} from '../state.js';
@@ -52,14 +51,6 @@ export class Power {
         this._capsule = capsule;
         this._actions = SystemActions.getDefault();
         this._toggles = createToggles(dir, settings);
-        // Cafeína on: a small cup on the island's left corner (the top bar and its indicator are gone).
-        this._settings = settings;
-        this._caffeine = this._toggles[this._toggles.length - 1];
-        this._cup = new IslandBadge(capsule, this._caffeine.icon, 'left', 'isla-insignia-cafeina');
-        const cup = animate => this._cup.show(this._caffeine.on && settings.get_boolean('cafeina-insignia'), animate);
-        this._cupOff = this._caffeine.connect(() => cup(true));
-        this._cupKey = settings.connect('changed::cafeina-insignia', () => cup(false));
-        cup(false);
         this._panel = null;
         this._ids = [
             [state, state.connect('command', (_s, name, ...args) => {
@@ -396,9 +387,6 @@ export class Power {
 
     destroy() {
         this.close(false);
-        this._cupOff();
-        this._settings.disconnect(this._cupKey);
-        this._cup.destroy();
         this._ids.forEach(([obj, id]) => obj.disconnect(id));
         this._ids = [];
         this._toggles.forEach(t => t.destroy?.());

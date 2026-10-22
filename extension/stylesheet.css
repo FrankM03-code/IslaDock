@@ -407,7 +407,7 @@
 .isla-flotante.clara .isla-flotante-cerrar:hover { background-color: #D93A3A; color: #ffffff; }
 .isla-flotante.clara .isla-flotante-icono { color: #2A2A2E; }
 
-/* Badges on the island's corners: Mayúsculas (right), Cafeína (left) */
+/* The badge on the island's corner: Mayúsculas */
 .isla-insignia {
   width: 20px; height: 20px; border-radius: 10px;
   border: 1.5px solid rgba(255, 255, 255, 0.9);
@@ -415,4 +415,3 @@
 }
 .isla-insignia-icono { icon-size: 12px; color: #ffffff; }
 .isla-insignia-mayus { background-color: #2F7DE1; }
-.isla-insignia-cafeina { background-color: #B5651D; }

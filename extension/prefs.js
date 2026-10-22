@@ -310,8 +310,6 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             'Mientras estén activas, un pequeño ⇪ en la esquina de la isla'));
         functions.add(switchRow(settings, 'cafeina-activa', 'Cafeína',
             'La pantalla no se apaga ni el equipo se suspende. También en el panel Energía'));
-        functions.add(switchRow(settings, 'cafeina-insignia', 'Tacita de Cafeína en la isla',
-            'Mientras Cafeína esté encendida, una tacita en la esquina izquierda de la isla'));
         functions.add(switchRow(settings, 'no-molestar', 'No molestar', 'También con un clic largo sobre la isla'));
         page.add(functions);
 
