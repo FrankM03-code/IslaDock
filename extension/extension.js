@@ -22,6 +22,7 @@ import {FloatingNotices} from './isla/floating.js';
 import {TopBar} from './isla/topbar.js';
 import {OverviewBlur} from './isla/overviewBlur.js';
 import {CapsLock} from './isla/capslock.js';
+import {DesktopClock} from './isla/clock.js';
 import {IslaState} from './isla/state.js';
 
 // Modules that a setting can switch off: [key or null, factory].
@@ -42,6 +43,7 @@ const MODULES = {
     prefsWindow: [null, ctx => new PrefsWindow(ctx)],
     overviewBlur: ['desenfoque-cajon', () => new OverviewBlur()],
     capsLock: [null, ctx => new CapsLock(ctx)],
+    clock: ['reloj-escritorio', ctx => new DesktopClock(ctx)],
 };
 
 export default class IslaDockExtension extends Extension {

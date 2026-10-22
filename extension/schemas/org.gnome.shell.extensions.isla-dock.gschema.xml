@@ -190,5 +190,31 @@
       <default>true</default>
       <summary>Vidrio oscuro: música en una tarjeta aparte</summary>
     </key>
+    <key name="reloj-escritorio" type="b">
+      <default>false</default>
+      <summary>Reloj de escritorio: hora y fecha sobre el fondo de pantalla</summary>
+    </key>
+    <key name="reloj-estilo" type="s">
+      <default>'fino'</default>
+      <summary>Estilo del reloj: fino, lateral, linea, esquina, semana o anillo</summary>
+    </key>
+    <key name="reloj-tamano" type="d">
+      <range min="0.5" max="2.0"/>
+      <default>1.0</default>
+      <summary>Reloj de escritorio: multiplicador de tamaño</summary>
+    </key>
+    <key name="reloj-monitor" type="i">
+      <default>-1</default>
+      <summary>Reloj de escritorio: monitor (-1 = el principal)</summary>
+    </key>
+    <key name="reloj-desplazamiento" type="d">
+      <range min="-20" max="20"/>
+      <default>0.0</default>
+      <summary>Reloj de escritorio: ajuste vertical (% de la altura)</summary>
+    </key>
+    <key name="reloj-posicion" type="s">
+      <default>'arriba'</default>
+      <summary>Reloj de escritorio: posición vertical (arriba, centro o abajo)</summary>
+    </key>
   </schema>
 </schemalist>

@@ -7,6 +7,7 @@ import Gdk from 'gi://Gdk';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
+import PangoCairo from 'gi://PangoCairo';
 
 import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
@@ -359,7 +360,73 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         dock.add(this._stackGroup(window, settings));
         dock.add(this._foldersGroup(window, settings));
 
+        window.add(this._desktopPage(settings));
         window.add(this._aboutPage());
+    }
+
+    // ---------- Escritorio: the desktop clock ----------
+    _desktopPage(settings) {
+        const page = new Adw.PreferencesPage({title: 'Escritorio', icon_name: 'preferences-desktop-wallpaper-symbolic'});
+        const group = new Adw.PreferencesGroup({
+            title: 'Reloj en el escritorio',
+            description: 'La hora y la fecha sobre tu fondo de pantalla, detrás de las ventanas. Los clics lo atraviesan.',
+        });
+        group.add(switchRow(settings, 'reloj-escritorio', 'Mostrar el reloj'));
+        group.add(comboRow(settings, 'reloj-estilo', 'Estilo', [
+            ['fino', 'Fino compacto'],
+            ['lateral', 'Lateral compacto'],
+            ['linea', 'Línea'],
+            ['esquina', 'Esquina'],
+            ['semana', 'Semana'],
+            ['anillo', 'Anillo del día'],
+        ]));
+        group.add(this._sliderRow(settings, 'reloj-tamano', 'Tamaño', 'Se ajusta solo a tu pantalla; esto lo agranda o achica',
+            0.5, 2.0, 0.05, [[0.5, 'Pequeño'], [1.0, null], [2.0, 'Grande']]));
+        group.add(comboRow(settings, 'reloj-posicion', 'Posición', [
+            ['arriba', 'Arriba'],
+            ['centro', 'En el centro de la pantalla'],
+            ['abajo', 'Abajo'],
+        ]));
+        group.add(this._sliderRow(settings, 'reloj-desplazamiento', 'Subir o bajar', 'Ajuste fino desde la posición elegida',
+            -20, 20, 0.5, [[-20, 'Arriba'], [0, null], [20, 'Abajo']]));
+
+        const monitors = Gdk.Display.get_default().get_monitors();
+        const options = [[-1, 'El principal']];
+        for (let i = 0; i < monitors.get_n_items(); i++) {
+            const m = monitors.get_item(i);
+            options.push([i, `Monitor ${i + 1}${m.model ? `  (${m.model})` : ''}`]);
+        }
+        if (options.length > 2) {
+            const row = new Adw.ComboRow({title: 'Monitor', model: Gtk.StringList.new(options.map(([, label]) => label))});
+            row.selected = Math.max(0, options.findIndex(([v]) => v === settings.get_int('reloj-monitor')));
+            row.connect('notify::selected', () => settings.set_int('reloj-monitor', options[row.selected]?.[0] ?? -1));
+            group.add(row);
+        }
+        page.add(group);
+
+        const hasInter = PangoCairo.FontMap.get_default().list_families().some(f => f.get_name() === 'Inter');
+        if (!hasInter) {
+            const font = new Adw.PreferencesGroup({
+                title: 'Letra',
+                description: 'El reloj está diseñado con la letra Inter; mientras no esté instalada usa Cantarell. ' +
+                    'Para instalarla: sudo apt install fonts-inter (y luego cerrar sesión).',
+            });
+            page.add(font);
+        }
+        return page;
+    }
+
+    _sliderRow(settings, key, title, subtitle, min, max, step, marks) {
+        const row = new Adw.ActionRow({title, subtitle});
+        const scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, min, max, step);
+        scale.set_size_request(220, -1);
+        scale.valign = Gtk.Align.CENTER;
+        scale.draw_value = false;
+        for (const [value, label] of marks)
+            scale.add_mark(value, Gtk.PositionType.BOTTOM, label);
+        settings.bind(key, scale.adjustment, 'value', Gio.SettingsBindFlags.DEFAULT);
+        row.add_suffix(scale);
+        return row;
     }
 
     // ---------- About ----------

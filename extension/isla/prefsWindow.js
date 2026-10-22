@@ -32,7 +32,9 @@ export class PrefsWindow {
         const f = w.get_frame_rect();
         const x = area.x + Math.round((area.width - f.width) / 2);
         const y = area.y + Math.max(0, Math.round((area.height - f.height) / 2));
-        if (w.get_maximized() !== Meta.MaximizeFlags.BOTH)
+        // GNOME 49 replaced get_maximized() with is_maximized().
+        const maximized = w.is_maximized ? w.is_maximized() : w.get_maximized() === Meta.MaximizeFlags.BOTH;
+        if (!maximized)
             w.move_frame(true, x, y);
     }
 

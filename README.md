@@ -26,6 +26,7 @@ convierte en el dock completo.
 - **Panel Energía**: red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, volumen, captura, bloquear, cerrar sesión, reiniciar y apagar.
 - **Cafeína**: la pantalla no se apaga ni el equipo se suspende (en el panel Energía).
 - **Mayúsculas**: para teclados sin luz de Bloq Mayús, un pequeño ⇪ en la isla mientras están activas.
+- **Reloj de escritorio**: hora y fecha grandes sobre el fondo de pantalla, arriba, al centro o abajo (Preferencias → Escritorio).
 - **Sin barra superior** (opcional, encendido por defecto): todo queda en la isla y el panel Energía.
 - **Pieles**: Clásica (blanca u oscura), Vidrio oscuro (vidrio ahumado con efecto lupa) y Aurora, con transparencia ajustable.
 - Tus propios íconos: elige tema o pon archivos en `~/.icons/isla-dock`.
