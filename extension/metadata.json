@@ -1,0 +1,11 @@
+{
+  "uuid": "isla-dock@frankm",
+  "name": "islaDock",
+  "description": "Un dock en forma de isla: una cápsula pequeña que avisa qué está abierto, qué suena y cuánto falta, y que al acercarte se convierte en el dock completo. Con pila de descargas, búsqueda rápida, temporizador y varias pieles.\n\nCreado y diseñado por Frank Molina.",
+  "shell-version": [
+    "48"
+  ],
+  "settings-schema": "org.gnome.shell.extensions.isla-dock",
+  "version-name": "1.0",
+  "url": "https://github.com/FrankM03-code/isladock"
+}

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 Frank Molina
+     SPDX-License-Identifier: GPL-2.0-or-later -->
+<schemalist gettext-domain="isla-dock">
+  <schema id="org.gnome.shell.extensions.isla-dock" path="/org/gnome/shell/extensions/isla-dock/">
+    <key name="tamano-base" type="i">
+      <range min="24" max="64"/>
+      <default>40</default>
+      <summary>Tamaño de los íconos con la isla abierta (px)</summary>
+    </key>
+    <key name="magnificacion" type="b">
+      <default>true</default>
+      <summary>Agrandar los íconos al pasar el mouse</summary>
+    </key>
+    <key name="desaturar-en-reposo" type="b">
+      <default>false</default>
+      <summary>Íconos en gris hasta pasar el mouse</summary>
+    </key>
+    <key name="tema-iconos" type="s">
+      <default>''</default>
+      <summary>Tema de íconos del dock (vacío = el del sistema)</summary>
+    </key>
+    <key name="desenfoque" type="b">
+      <default>true</default>
+      <summary>Desenfocar lo que hay detrás de la isla</summary>
+    </key>
+    <key name="mostrar-descargas" type="b">
+      <default>true</default>
+      <summary>Mostrar Descargas</summary>
+    </key>
+    <key name="mostrar-aplicaciones" type="b">
+      <default>true</default>
+      <summary>Botón para ver todas las aplicaciones</summary>
+    </key>
+    <key name="portal-giro" type="b">
+      <default>true</default>
+      <summary>El aro del botón Portal gira al pasar el mouse</summary>
+    </key>
+    <key name="ocultar" type="s">
+      <choices><choice value="nunca"/><choice value="inteligente"/><choice value="siempre"/></choices>
+      <default>'nunca'</default>
+      <summary>Cuándo se esconde la isla</summary>
+    </key>
+    <key name="mostrar-papelera" type="b">
+      <default>true</default>
+      <summary>Mostrar Papelera</summary>
+    </key>
+    <key name="isla-piel" type="s">
+      <choices>
+        <choice value="clasica"/><choice value="vidrio-oscuro"/><choice value="aurora"/>
+        <!-- Replaced by vidrio-oscuro; kept so an old value still reads (it is moved on enable). -->
+        <choice value="vidrio-liquido"/>
+      </choices>
+      <default>'clasica'</default>
+      <summary>Piel de la isla</summary>
+    </key>
+    <key name="velocidad" type="d">
+      <range min="0.5" max="2.5"/>
+      <default>1.0</default>
+      <summary>Duración de las animaciones (1 = normal, más = más lentas)</summary>
+    </key>
+    <key name="efecto-iconos" type="s">
+      <choices><choice value="uno-a-uno"/><choice value="todos"/><choice value="centro"/></choices>
+      <default>'uno-a-uno'</default>
+      <summary>Cómo aparecen los íconos al abrir la isla</summary>
+    </key>
+    <key name="isla-oscura" type="b">
+      <default>false</default>
+      <summary>Isla oscura</summary>
+    </key>
+    <key name="isla-respiracion" type="b">
+      <default>true</default>
+      <summary>Respiración en reposo</summary>
+    </key>
+    <key name="isla-musica" type="b">
+      <default>true</default>
+      <summary>Mostrar la música que suena</summary>
+    </key>
+    <key name="isla-avisos" type="b">
+      <default>true</default>
+      <summary>Mostrar las notificaciones en la isla</summary>
+    </key>
+    <key name="isla-rueda-volumen" type="b">
+      <default>true</default>
+      <summary>La rueda del mouse cambia el volumen</summary>
+    </key>
+    <key name="isla-vistas-previas" type="b">
+      <default>true</default>
+      <summary>Mostrar la miniatura de las ventanas al dejar el mouse sobre una app abierta</summary>
+    </key>
+    <key name="isla-progreso" type="b">
+      <default>true</default>
+      <summary>Mostrar el progreso de tareas</summary>
+    </key>
+    <key name="atajo-busqueda" type="as">
+      <default><![CDATA[['<Control>space']]]></default>
+      <summary>Atajo de la búsqueda rápida</summary>
+    </key>
+    <key name="no-molestar" type="b">
+      <default>false</default>
+      <summary>No molestar</summary>
+    </key>
+    <key name="banners-previos" type="b">
+      <default>true</default>
+      <summary>Uso interno: valor de show-banners a restaurar</summary>
+    </key>
+    <key name="temporizador-fin" type="x">
+      <default>0</default>
+      <summary>Uso interno: fin del temporizador (µs, tiempo real)</summary>
+    </key>
+    <key name="temporizador-modo" type="s">
+      <default>''</default>
+      <summary>Uso interno: estado del temporizador</summary>
+    </key>
+    <key name="stack-view" type="s">
+      <choices><choice value="auto"/><choice value="cascade"/><choice value="grid"/></choices>
+      <default>'auto'</default>
+      <summary>Vista de la pila de descargas (auto, cascade o grid)</summary>
+    </key>
+    <key name="stack-folder" type="s">
+      <default>''</default>
+      <summary>Carpeta de la pila; vacío = Descargas del sistema</summary>
+    </key>
+    <key name="stack-cascade-max" type="i">
+      <range min="3" max="12"/>
+      <default>8</default>
+      <summary>Máximo de celdas en cascada (y umbral del modo automático)</summary>
+    </key>
+    <key name="stack-grid-max" type="i">
+      <range min="4" max="32"/>
+      <default>16</default>
+      <summary>Máximo de mosaicos en la cuadrícula</summary>
+    </key>
+    <key name="stack-show-aviso" type="b">
+      <default>true</default>
+      <summary>Avisar en la isla cuando termina una descarga</summary>
+    </key>
+    <key name="glass-refraction" type="b">
+      <default>true</default>
+      <summary>Vidrio oscuro: lente con refracción cuando no hay ventanas detrás</summary>
+    </key>
+    <key name="glass-tint" type="d">
+      <range min="0.2" max="0.7"/>
+      <default>0.46</default>
+      <summary>Vidrio oscuro: oscuridad del vidrio</summary>
+    </key>
+    <key name="glass-strength" type="d">
+      <range min="0" max="40"/>
+      <default>28.0</default>
+      <summary>Vidrio oscuro: fuerza de la refracción del borde (px)</summary>
+    </key>
+    <key name="glass-music-card" type="b">
+      <default>true</default>
+      <summary>Vidrio oscuro: música en una tarjeta aparte</summary>
+    </key>
+  </schema>
+</schemalist>
