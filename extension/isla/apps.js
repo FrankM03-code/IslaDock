@@ -413,7 +413,7 @@ export class AppsRow extends Signals.EventEmitter {
         if (item.kind === 'downloads') {
             menu.addAction('Abrir carpeta', () => this._launch(GLib.filename_to_uri(this._downloadsDir(), null)));
             menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            for (const [value, label] of [['auto', 'Vista: automática'], ['cascade', 'Vista: cascada'], ['grid', 'Vista: cuadrícula']]) {
+            for (const [value, label] of [['cascade', 'Vista: cascada'], ['grid', 'Vista: cuadrícula'], ['list', 'Vista: lista']]) {
                 const option = menu.addAction(label, () => this._settings.set_string('stack-view', value));
                 option.setOrnament(this._settings.get_string('stack-view') === value
                     ? PopupMenu.Ornament.DOT : PopupMenu.Ornament.NO_DOT);

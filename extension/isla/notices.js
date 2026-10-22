@@ -1,17 +1,11 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Discreet notices (A6): each new GNOME notification opens the island for a
-// moment with the app icon, the title and one line of the body. GNOME's own
-// banners stay. The app's dot keeps a ring until the app is opened or the
-// notification is read (removed) in GNOME's list.
-import Clutter from 'gi://Clutter';
-import Pango from 'gi://Pango';
+// Unread notifications: the app's dot keeps a ring until the app is opened or
+// the notification is read (removed) in GNOME's list. The notifications
+// themselves show at the top (floating.js or GNOME's banners), not in the island.
 import Shell from 'gi://Shell';
-import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-
-import {iconColor} from './dots.js';
 
 function appIdOf(source) {
     const app = source?.app ?? source?._app ?? null;
@@ -22,9 +16,8 @@ function appIdOf(source) {
 }
 
 export class Notices {
-    constructor({state, settings}) {
+    constructor({state}) {
         this._state = state;
-        this._settings = settings;
         this._sources = new Map();       // source -> [signal ids]
         this._unread = new Map();        // app id -> Set(notification)
         this._watched = new Map();       // notification -> destroy signal id
@@ -68,36 +61,6 @@ export class Notices {
             this._watched.set(notification, id);
             this._state.command('unread', appId, true);
         }
-        if (this._state.dnd || !this._settings.get_boolean('isla-avisos'))
-            return;
-        const gicon = notification.gicon ?? source.icon ?? null;
-        this._state.command('notice', {
-            actor: this._buildActor(source, notification),
-            // The app's color (some skins paint a stripe with it).
-            color: iconColor(appId ?? source.title ?? 'aviso', source.app?.get_icon?.() ?? gicon),
-            activate: () => {
-                Main.overview.hide();
-                notification.activate();
-            },
-        });
-    }
-
-    _buildActor(source, notification) {
-        const box = new St.BoxLayout({style_class: 'isla-aviso'});
-        const gicon = notification.gicon ?? source.icon ?? null;
-        box.add_child(new St.Icon({style_class: 'isla-aviso-icono', gicon, fallback_icon_name: 'dialog-information-symbolic',
-            y_align: Clutter.ActorAlign.CENTER}));
-        const text = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, y_align: Clutter.ActorAlign.CENTER, x_expand: true});
-        const oneLine = s => (s ?? '').replace(/\s+/g, ' ').trim();
-        const title = new St.Label({style_class: 'isla-aviso-titulo', text: oneLine(notification.title || source.title)});
-        const body = new St.Label({style_class: 'isla-aviso-cuerpo', text: oneLine(notification.body)});
-        for (const label of [title, body])
-            label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-        body.visible = !!body.text;
-        text.add_child(title);
-        text.add_child(body);
-        box.add_child(text);
-        return box;
     }
 
     _clear(appId) {

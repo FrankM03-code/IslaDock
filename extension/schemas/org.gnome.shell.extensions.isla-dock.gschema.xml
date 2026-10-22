@@ -81,10 +81,6 @@
       <default>true</default>
       <summary>Mostrar la música que suena</summary>
     </key>
-    <key name="isla-avisos" type="b">
-      <default>false</default>
-      <summary>Mostrar las notificaciones en la isla</summary>
-    </key>
     <key name="isla-rueda-volumen" type="b">
       <default>true</default>
       <summary>La rueda del mouse cambia el volumen</summary>
@@ -130,9 +126,9 @@
       <summary>Uso interno: estado del temporizador</summary>
     </key>
     <key name="stack-view" type="s">
-      <choices><choice value="auto"/><choice value="cascade"/><choice value="grid"/></choices>
-      <default>'auto'</default>
-      <summary>Vista de la pila de descargas (auto, cascade o grid)</summary>
+      <choices><choice value="cascade"/><choice value="grid"/><choice value="list"/></choices>
+      <default>'cascade'</default>
+      <summary>Vista de la pila de descargas (cascade, grid o list)</summary>
     </key>
     <key name="stack-folder" type="s">
       <default>''</default>
@@ -141,12 +137,17 @@
     <key name="stack-cascade-max" type="i">
       <range min="3" max="12"/>
       <default>8</default>
-      <summary>Máximo de celdas en cascada (y umbral del modo automático)</summary>
+      <summary>Máximo de celdas en cascada</summary>
     </key>
     <key name="stack-grid-max" type="i">
       <range min="4" max="32"/>
       <default>16</default>
       <summary>Máximo de mosaicos en la cuadrícula</summary>
+    </key>
+    <key name="stack-list-max" type="i">
+      <range min="3" max="12"/>
+      <default>6</default>
+      <summary>Máximo de filas en la lista</summary>
     </key>
     <key name="ocultar-barra-superior" type="b">
       <default>true</default>
@@ -170,7 +171,7 @@
     </key>
     <key name="stack-show-aviso" type="b">
       <default>true</default>
-      <summary>Avisar en la isla cuando termina una descarga</summary>
+      <summary>Notificación arriba cuando termina una descarga</summary>
     </key>
     <key name="glass-refraction" type="b">
       <default>true</default>

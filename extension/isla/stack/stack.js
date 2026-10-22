@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Pila de descargas: the Downloads button of the open island shows the latest
-// downloads as a diagonal cascade or a grid. This module owns the folder model
-// and the popup, keeps the button's dot and ring up to date and, when a
-// download finishes, opens the island as a notice.
+// downloads as a diagonal cascade, a grid or a list. This module owns the
+// folder model and the popup, keeps the button's dot and ring up to date and,
+// when a download finishes, sends a notification (it shows at the top, like
+// every other one).
 //
 // Commands it listens to: 'stack-toggle' (anchor actor).
-// Commands it sends: 'downloads-state' ({busy, fresh, progress}), 'notice'.
-import Clutter from 'gi://Clutter';
-import Pango from 'gi://Pango';
-import St from 'gi://St';
+// Commands it sends: 'downloads-state' ({busy, fresh, progress}).
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import {DownloadsModel} from './downloadsModel.js';
 import {StackPopup} from './stackPopup.js';
@@ -51,32 +51,23 @@ export class Stack {
     }
 
     _finished(entry) {
-        if (this._state.dnd || !this._settings.get_boolean('stack-show-aviso'))
+        if (!this._settings.get_boolean('stack-show-aviso'))
             return;
-        this._state.command('notice', {
-            actor: this._noticeActor(entry),
-            color: [47, 125, 225],
-            activate: () => this._state.command('stack-open'),
-        });
-    }
-
-    _noticeActor(entry) {
-        const box = new St.BoxLayout({style_class: 'isla-aviso'});
-        box.add_child(new St.Icon({style_class: 'isla-aviso-icono', gicon: entry.gicon, fallback_icon_name: 'folder-download-symbolic',
-            y_align: Clutter.ActorAlign.CENTER}));
-        const text = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, y_align: Clutter.ActorAlign.CENTER, x_expand: true});
-        const title = new St.Label({style_class: 'isla-aviso-titulo', text: 'Descarga lista'});
-        const body = new St.Label({style_class: 'isla-aviso-cuerpo', text: entry.display});
-        body.clutter_text.ellipsize = Pango.EllipsizeMode.MIDDLE;
-        text.add_child(title);
-        text.add_child(body);
-        box.add_child(text);
-        return box;
+        if (!this._source) {
+            this._source = new MessageTray.Source({title: 'Descargas', iconName: 'folder-download-symbolic'});
+            this._source.connect('destroy', () => (this._source = null));
+            Main.messageTray.add(this._source);
+        }
+        const notification = new MessageTray.Notification({source: this._source, title: 'Descarga lista',
+            body: entry.display, gicon: entry.gicon, isTransient: true});
+        notification.connect('activated', () => this._state.command('stack-open'));
+        this._source.addNotification(notification);
     }
 
     destroy() {
         this._ids.forEach(([obj, id]) => obj.disconnect(id));
         this._ids = [];
+        this._source?.destroy();
         this._popup.destroy();
         this._model.destroy();
         this._state.command('downloads-state', {busy: false, fresh: false, progress: null});

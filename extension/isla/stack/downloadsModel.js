@@ -40,7 +40,7 @@ export class DownloadsModel extends Signals.EventEmitter {
         this.lastOpened = GLib.get_real_time() / 1e6;
         this._partials = new Map();   // final name -> entry
         this._timer = 0;
-        this._ids = ['stack-folder', 'stack-grid-max', 'stack-cascade-max'].map(key =>
+        this._ids = ['stack-folder', 'stack-grid-max', 'stack-cascade-max', 'stack-list-max'].map(key =>
             settings.connect(`changed::${key}`, () => (key === 'stack-folder' ? this._watch() : this._queue())));
         this._watch();
     }
@@ -86,7 +86,7 @@ export class DownloadsModel extends Signals.EventEmitter {
     }
 
     get _keep() {
-        return Math.max(this._settings.get_int('stack-grid-max'), this._settings.get_int('stack-cascade-max'));
+        return Math.max(...['stack-grid-max', 'stack-cascade-max', 'stack-list-max'].map(key => this._settings.get_int(key)));
     }
 
     refresh() {

@@ -14,8 +14,11 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {CascadeView} from './cascadeView.js';
 import {GridView} from './gridView.js';
+import {ListView} from './listView.js';
 import * as FileActions from './fileActions.js';
 import {Mode} from '../state.js';
+
+const VIEWS = {cascade: CascadeView, grid: GridView, list: ListView};
 
 export class StackPopup {
     constructor({state, settings, model, capsule, holdId = 'stack'}) {
@@ -46,13 +49,11 @@ export class StackPopup {
 
     _kind() {
         const view = this._settings.get_string('stack-view');
-        if (view === 'cascade' || view === 'grid')
-            return view;
-        return this._model.total <= this._settings.get_int('stack-cascade-max') ? 'cascade' : 'grid';
+        return VIEWS[view] ? view : 'cascade';
     }
 
     _max(kind) {
-        return this._settings.get_int(kind === 'cascade' ? 'stack-cascade-max' : 'stack-grid-max');
+        return this._settings.get_int(`stack-${kind}-max`);
     }
 
     open(anchor) {
@@ -76,7 +77,7 @@ export class StackPopup {
             },
         };
         this._kindShown = this._kind();
-        const View = this._kindShown === 'cascade' ? CascadeView : GridView;
+        const View = VIEWS[this._kindShown];
         const view = this._view = new View({style, sf, on, labels: this._model.labels});
         this._anchor = anchor;
         Main.layoutManager.addTopChrome(view.actor);

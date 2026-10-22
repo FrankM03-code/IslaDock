@@ -15,11 +15,12 @@ import {USER_DOCK_ICONS, listIconThemes} from './iconThemes.js';
 
 const PAYPAL_DONATION_URL = 'https://paypal.me/frankmolina29';
 
-// Skins: key, name, and how to draw the little preview (fixed colors).
+// Skin cards, two per row: [id, skin key, dark (Clásica only, null = untouched), name, about].
 const SKINS = [
-    ['clasica', 'Clásica', 'Vidrio claro y desenfocado'],
-    ['vidrio-oscuro', 'Vidrio oscuro', 'Vidrio ahumado que dobla el fondo como una lupa'],
-    ['aurora', 'Aurora', 'Cápsula oscura con un halo que fluye'],
+    ['clasica', 'clasica', false, 'Clásica', 'Vidrio claro y desenfocado'],
+    ['clasica-oscura', 'clasica', true, 'Clásica oscura', 'El mismo vidrio, en tono oscuro'],
+    ['vidrio-oscuro', 'vidrio-oscuro', null, 'Vidrio oscuro', 'Vidrio ahumado que dobla el fondo como una lupa'],
+    ['aurora', 'aurora', null, 'Aurora', 'Cápsula oscura con un halo que fluye'],
 ];
 
 function roundRect(cr, x, y, w, h, r) {
@@ -78,13 +79,17 @@ function drawPreview(key, cr, w, h) {
         dots();
         return;
     }
+    const dark = key === 'clasica-oscura';
     roundRect(cr, x, y + 4, cw, ch, ch / 2);
-    cr.setSourceRGBA(0.04, 0.03, 0.16, 0.25);
+    cr.setSourceRGBA(0.04, 0.03, 0.16, dark ? 0.35 : 0.25);
     cr.fill();
     roundRect(cr, x, y, cw, ch, ch / 2);
-    cr.setSourceRGBA(1, 1, 1, 0.62);
+    if (dark)
+        cr.setSourceRGBA(0.11, 0.12, 0.17, 0.86);
+    else
+        cr.setSourceRGBA(1, 1, 1, 0.62);
     cr.fillPreserve();
-    cr.setSourceRGBA(1, 1, 1, 0.3);
+    cr.setSourceRGBA(1, 1, 1, dark ? 0.14 : 0.3);
     cr.setLineWidth(1);
     cr.stroke();
     dots();
@@ -119,23 +124,27 @@ export default class IslaDockPreferences extends ExtensionPreferences {
     _skinsGroup(settings) {
         const group = new Adw.PreferencesGroup({title: 'Piel', description: 'Cómo se ve la isla. Se cambia al instante.'});
         const flow = new Gtk.FlowBox({selection_mode: Gtk.SelectionMode.NONE, homogeneous: true, column_spacing: 10,
-            row_spacing: 10, min_children_per_line: 2, max_children_per_line: 3, margin_top: 4, margin_bottom: 4});
+            row_spacing: 10, min_children_per_line: 2, max_children_per_line: 2, margin_top: 4, margin_bottom: 4});
         let radio = null;
         const buttons = [];
-        for (const [key, name, about] of SKINS) {
+        for (const [id, key, dark, name, about] of SKINS) {
             const area = new Gtk.DrawingArea({content_width: 150, content_height: 64});
             area.set_draw_func((_a, cr, w, h) => {
-                drawPreview(key, cr, w, h);
+                drawPreview(id, cr, w, h);
                 cr.$dispose();
             });
             const frame = new Gtk.Frame({child: area});
             const check = new Gtk.CheckButton({label: name, group: radio});
             radio ??= check;
             check.connect('toggled', () => {
-                if (check.active && settings.get_string('isla-piel') !== key)
+                if (!check.active)
+                    return;
+                if (dark !== null && settings.get_boolean('isla-oscura') !== dark)
+                    settings.set_boolean('isla-oscura', dark);
+                if (settings.get_string('isla-piel') !== key)
                     settings.set_string('isla-piel', key);
             });
-            buttons.push([key, check]);
+            buttons.push([key, dark, check]);
             const card = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 6});
             card.append(frame);
             card.append(check);
@@ -146,15 +155,15 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             frame.add_controller(click);
             flow.append(card);
         }
-        const sync = () => buttons.forEach(([key, check]) => {
-            if (key === settings.get_string('isla-piel'))
+        const sync = () => buttons.forEach(([key, dark, check]) => {
+            if (key === settings.get_string('isla-piel') && (dark === null || dark === settings.get_boolean('isla-oscura')))
                 check.active = true;
         });
         sync();
         group.add(flow);
 
-        const id = settings.connect('changed::isla-piel', sync);
-        group.connect('destroy', () => settings.disconnect(id));
+        const ids = ['isla-piel', 'isla-oscura'].map(k => settings.connect(`changed::${k}`, sync));
+        group.connect('destroy', () => ids.forEach(id => settings.disconnect(id)));
         return group;
     }
 
@@ -277,7 +286,6 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         page.add(this._glassGroup(settings));
 
         const look = new Adw.PreferencesGroup({title: 'Aspecto'});
-        look.add(switchRow(settings, 'isla-oscura', 'Isla oscura', 'Para la piel Clásica'));
         look.add(this._speedRow(settings));
         look.add(comboRow(settings, 'efecto-iconos', 'Cómo aparecen los íconos', [
             ['uno-a-uno', 'Uno por uno'],
@@ -303,7 +311,6 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         functions.add(switchRow(settings, 'isla-musica', 'Música', 'Lo que suena, con sus botones (Shift + rueda cambia de canción)'));
         functions.add(switchRow(settings, 'avisos-flotantes', 'Notificaciones flotantes',
             'Cada notificación aparece sola arriba en el centro, sin isla ni barra, y se va sola'));
-        functions.add(switchRow(settings, 'isla-avisos', 'Avisos en la isla', 'Las notificaciones asoman también en la isla unos segundos'));
         functions.add(switchRow(settings, 'isla-rueda-volumen', 'La rueda cambia el volumen'));
         functions.add(switchRow(settings, 'isla-vistas-previas', 'Vista en miniatura de las ventanas',
             'Al dejar el mouse sobre una app abierta (Firefox, Archivos…) aparece lo que tiene en pantalla'));
@@ -558,17 +565,15 @@ export default class IslaDockPreferences extends ExtensionPreferences {
     _stackGroup(window, settings) {
         const group = new Adw.PreferencesGroup({
             title: 'Pila de descargas',
-            description: 'Clic en Descargas: tus últimos archivos. Clic central: la carpeta. Clic derecho: cambiar la vista. ' +
-                'Automática: cascada con pocos archivos, cuadrícula con muchos.',
+            description: 'Clic en Descargas: tus últimos archivos. Clic central: la carpeta. Clic derecho: cambiar la vista.',
         });
         group.add(comboRow(settings, 'stack-view', 'Vista', [
-            ['auto', 'Automática'],
             ['cascade', 'Cascada diagonal'],
             ['grid', 'Cuadrícula'],
+            ['list', 'Lista'],
         ]));
         const cascade = Adw.SpinRow.new_with_range(3, 12, 1);
         cascade.title = 'Máximo en cascada';
-        cascade.subtitle = 'Con más archivos que esto, la vista automática pasa a cuadrícula';
         settings.bind('stack-cascade-max', cascade, 'value', Gio.SettingsBindFlags.DEFAULT);
         group.add(cascade);
         const grid = Adw.SpinRow.new_with_range(4, 32, 4);
@@ -576,7 +581,12 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         grid.subtitle = '4 por fila';
         settings.bind('stack-grid-max', grid, 'value', Gio.SettingsBindFlags.DEFAULT);
         group.add(grid);
-        group.add(switchRow(settings, 'stack-show-aviso', 'Avisar cuando termina una descarga', 'La isla muestra «Descarga lista» unos segundos'));
+        const list = Adw.SpinRow.new_with_range(3, 12, 1);
+        list.title = 'Máximo en lista';
+        settings.bind('stack-list-max', list, 'value', Gio.SettingsBindFlags.DEFAULT);
+        group.add(list);
+        group.add(switchRow(settings, 'stack-show-aviso', 'Avisar cuando termina una descarga',
+            '«Descarga lista» aparece arriba, como las demás notificaciones'));
 
         // Folder: the system's Downloads unless another one is chosen.
         const folder = new Adw.ActionRow({title: 'Carpeta'});

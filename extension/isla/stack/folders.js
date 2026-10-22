@@ -41,7 +41,7 @@ class FoldersModel extends Signals.EventEmitter {
 
     // What the popup shows instead of the downloads' wording.
     get labels() {
-        return {folder: 'Carpeta personal', count: () => '', accent: false};
+        return {title: 'Carpetas', folder: 'Carpeta personal', count: () => '', accent: false};
     }
 
     _entry(path, key, iconName, extra) {

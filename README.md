@@ -11,7 +11,7 @@ convierte en el dock completo.
 
 - **Isla que se expande**: puntos de color por cada app abierta, respiración suave en reposo.
 - **Música** (MPRIS): barras que se mueven mientras suena; carátula y controles al abrir la isla.
-- **Notificaciones flotantes**: cada notificación aparece sola arriba en el centro, con el aspecto de la isla, y se va sola (o, si prefieres, asoman en la isla).
+- **Notificaciones flotantes**: cada notificación aparece sola arriba en el centro, con el aspecto de la isla, y se va sola. También el aviso «Descarga lista».
 - **No molestar** con un clic largo sobre la isla.
 - **Gestos**: rueda = volumen, Shift + rueda = cambiar canción, clic central = pausa,
   arrastrar hacia arriba = aplicaciones.
@@ -19,7 +19,7 @@ convierte en el dock completo.
 - **Temporizador y Pomodoro** (clic derecho sobre la isla).
 - **Vista previa de ventanas** al dejar el mouse sobre una app (se puede apagar).
 - **Progreso de tareas** de las apps que lo publican.
-- **Pila de descargas**: tus últimos archivos en cascada diagonal o en cuadrícula.
+- **Pila de descargas**: tus últimos archivos en cascada diagonal, en cuadrícula o en una lista minimalista.
 - **Carpetas de Archivos**: clic en Archivos y tienes a mano Descargas, Documentos, Imágenes, Música, Vídeos y las que añadas.
 - **Botón Portal** para ver todas las aplicaciones; la isla se queda visible en el cajón de aplicaciones.
 - **Fondo desenfocado en el cajón**: tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades.
@@ -28,7 +28,7 @@ convierte en el dock completo.
 - **Mayúsculas**: para teclados sin luz de Bloq Mayús, un pequeño ⇪ en la isla mientras están activas.
 - **Reloj de escritorio**: hora y fecha grandes sobre el fondo de pantalla, arriba, al centro o abajo (Preferencias → Escritorio).
 - **Sin barra superior** (opcional, encendido por defecto): todo queda en la isla y el panel Energía.
-- **Pieles**: Clásica (blanca u oscura), Vidrio oscuro (vidrio ahumado con efecto lupa) y Aurora, con transparencia ajustable.
+- **Pieles**: Clásica, Clásica oscura, Vidrio oscuro (vidrio ahumado con efecto lupa) y Aurora, con transparencia ajustable.
 - Tus propios íconos: elige tema o pon archivos en `~/.icons/isla-dock`.
 
 ## Requisitos
