@@ -46,6 +46,11 @@ Desde [extensions.gnome.org](https://extensions.gnome.org) (cuando esté publica
 Después reinicia GNOME y actívala con `gnome-extensions enable isla-dock@frankm`.
 Los ajustes están en *Extensiones → IslaDock → Configuración*.
 
+## Apoya a IslaDock
+
+Si IslaDock te es útil, puedes apoyar su desarrollo con una donación voluntaria:
+[Donar con PayPal](https://paypal.me/frankmolina29). También está el botón en Preferencias → Acerca de.
+
 ## Licencia
 
 GNU General Public License 2.0 o posterior. Consulta el archivo `LICENSE`.

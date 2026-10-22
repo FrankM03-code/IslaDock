@@ -6,6 +6,9 @@
     "48"
   ],
   "settings-schema": "org.gnome.shell.extensions.isla-dock",
-  "version-name": "1.2",
-  "url": "https://github.com/FrankM03-code/IslaDock"
+  "version-name": "1.3",
+  "url": "https://github.com/FrankM03-code/IslaDock",
+  "donations": {
+    "paypal": "frankmolina29"
+  }
 }

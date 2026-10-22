@@ -13,6 +13,8 @@ import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/ex
 
 import {USER_DOCK_ICONS, listIconThemes} from './iconThemes.js';
 
+const PAYPAL_DONATION_URL = 'https://paypal.me/frankmolina29';
+
 // Skins: key, name, and how to draw the little preview (fixed colors).
 const SKINS = [
     ['clasica', 'Clásica', 'Vidrio claro y desenfocado'],
@@ -450,7 +452,43 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         info.add(row('Versión', this.metadata['version-name'] ?? String(this.metadata.version ?? '')));
         info.add(row('Licencia', 'GNU GPL 2.0 o posterior'));
         page.add(info);
+        page.add(this._donateGroup());
         return page;
+    }
+
+    // Same PayPal profile as Alemi Finanzas.
+    _donateGroup() {
+        const css = new Gtk.CssProvider();
+        css.load_from_string(
+            '.btn-paypal { background: linear-gradient(180deg, #0B3F91 0%, #003087 100%); color: #FFFFFF; ' +
+            'font-weight: bold; border-radius: 12px; padding: 6px 16px; box-shadow: 0 3px 0 #001C54; }' +
+            '.btn-paypal:hover { background: linear-gradient(180deg, #1150B0 0%, #003A9E 100%); }' +
+            '.btn-paypal:active { box-shadow: none; }' +
+            '.btn-paypal .paypal-mark { color: #FFC439; }' +
+            '.donate-heart { color: #E5484D; font-size: 18px; }');
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+        const group = new Adw.PreferencesGroup();
+        const row = new Adw.ActionRow({
+            title: 'Apoya a IslaDock',
+            subtitle: 'Si IslaDock te es útil, puedes apoyar su desarrollo con una donación voluntaria.',
+        });
+        row.add_prefix(new Gtk.Label({label: '♥', css_classes: ['donate-heart']}));
+        const content = new Gtk.Box({spacing: 8});
+        content.append(new Gtk.Label({label: '♥', css_classes: ['paypal-mark']}));
+        content.append(new Gtk.Label({label: 'Donar con PayPal'}));
+        const button = new Gtk.Button({child: content, valign: Gtk.Align.CENTER, css_classes: ['btn-paypal']});
+        button.connect('clicked', () => {
+            new Gtk.UriLauncher({uri: PAYPAL_DONATION_URL}).launch(button.get_root(), null, (l, res) => {
+                try {
+                    l.launch_finish(res);
+                } catch {}
+            });
+        });
+        row.add_suffix(button);
+        group.add(row);
+        return group;
     }
 
     // ---------- Carpetas de Archivos ----------
