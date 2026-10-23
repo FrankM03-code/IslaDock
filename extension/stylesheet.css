@@ -420,7 +420,7 @@
 .isla-flotante.clara .isla-flotante-icono { color: #2A2A2E; }
 
 /* The badge on the island's corner: Mayúsculas */
-.isla-insignia {
+.isla-insignia-isla {
   width: 20px; height: 20px; border-radius: 10px;
   border: 1.5px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
@@ -616,24 +616,105 @@
 .isla-privacidad-caja, .isla-privacidad-iconos { spacing: 6px; }
 .isla-privacidad-texto { font-size: 12px; font-weight: 600; }
 
-/* Tray icons (StatusNotifierItem) */
-.isla-bandeja { spacing: 2px; }
-.isla-bandeja-boton { padding: 6px; border-radius: 10px; color: #3A3D45; }
-.isla-bandeja-boton:hover, .isla-bandeja-boton:focus { background-color: rgba(30, 32, 40, 0.10); }
-.isla-bandeja-icono { icon-size: 20px; }
-.isla-capsule.oscura .isla-bandeja-boton,
-.isla-skin-vidrio-oscuro .isla-bandeja-boton,
-.isla-skin-aurora .isla-bandeja-boton { color: #F4F5FA; }
-.isla-capsule.oscura .isla-bandeja-boton:hover,
-.isla-skin-vidrio-oscuro .isla-bandeja-boton:hover,
-.isla-skin-aurora .isla-bandeja-boton:hover { background-color: rgba(255, 255, 255, 0.12); }
-
-/* Calendar and notifications panel (GNOME's date menu content, lent) */
-.isla-calendario {
-  background-color: rgba(30, 30, 34, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 26px;
-  padding: 12px;
-  color: #FFFFFF;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.30);
+/* Calendario: small, solid; dark by default, .clara over a light island. */
+.isla-cal {
+  width: 268px; padding: 16px; spacing: 12px;   /* 300 px wide with padding and border */
+  border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.10);
+  background-color: #1E2027;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  font-family: Inter, Cantarell, sans-serif;
+  color: #F4F5FA;
 }
+.isla-cal-titulo { spacing: 6px; }
+.isla-cal-mes { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
+.isla-cal-anio { font-size: 13px; font-weight: 500; color: rgba(244, 245, 250, 0.55); padding-bottom: 2px; }
+.isla-cal-controles { spacing: 3px; }
+.isla-cal-ctrl { height: 28px; border-radius: 8px; color: #F4F5FA; background-color: transparent; }
+.isla-cal-ctrl:hover { background-color: rgba(255, 255, 255, 0.10); }
+.isla-cal-ctrl:focus, .isla-cal-dia:focus, .isla-cal-mas:focus, .isla-cal-boton:focus,
+.isla-cal-quitar:focus { box-shadow: 0 0 0 2px #3B82E6; }
+.isla-cal-flecha { width: 28px; padding: 0; }
+.isla-cal-flecha.pequena { width: 24px; height: 24px; }
+.isla-cal-flecha-icono { icon-size: 14px; }
+.isla-cal-hoy { padding: 0 9px; font-size: 12px; font-weight: 600; }
+.isla-cal-ini { height: 16px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; color: rgba(244, 245, 250, 0.50); }
+.isla-cal-dia {
+  height: 32px; border-radius: 8px; padding: 0;
+  font-size: 13px; font-weight: 500; color: #F4F5FA; background-color: transparent;
+}
+.isla-cal-dia:hover { background-color: rgba(255, 255, 255, 0.08); }
+.isla-cal-dia.finde { color: rgba(244, 245, 250, 0.50); }
+.isla-cal-dia.elegido { background-color: rgba(59, 130, 230, 0.22); font-weight: 700; color: #F4F5FA; }
+.isla-cal-dia.hoy, .isla-cal-dia.hoy:hover { background-color: #3B82E6; color: #FFFFFF; font-weight: 700; }
+.isla-cal-punto { width: 4px; height: 4px; border-radius: 2px; background-color: #3B82E6; margin-top: 1px; }
+.isla-cal-dia.hoy .isla-cal-punto { background-color: #FFFFFF; }
+.isla-cal-tarjeta { spacing: 6px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.isla-cal-tarjeta-fila { spacing: 8px; }
+.isla-cal-sel { font-size: 13px; font-weight: 600; }
+.isla-cal-vacio { font-size: 12px; color: rgba(244, 245, 250, 0.50); }
+.isla-cal-nota { spacing: 6px; padding: 5px 4px 5px 10px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.06); }
+.isla-cal-nota-texto { font-size: 12px; }
+.isla-cal-quitar { width: 20px; height: 20px; border-radius: 10px; padding: 0; color: rgba(244, 245, 250, 0.55); }
+.isla-cal-quitar:hover { background-color: #D93A3A; color: #FFFFFF; }
+.isla-cal-quitar-icono { icon-size: 11px; }
+.isla-cal-mas { width: 28px; height: 28px; border-radius: 14px; background-color: #3B82E6; color: #FFFFFF; }
+.isla-cal-mas:hover { background-color: #5592EA; }
+.isla-cal-mas-icono { icon-size: 14px; }
+.isla-cal-campo {
+  height: 32px; padding: 0 10px; border-radius: 8px; font-size: 13px;
+  color: #F4F5FA; background-color: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12);
+  caret-color: #F4F5FA; selection-background-color: #3B82E6;
+}
+.isla-cal-campo:focus { border-color: #3B82E6; }
+.isla-cal-campo StLabel.hint-text { color: rgba(244, 245, 250, 0.45); }
+.isla-cal-fecha { spacing: 6px; }
+.isla-cal-paso { border-radius: 8px; padding: 2px; background-color: rgba(255, 255, 255, 0.06); }
+.isla-cal-paso-valor { font-size: 12px; font-weight: 600; }
+.isla-cal-botones { spacing: 6px; }
+.isla-cal-boton { height: 30px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #F4F5FA;
+  background-color: rgba(255, 255, 255, 0.08); }
+.isla-cal-boton:hover { background-color: rgba(255, 255, 255, 0.14); }
+.isla-cal-boton.guardar { background-color: #3B82E6; color: #FFFFFF; }
+.isla-cal-boton.guardar:hover { background-color: #5592EA; }
+
+/* Over a light island */
+.isla-cal.clara { color: #15181E; border-color: #E1E4E9; background-color: #FFFFFF; box-shadow: 0 8px 24px rgba(20, 24, 32, 0.18); }
+.isla-cal.clara .isla-cal-anio,
+.isla-cal.clara .isla-cal-ini,
+.isla-cal.clara .isla-cal-vacio,
+.isla-cal.clara .isla-cal-dia.finde { color: #6B7280; }
+.isla-cal.clara .isla-cal-ctrl { color: #3A404A; }
+.isla-cal.clara .isla-cal-hoy { color: #15181E; }
+.isla-cal.clara .isla-cal-ctrl:hover,
+.isla-cal.clara .isla-cal-dia:hover { background-color: #F0F2F5; }
+.isla-cal.clara .isla-cal-ctrl:focus, .isla-cal.clara .isla-cal-dia:focus, .isla-cal.clara .isla-cal-mas:focus,
+.isla-cal.clara .isla-cal-boton:focus, .isla-cal.clara .isla-cal-quitar:focus { box-shadow: 0 0 0 2px #1C6FD1; }
+.isla-cal.clara .isla-cal-dia { color: #15181E; }
+.isla-cal.clara .isla-cal-dia.elegido { background-color: rgba(28, 111, 209, 0.12); color: #15181E; }
+.isla-cal.clara .isla-cal-dia.hoy { background-color: #1C6FD1; color: #FFFFFF; }
+.isla-cal.clara .isla-cal-punto { background-color: #1C6FD1; }
+.isla-cal.clara .isla-cal-dia.hoy .isla-cal-punto { background-color: #FFFFFF; }
+.isla-cal.clara .isla-cal-tarjeta { border-top-color: #ECEEF2; }
+.isla-cal.clara .isla-cal-nota { background-color: #F3F4F7; }
+.isla-cal.clara .isla-cal-quitar { color: #6B7280; }
+.isla-cal.clara .isla-cal-mas, .isla-cal.clara .isla-cal-boton.guardar { background-color: #1C6FD1; }
+.isla-cal.clara .isla-cal-mas:hover, .isla-cal.clara .isla-cal-boton.guardar:hover { background-color: #1A63BC; }
+.isla-cal.clara .isla-cal-campo { color: #15181E; background-color: #F7F8FA; border-color: #E1E4E9; caret-color: #15181E; selection-background-color: #1C6FD1; }
+.isla-cal.clara .isla-cal-campo:focus { border-color: #1C6FD1; }
+.isla-cal.clara .isla-cal-campo StLabel.hint-text { color: #9AA0AA; }
+.isla-cal.clara .isla-cal-paso { background-color: #F3F4F7; }
+.isla-cal.clara .isla-cal-boton { color: #15181E; background-color: #F0F2F5; }
+.isla-cal.clara .isla-cal-boton:hover { background-color: #E4E7EC; }
+.isla-cal.clara .isla-cal-boton.guardar { color: #FFFFFF; }
+
+/* Energía: sound outputs (inline list) and the microphone row */
+.isla-pd-micro { padding-top: 6px; }
+.isla-pd-volumen-boton:checked { color: #E5484D; }
+.isla-pd-salidas { spacing: 2px; padding: 6px 4px 0 4px; }
+.isla-pd-salida { border-radius: 10px; padding: 6px 8px; color: #dddddd; }
+.isla-pd-salida:hover, .isla-pd-salida:focus { background-color: rgba(255, 255, 255, 0.10); }
+.isla-pd-salida:checked { color: #FFFFFF; font-weight: bold; }
+.isla-pd-salida-caja { spacing: 8px; font-size: 12px; }
+.isla-pd-panel.clara .isla-pd-salida { color: #2A2A2E; }
+.isla-pd-panel.clara .isla-pd-salida:hover, .isla-pd-panel.clara .isla-pd-salida:focus { background-color: rgba(30, 30, 30, 0.08); }
+.isla-pd-panel.clara .isla-pd-salida:checked { color: #1E1E1E; }

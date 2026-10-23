@@ -32,10 +32,6 @@
       <default>true</default>
       <summary>Botón para ver todas las aplicaciones</summary>
     </key>
-    <key name="portal-giro" type="b">
-      <default>true</default>
-      <summary>El aro del botón Portal gira al pasar el mouse</summary>
-    </key>
     <key name="ocultar" type="s">
       <choices><choice value="nunca"/><choice value="inteligente"/><choice value="siempre"/></choices>
       <default>'nunca'</default>
@@ -263,18 +259,13 @@
       <default>true</default>
       <summary>Reloj lateral: un clic abre el calendario y las notificaciones</summary>
     </key>
-    <key name="bandeja" type="b">
-      <default>true</default>
-      <summary>Íconos de bandeja (AppIndicator / StatusNotifierItem) en el dock</summary>
-    </key>
-    <key name="bandeja-lado" type="s">
-      <choices><choice value='derecha'/><choice value='izquierda'/></choices>
-      <default>'derecha'</default>
-      <summary>Bandeja: antes de Energía (derecha) o al comienzo del dock (izquierda)</summary>
-    </key>
     <key name="atajo-calendario" type="as">
       <default>['&lt;Super&gt;m']</default>
       <summary>Atajo del panel de calendario y notificaciones</summary>
+    </key>
+    <key name="recordatorios" type="s">
+      <default>'[]'</default>
+      <summary>Recordatorios del calendario (JSON: texto, día, mes, año, avisado)</summary>
     </key>
     <key name="calendario-liberado" type="as">
       <default>[]</default>
@@ -292,6 +283,10 @@
     <key name="monitor-isla" type="i">
       <default>-1</default>
       <summary>Monitor de la isla (-1 = el principal)</summary>
+    </key>
+    <key name="ahorro-energia" type="b">
+      <default>true</default>
+      <summary>Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento y sin respiración</summary>
     </key>
   </schema>
 </schemalist>
