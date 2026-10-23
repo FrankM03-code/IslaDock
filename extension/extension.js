@@ -30,9 +30,9 @@ import {KeyboardStatus} from './isla/keyboard.js';
 import {WorkspacesStatus} from './isla/workspaces.js';
 import {SideClock} from './isla/sideClock.js';
 import {PrivacyStatus} from './isla/privacy.js';
-import {Tray} from './isla/tray/tray.js';
 import {CalendarPanel} from './isla/calendar.js';
 import {dockMonitorIndex, setDockSettings} from './isla/monitor.js';
+import {Calm} from './isla/calm.js';
 import {IslaState} from './isla/state.js';
 
 // Modules that a setting can switch off: [key or null, factory].
@@ -61,7 +61,6 @@ const MODULES = {
     workspaces: ['espacios-trabajo', ctx => new WorkspacesStatus(ctx)],
     sideClock: ['reloj-lateral', ctx => new SideClock(ctx)],
     privacy: [null, ctx => new PrivacyStatus(ctx)],
-    tray: ['bandeja', ctx => new Tray(ctx)],
     calendar: [null, ctx => new CalendarPanel(ctx)],
 };
 
@@ -87,6 +86,7 @@ export default class IslaDockExtension extends Extension {
             this._startId = 0;
         }
         this._state = new IslaState();
+        this._state.calm = new Calm(this._settings);
         this._dockMonitor = dockMonitorIndex();
         if (!this._monitorIds)
             this._watchMonitor();
@@ -122,6 +122,7 @@ export default class IslaDockExtension extends Extension {
         this._modules.clear();
         this._isla?.destroy();
         this._isla = null;
+        this._state?.calm?.destroy();
         this._state?.destroy();
         this._state = null;
         this._ctx = null;

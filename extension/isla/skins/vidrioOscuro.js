@@ -100,6 +100,14 @@ export class VidrioOscuroSkin extends SkinBase {
         this._behind = false;
         this._lenses = [];
         this._later = 0;
+        // On shell shutdown the card can be destroyed before disable(): stop touching it.
+        this._cardGone = isla.card.connect('destroy', () => {
+            this._off = true;
+            this._cardGone = 0;
+            if (this._later)
+                global.compositor.get_laters().remove(this._later);
+            this._later = 0;
+        });
 
         // Shadow and lens of the island; the same for the music card.
         // The card's lens (a second wallpaper copy) only exists while the card shows.
@@ -115,6 +123,8 @@ export class VidrioOscuroSkin extends SkinBase {
         for (const key of ['glass-tint', 'glass-strength'])
             this.connect(settings, `changed::${key}`, () => this._applyLook());
         this.connect(settings, 'changed::glass-refraction', () => this._updateMode(true));
+        if (isla._state.calm)
+            this.connect(isla._state.calm, 'changed', () => this._updateMode(true));
         this.connect(settings, 'changed::glass-music-card', () => {
             isla._applySettings();
             isla._resize();
@@ -190,7 +200,8 @@ export class VidrioOscuroSkin extends SkinBase {
     }
 
     _updateMode(animate) {
-        const flat = this._behind || !this.isla._settings.get_boolean('glass-refraction') || !this._lens;
+        const flat = this._behind || !this.isla._settings.get_boolean('glass-refraction') || !this._lens ||
+            !!this.isla._state.calm?.lensOff;
         const changed = flat !== this._flat;
         this._flat = flat;
         const card = this.isla.card;
@@ -259,6 +270,9 @@ export class VidrioOscuroSkin extends SkinBase {
         if (this._later)
             global.compositor.get_laters().remove(this._later);
         this._later = 0;
+        if (this._cardGone)
+            this.isla.card.disconnect(this._cardGone);
+        this._cardGone = 0;
         for (const actor of [this.isla.capsule, this.isla.card])
             actor.remove_style_class_name('vo-plano');
         super.disable();

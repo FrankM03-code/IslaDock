@@ -32,7 +32,7 @@ export class SkinBase {
         return [];
     }
 
-    // The Portal button turns graphite over a very light island.
+    // The Apps button's text turns graphite over a very light island.
     get portalGraphite() {
         return !this.isla._settings.get_boolean('isla-oscura');
     }

@@ -81,6 +81,12 @@ export class AuroraSkin extends SkinBase {
         halo.connect('destroy', () => this._timeline?.stop());
         this.connect(halo, 'notify::mapped', () => this._run());
         this.connect(St.Settings.get(), 'notify::enable-animations', () => this._run());
+        if (this.isla._state.calm) {
+            this.connect(this.isla._state.calm, 'changed', () => {
+                this._react();
+                this._run();
+            });
+        }
         this._last = GLib.get_monotonic_time();
         this.connect(this.isla._state, 'music-changed', () => this._react());
         this._react();
@@ -100,7 +106,8 @@ export class AuroraSkin extends SkinBase {
     }
 
     _run() {
-        const animate = St.Settings.get().enable_animations && this._halo.mapped && this._halo.opacity > 0 &&
+        const animate = !this.isla._state.calm?.motionOff && St.Settings.get().enable_animations && this._halo.mapped &&
+            this._halo.opacity > 0 &&
             !this.isla._state.dnd;
         if (animate && !this._timeline.is_playing()) {
             this._last = GLib.get_monotonic_time();
@@ -155,7 +162,7 @@ export class AuroraSkin extends SkinBase {
         }
         this._grow = mode === Mode.COLLAPSED ? 4 : 5;
         this._cycleTarget = cycle;
-        if (!St.Settings.get().enable_animations)
+        if (!St.Settings.get().enable_animations || this.isla._state.calm?.motionOff)
             opacity = state.dnd ? 0 : 0.6;
         this._halo.remove_transition('opacity');
         const target = Math.round(255 * opacity);

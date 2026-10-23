@@ -47,6 +47,7 @@ export class IslaState extends Signals.EventEmitter {
         this.compact = false;
         this._holds = new Set();
         this._status = new Map();       // id -> {id, order, folded, open}
+        this.calm = null;               // calm.js: reduced animations, power saving
     }
 
     get mode() {

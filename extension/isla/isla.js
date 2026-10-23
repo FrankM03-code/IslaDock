@@ -304,7 +304,7 @@ export class Isla {
         // Status items, then Energía last, to the right of the panels.
         this._statusOpen = new St.BoxLayout({style_class: 'isla-estado isla-estado-abierto', y_align: Clutter.ActorAlign.CENTER,
             visible: false});
-        // Some (the tray, when asked) go at the start instead.
+        // Status items with side 'start' go at the start instead.
         this._statusStart = new St.BoxLayout({style_class: 'isla-estado isla-estado-abierto', y_align: Clutter.ActorAlign.CENTER,
             visible: false});
         for (const actor of [this._statusStart, this._apps.actor, this._panelSep, this._panels, this._statusOpen, this._apps.tail])
@@ -433,7 +433,7 @@ export class Isla {
         this._open.style = `padding: ${Math.round(pv * f)}px ${Math.round(ph * f)}px ${Math.round(pb * f)}px;`;
         this._openLayout.spacing = Math.round(10 * this._sf);
         this._openLayout.layout_changed();
-        const blur = this._settings.get_boolean('desenfoque') ? skin.blur : null;
+        const blur = this._settings.get_boolean('desenfoque') && !this._state.calm?.blurOff ? skin.blur : null;
         const blurOk = !!blur && this._blur.configure(true, RADIUS, 'all', this._sf, blur);
         if (!blurOk)
             this._blur.configure(false);
@@ -476,6 +476,13 @@ export class Isla {
         // The blurred wallpaper copy must not slide with the island.
         this._on(this._capsule, 'notify::translation-y', () => (this._blur.slide = this._capsule.translation_y));
         this._on(St.Settings.get(), 'notify::enable-animations', () => this._updateBreathing());
+        // Reduced animations or power saving: blur and breathing follow.
+        if (this._state.calm) {
+            this._on(this._state.calm, 'changed', () => {
+                this._applySettings();
+                this._updateBreathing(true);
+            });
+        }
         this._on(Main.layoutManager, 'monitors-changed', () => {
             this._place();
             this._resize(false);
@@ -540,7 +547,7 @@ export class Isla {
         });
 
         // Away in the overview, except over the app grid: there the island stays
-        // so the Portal (or an app) is a way out besides Esc.
+        // so the Apps button (or an app) is a way out besides Esc.
         this._on(Main.overview, 'showing', () => {
             this._apps.hideTooltip();
             this._leavingOverview = false;
@@ -978,7 +985,7 @@ export class Isla {
     }
 
     _updateBreathing(force = false) {
-        const on = this._settings.get_boolean('isla-respiracion') && St.Settings.get().enable_animations &&
+        const on = this._settings.get_boolean('isla-respiracion') && !this._state.calm?.motionOff &&
             this._state.mode === Mode.COLLAPSED && !this._state.dnd && this._state.activities.length === 0;
         if (on === !!this._breathing && !force)
             return;
