@@ -6,6 +6,7 @@
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
+import Pango from 'gi://Pango';
 import St from 'gi://St';
 
 import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
@@ -194,6 +195,8 @@ export const DockItem = GObject.registerClass({
         if (!this._badge) {
             this._badge = new St.Label({style_class: 'isla-insignia', x_align: Clutter.ActorAlign.END,
                 y_align: Clutter.ActorAlign.START, x_expand: true, y_expand: true});
+            // "99+" is wider than the round badge: it grows, never cut to "9…".
+            this._badge.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
             this._tile.add_child(this._badge);
         }
         this._badge.text = count > 99 ? '99+' : String(count);

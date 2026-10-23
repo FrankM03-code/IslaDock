@@ -316,6 +316,8 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             'Al dejar el mouse sobre una app abierta (Firefox, Archivos…) aparece lo que tiene en pantalla'));
         functions.add(switchRow(settings, 'isla-progreso', 'Progreso de tareas',
             'Descargas, copias… solo de las apps que lo publican (como en Dash to Dock)'));
+        functions.add(switchRow(settings, 'insignias', 'Mensajes sin leer en los íconos',
+            'Un número sobre la app (Telegram, Thunderbird…), solo de las apps que lo publican'));
         functions.add(switchRow(settings, 'mayus-insignia', 'Símbolo de mayúsculas en la isla',
             'Mientras estén activas, un pequeño ⇪ en la esquina de la isla'));
         functions.add(switchRow(settings, 'cafeina-activa', 'Cafeína',

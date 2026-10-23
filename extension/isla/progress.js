@@ -4,8 +4,9 @@
 // com.canonical.Unity.LauncherEntry "Update" signal (the standard Dash to Dock
 // and Plank read). Folded: a 2 px line fills along the bottom of the island;
 // open: one row per app with its icon, name, percentage and bar. `count` is a
-// badge on the app's icon. Apps that do not publish it show nothing: no
-// progress is ever made up.
+// badge on the app's icon ('insignias'; 99+ above 99). Apps that do not
+// publish it show nothing: no progress is ever made up. The progress
+// ('isla-progreso') and the badges switch off apart.
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import Pango from 'gi://Pango';
@@ -49,6 +50,19 @@ export class Progress {
                 if (dropped)
                     this._refresh();
             });
+        this._settingIds = [
+            settings.connect('changed::isla-progreso', () => this._refresh()),
+            settings.connect('changed::insignias', () => this._sendBadges()),
+        ];
+    }
+
+    _badgeOf(e) {
+        return this._settings.get_boolean('insignias') && e.countVisible && e.count > 0 ? e.count : null;
+    }
+
+    _sendBadges() {
+        for (const [id, e] of this._entries)
+            this._state.command('badge', id, this._badgeOf(e));
     }
 
     _onUpdate(sender, uri, props) {
@@ -64,7 +78,7 @@ export class Progress {
         if ('count-visible' in props)
             e.countVisible = !!props['count-visible'];
         this._entries.set(id, e);
-        this._state.command('badge', id, e.countVisible && e.count > 0 ? e.count : null);
+        this._state.command('badge', id, this._badgeOf(e));
         if (!e.visible && !e.countVisible)
             this._entries.delete(id);
         this._refresh();
@@ -119,6 +133,7 @@ export class Progress {
     }
 
     destroy() {
+        this._settingIds.forEach(id => this._settings.disconnect(id));
         Gio.DBus.session.signal_unsubscribe(this._updateId);
         Gio.DBus.session.signal_unsubscribe(this._ownerId);
         for (const id of [...this._entries.keys()])
