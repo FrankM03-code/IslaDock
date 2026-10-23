@@ -2,14 +2,22 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Live music (A5): follows the MPRIS players on the session bus. Folded, the
 // island shows a small wave (moving only while it plays); open, the cover,
-// title, artist and previous / play-pause / next buttons.
+// title, artist and previous / play-pause / next buttons. Covers from the web
+// (Spotify, browsers) are downloaded once into the cache. With several
+// players, a right click on the music lists them to choose which one the
+// island follows; with one, the right click stays the timer's.
 import Clutter from 'gi://Clutter';
 import GdkPixbuf from 'gi://GdkPixbuf';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Pango from 'gi://Pango';
 import Shell from 'gi://Shell';
+import Soup from 'gi://Soup?version=3.0';
 import St from 'gi://St';
+
+import * as BoxPointer from 'resource:///org/gnome/shell/ui/boxpointer.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {averageColor} from './dots.js';
 import {pillSizes, pillStyle, roundButton} from './pill.js';
@@ -17,6 +25,7 @@ import {Priority} from './state.js';
 
 const MPRIS_PREFIX = 'org.mpris.MediaPlayer2.';
 const MPRIS_PATH = '/org/mpris/MediaPlayer2';
+const MAX_COVER = 4 * 1024 * 1024;   // bytes of a downloaded cover
 
 const PlayerProxy = Gio.DBusProxy.makeProxyWrapper(`
 <node><interface name="org.mpris.MediaPlayer2.Player">
@@ -127,6 +136,14 @@ export class Media {
         this._skips.push(button('media-skip-forward-symbolic', 'next'));
         for (const actor of [this._coverButton, this._title, buttons])
             this._panel.add_child(actor);
+        // Right click: which player to follow (only when there is a choice).
+        this._panel.reactive = true;
+        this._panel.connect('button-press-event', (_a, event) => {
+            if (event.get_button() !== 3 || this._choices().length < 2)
+                return Clutter.EVENT_PROPAGATE;
+            this._openPlayers();
+            return Clutter.EVENT_STOP;
+        });
         this._setCompact(this._state.compact);
         this._applySize();
     }
@@ -172,6 +189,8 @@ export class Media {
         this._players.delete(name);
         if (this._current === entry)
             this._current = null;
+        if (this._chosen === name)
+            this._chosen = null;
         this._update();
     }
 
@@ -196,9 +215,47 @@ export class Media {
         this._update();
     }
 
-    // The player that most recently started playing; else the one we had; else any with a song.
+    // Players with a song, for the right-click choice.
+    _choices() {
+        return [...this._players.values()].filter(e => e.player && this._metadata(e)['xesam:title']);
+    }
+
+    _openPlayers() {
+        if (!this._menu) {
+            this._menu = new PopupMenu.PopupMenu(this._panel, 0.5, St.Side.BOTTOM);
+            this._menu.actor.add_style_class_name('isla-menu');
+            Main.uiGroup.add_child(this._menu.actor);
+            this._menu.actor.hide();
+            this._menuManager = new PopupMenu.PopupMenuManager(this._panel);
+            this._menuManager.addMenu(this._menu);
+            this._menu.connect('open-state-changed', (_m, open) => {
+                if (open)
+                    this._state.hold('musica');
+                else
+                    this._state.release('musica');
+            });
+        }
+        this._menu.removeAll();
+        for (const entry of this._choices()) {
+            const meta = this._metadata(entry);
+            const who = entry.root?.Identity || entry.name.slice(MPRIS_PREFIX.length);
+            const title = String(meta['xesam:title']);
+            const item = this._menu.addAction(`${who}: ${title.length > 40 ? `${title.slice(0, 39)}…` : title}`, () => {
+                this._chosen = entry.name;
+                this._update();
+            });
+            item.setOrnament(entry === this._current ? PopupMenu.Ornament.DOT : PopupMenu.Ornament.NO_DOT);
+        }
+        this._menu.open(BoxPointer.PopupAnimation.FULL);
+    }
+
+    // The one chosen with the right click; else the player that most recently
+    // started playing; else the one we had; else any with a song.
     _pick() {
         const all = [...this._players.values()].filter(e => e.player);
+        const chosen = this._chosen && this._players.get(this._chosen);
+        if (chosen?.player && this._metadata(chosen)['xesam:title'])
+            return chosen;
         const playing = all.filter(e => e.playingSince).sort((a, b) => b.playingSince - a.playingSince);
         if (playing.length)
             return playing[0];
@@ -250,7 +307,16 @@ export class Media {
             return;
         this._coverShown = true;
         this._coverUrl = url;
-        // Only local images (http covers are not downloaded).
+        // Web covers come from the cache, downloaded the first time.
+        if (/^https?:\/\//.test(url ?? '')) {
+            const cached = this._cachedCover(url);
+            if (!cached) {
+                this._download(url);
+                url = null;
+            } else {
+                url = cached;
+            }
+        }
         const local = url?.startsWith('file://') ? url : null;
         if (local) {
             this._cover.set_child(null);
@@ -263,6 +329,48 @@ export class Media {
         }
         this._coverColor = local ? this._colorOf(local) : null;
         this._paintBars();
+    }
+
+    _coverPath(url) {
+        const name = GLib.compute_checksum_for_string(GLib.ChecksumType.MD5, url, -1);
+        return GLib.build_filenamev([GLib.get_user_cache_dir(), 'isla-dock@frankm', 'caratulas', name]);
+    }
+
+    _cachedCover(url) {
+        const path = this._coverPath(url);
+        return GLib.file_test(path, GLib.FileTest.EXISTS) ? GLib.filename_to_uri(path, null) : null;
+    }
+
+    // Once per address; when it arrives and that song is still on, it shows.
+    _download(url) {
+        if (this._downloading === url)
+            return;
+        this._downloading = url;
+        this._soup ??= new Soup.Session({timeout: 15});
+        const message = Soup.Message.new('GET', url);
+        if (!message)
+            return;
+        this._soup.send_and_read_async(message, GLib.PRIORITY_LOW, this._cancellable, (session, res) => {
+            if (this._downloading === url)
+                this._downloading = null;
+            try {
+                const bytes = session.send_and_read_finish(res);
+                const type = message.get_response_headers().get_content_type()?.[0] ?? '';
+                if (message.get_status() !== Soup.Status.OK || !type.startsWith('image/') || bytes.get_size() > MAX_COVER)
+                    return;
+                const path = this._coverPath(url);
+                GLib.mkdir_with_parents(GLib.path_get_dirname(path), 0o755);
+                GLib.file_set_contents(path, bytes.toArray());
+            } catch (e) {
+                if (!e.matches?.(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                    console.warn(`isla-dock: carátula: ${e.message}`);
+                return;
+            }
+            if (this._coverUrl === url) {
+                this._coverShown = false;
+                this._setCover(url);
+            }
+        });
     }
 
     // The skin's wave color, or else the cover's.
@@ -357,6 +465,9 @@ export class Media {
         for (const name of [...this._players.keys()])
             this._remove(name);
         this._state.removeActivity('music');
+        this._state.release('musica');
+        this._menu?.destroy();
+        this._soup?.abort();
         this._waving = false;
         if (this._mapIdle)
             GLib.source_remove(this._mapIdle);
