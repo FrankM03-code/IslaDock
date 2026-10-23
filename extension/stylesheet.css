@@ -531,3 +531,17 @@
 .isla-pd-bateria-texto { font-size: 12px; font-feature-settings: "tnum"; }
 .isla-pd-panel.clara .isla-pd-bateria { color: #2A2A2E; }
 .isla-pd-bateria.baja, .isla-pd-panel.clara .isla-pd-bateria.baja { color: #E5484D; }
+
+/* Keyboard layout: ES, EN… */
+.isla-teclado { font-size: 11px; font-weight: bold; color: #3A3D45; }
+.isla-teclado-boton { font-size: 12px; padding: 4px 8px; border-radius: 9px; background-color: rgba(30, 32, 40, 0.06); }
+.isla-teclado-boton:hover, .isla-teclado-boton:focus { background-color: rgba(30, 32, 40, 0.14); }
+.isla-capsule.oscura .isla-teclado,
+.isla-skin-vidrio-oscuro .isla-teclado,
+.isla-skin-aurora .isla-teclado { color: #F4F5FA; }
+.isla-capsule.oscura .isla-teclado-boton,
+.isla-skin-vidrio-oscuro .isla-teclado-boton,
+.isla-skin-aurora .isla-teclado-boton { background-color: rgba(255, 255, 255, 0.08); }
+.isla-capsule.oscura .isla-teclado-boton:hover,
+.isla-skin-vidrio-oscuro .isla-teclado-boton:hover,
+.isla-skin-aurora .isla-teclado-boton:hover { background-color: rgba(255, 255, 255, 0.16); }
