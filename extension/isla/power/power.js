@@ -3,7 +3,8 @@
 // Energía: the round button at the end of the dock opens a small floating
 // panel with icons only, above the dock and aligned to the button's right edge:
 //   row 1  red · bluetooth · modo de energía · luz nocturna · estilo oscuro · cafeína
-//          volume
+//          volume (and the sound output: speakers, headphones, HDMI…)
+//          microphone, while there is one: mute and level
 //   row 2  captura · configuración · bloquear · cerrar sesión · reiniciar · apagar
 // With a battery, a line on top says its charge, state and time left.
 // It looks like the island itself: the same background color and see-through
@@ -16,6 +17,7 @@
 //
 // Commands it listens to: 'power-toggle' (anchor actor), 'power-suspend'.
 import Clutter from 'gi://Clutter';
+import Pango from 'gi://Pango';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 
@@ -31,6 +33,7 @@ import {createToggles, openSettings} from './services.js';
 import {acquireBattery, describe, releaseBattery} from './battery.js';
 import {Mode} from '../state.js';
 import {ms} from '../timing.js';
+import {_, N_, fmt} from '../i18n.js';
 
 const GAP = 9;            // between the island and the panel
 const IN_TIME = 180;
@@ -40,12 +43,12 @@ const RADIUS = 18;
 
 // [icon, fallback, title, extra class, action, SystemActions property that hides it]
 const SYSTEM = [
-    ['screenshot-ui-area-symbolic', 'camera-photo-symbolic', 'Captura de pantalla', '', () => showScreenshotUI(), null],
-    ['preferences-system-symbolic', 'emblem-system-symbolic', 'Configuración', '', () => openSettings(), null],
-    ['system-lock-screen-symbolic', null, 'Bloquear', 'isla-pd-bloquear', a => a.activateLockScreen(), 'can-lock-screen'],
-    ['system-log-out-symbolic', null, 'Cerrar sesión', 'isla-pd-salir', a => a.activateLogout(), 'can-logout'],
-    ['system-reboot-symbolic', null, 'Reiniciar', 'isla-pd-reiniciar', a => a.activateRestart(), 'can-restart'],
-    ['system-shutdown-symbolic', null, 'Apagar', 'isla-pd-apagar', a => a.activatePowerOff(), 'can-power-off'],
+    ['screenshot-ui-area-symbolic', 'camera-photo-symbolic', N_('Captura de pantalla'), '', () => showScreenshotUI(), null],
+    ['preferences-system-symbolic', 'emblem-system-symbolic', N_('Configuración'), '', () => openSettings(), null],
+    ['system-lock-screen-symbolic', null, N_('Bloquear'), 'isla-pd-bloquear', a => a.activateLockScreen(), 'can-lock-screen'],
+    ['system-log-out-symbolic', null, N_('Cerrar sesión'), 'isla-pd-salir', a => a.activateLogout(), 'can-logout'],
+    ['system-reboot-symbolic', null, N_('Reiniciar'), 'isla-pd-reiniciar', a => a.activateRestart(), 'can-restart'],
+    ['system-shutdown-symbolic', null, N_('Apagar'), 'isla-pd-apagar', a => a.activatePowerOff(), 'can-power-off'],
 ];
 
 
@@ -169,14 +172,30 @@ export class Power {
         const control = Volume.getMixerControl();
         const icon = new St.Icon({style_class: 'isla-pd-volumen-icono', icon_name: 'audio-volume-medium-symbolic'});
         const mute = new St.Button({style_class: 'isla-pd-volumen-boton', can_focus: true, reactive: true, track_hover: true,
-            child: icon, accessible_name: 'Silenciar', y_align: Clutter.ActorAlign.CENTER});
+            child: icon, accessible_name: _('Silenciar'), y_align: Clutter.ActorAlign.CENTER});
         const slider = new Slider(0);
         slider.add_style_class_name('isla-pd-slider');
         slider.x_expand = true;
         slider.y_align = Clutter.ActorAlign.CENTER;
-        slider.accessible_name = 'Volumen';
+        slider.accessible_name = _('Volumen');
         row.add_child(mute);
         row.add_child(slider);
+        // The outputs, in a list that opens inside the panel (never a popup over it).
+        const outputs = new St.BoxLayout({style_class: 'isla-pd-salidas', orientation: Clutter.Orientation.VERTICAL,
+            visible: false});
+        const outputButton = new St.Button({style_class: 'isla-pd-volumen-boton', can_focus: true, reactive: true,
+            track_hover: true, accessible_name: _('Salida de sonido'), y_align: Clutter.ActorAlign.CENTER,
+            child: new St.Icon({style_class: 'isla-pd-volumen-icono', icon_name: 'audio-speakers-symbolic'})});
+        outputButton.connect('clicked', () => {
+            outputs.visible = !outputs.visible;
+            if (outputs.visible)
+                this._fillOutputs(outputs, control, outputButton);
+            this._place();
+        });
+        row.add_child(outputButton);
+        this._tooltipFor(outputButton, _('Salida de sonido'));
+        row._outputs = outputs;
+        row._outputButton = outputButton;
 
         let stream = null, streamIds = [], syncing = false;
         const max = () => control.get_vol_max_norm();
@@ -208,8 +227,14 @@ export class Power {
             stream.push_volume();
         });
         mute.connect('clicked', () => stream?.change_is_muted(!stream.is_muted));
-        const id = control.connect('default-sink-changed', follow);
+        const id = control.connect('default-sink-changed', () => {
+            follow();
+            this._syncOutputButton(control, outputButton);
+            if (outputs.visible)
+                this._fillOutputs(outputs, control, outputButton);
+        });
         follow();
+        this._syncOutputButton(control, outputButton);
         this._unwatch.push(() => {
             control.disconnect(id);
             streamIds.forEach(sid => stream?.disconnect(sid));
@@ -247,6 +272,115 @@ export class Power {
         return row;
     }
 
+    // Every sound output GNOME knows (its ids count up from 1), the one in use marked.
+    _outputDevices(control) {
+        const devices = [];
+        for (let id = 1, misses = 0; misses < 20 && id < 400; id++) {
+            const device = control.lookup_output_id(id);
+            if (!device) {
+                misses++;
+                continue;
+            }
+            misses = 0;
+            if (device.port_available !== false)
+                devices.push(device);
+        }
+        return devices;
+    }
+
+    _activeOutput(control) {
+        const sink = control.get_default_sink();
+        return sink ? control.lookup_device_from_stream(sink) : null;
+    }
+
+    _syncOutputButton(control, button) {
+        const active = this._activeOutput(control);
+        button.child.gicon = active?.get_gicon() ?? null;
+        button.child.fallback_icon_name = 'audio-speakers-symbolic';
+        button._tip = active ? fmt(_('Salida: {nombre}'), {nombre: active.description}) : _('Salida de sonido');
+        button.visible = this._outputDevices(control).length > 1;
+    }
+
+    _fillOutputs(box, control, button) {
+        box.destroy_all_children();
+        const active = this._activeOutput(control);
+        for (const device of this._outputDevices(control)) {
+            const name = device.origin ? `${device.description} – ${device.origin}` : device.description;
+            const row = new St.Button({style_class: 'isla-pd-salida', can_focus: true, reactive: true, track_hover: true,
+                x_expand: true, accessible_name: name});
+            const content = new St.BoxLayout({style_class: 'isla-pd-salida-caja'});
+            content.add_child(new St.Icon({style_class: 'isla-pd-volumen-icono', gicon: device.get_gicon(),
+                fallback_icon_name: 'audio-speakers-symbolic', y_align: Clutter.ActorAlign.CENTER}));
+            const label = new St.Label({text: name, x_expand: true, y_align: Clutter.ActorAlign.CENTER});
+            label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+            content.add_child(label);
+            if (active && device.get_id() === active.get_id()) {
+                row.add_style_pseudo_class('checked');
+                content.add_child(new St.Icon({style_class: 'isla-pd-volumen-icono', icon_name: 'object-select-symbolic',
+                    y_align: Clutter.ActorAlign.CENTER}));
+            }
+            row.set_child(content);
+            row.connect('clicked', () => {
+                control.change_output(device);
+                box.visible = false;
+                this._place();
+            });
+            box.add_child(row);
+        }
+    }
+
+    // Microphone: mute button and level; hidden with no microphone.
+    _micRow() {
+        const row = new St.BoxLayout({style_class: 'isla-pd-volumen isla-pd-micro'});
+        const control = Volume.getMixerControl();
+        const icon = new St.Icon({style_class: 'isla-pd-volumen-icono', icon_name: 'audio-input-microphone-symbolic'});
+        const mute = new St.Button({style_class: 'isla-pd-volumen-boton', can_focus: true, reactive: true, track_hover: true,
+            child: icon, accessible_name: _('Silenciar el micrófono'), y_align: Clutter.ActorAlign.CENTER});
+        const slider = new Slider(0);
+        slider.add_style_class_name('isla-pd-slider');
+        slider.x_expand = true;
+        slider.y_align = Clutter.ActorAlign.CENTER;
+        slider.accessible_name = _('Micrófono');
+        row.add_child(mute);
+        row.add_child(slider);
+
+        let stream = null, streamIds = [], syncing = false;
+        const max = () => control.get_vol_max_norm();
+        const sync = () => {
+            row.visible = !!stream;
+            if (!stream)
+                return;
+            syncing = true;
+            slider.value = Math.min(1, stream.volume / max());
+            syncing = false;
+            icon.icon_name = stream.is_muted ? 'microphone-sensitivity-muted-symbolic' : 'audio-input-microphone-symbolic';
+            if (stream.is_muted)
+                mute.add_style_pseudo_class('checked');
+            else
+                mute.remove_style_pseudo_class('checked');
+        };
+        const follow = () => {
+            streamIds.forEach(id => stream?.disconnect(id));
+            stream = control.get_default_source();
+            streamIds = stream ? [stream.connect('notify::volume', sync), stream.connect('notify::is-muted', sync)] : [];
+            sync();
+        };
+        slider.connect('notify::value', () => {
+            if (syncing || !stream)
+                return;
+            stream.volume = slider.value * max();
+            stream.push_volume();
+        });
+        mute.connect('clicked', () => stream?.change_is_muted(!stream.is_muted));
+        const id = control.connect('default-source-changed', follow);
+        follow();
+        this._unwatch.push(() => {
+            control.disconnect(id);
+            streamIds.forEach(sid => stream?.disconnect(sid));
+        });
+        return row;
+    }
+
     _build() {
         this._unwatch = [];
         const panel = new St.BoxLayout({style_class: 'isla-pd-panel', orientation: Clutter.Orientation.VERTICAL,
@@ -257,7 +391,7 @@ export class Power {
             row1.add_child(this._toggleButton(toggle));
         const row2 = new St.BoxLayout({style_class: 'isla-pd-fila'});
         for (const [icon, fallback, title, cls, action, can] of SYSTEM) {
-            const button = this._button(icon, fallback, title, cls, () => {
+            const button = this._button(icon, fallback, _(title), cls, () => {
                 this.close(false);
                 action(this._actions);
             });
@@ -270,7 +404,10 @@ export class Power {
             row2.add_child(button);
         }
         panel.add_child(row1);
-        panel.add_child(this._volumeRow());
+        const volume = this._volumeRow();
+        panel.add_child(volume);
+        panel.add_child(volume._outputs);
+        panel.add_child(this._micRow());
         panel.add_child(new St.Widget({style_class: 'isla-pd-sep'}));
         panel.add_child(row2);
         return panel;
