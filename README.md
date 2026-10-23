@@ -23,13 +23,20 @@ convierte en el dock completo.
 - **Progreso de tareas** de las apps que lo publican.
 - **Pila de descargas**: tus últimos archivos en cascada diagonal, en cuadrícula o en una lista minimalista.
 - **Carpetas de Archivos**: clic en Archivos y tienes a mano Descargas, Documentos, Imágenes, Música, Vídeos y las que añadas.
-- **Botón Portal** para ver todas las aplicaciones; la isla se queda visible en el cajón de aplicaciones.
+- **Botón Mazo** para ver todas las aplicaciones; la isla se queda visible en el cajón de aplicaciones.
 - **Fondo desenfocado en el cajón**: tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades.
 - **Panel Energía**: red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, volumen, captura, bloquear, cerrar sesión, reiniciar y apagar.
 - **Cafeína**: la pantalla no se apaga ni el equipo se suspende (en el panel Energía).
 - **Mayúsculas**: para teclados sin luz de Bloq Mayús, un pequeño ⇪ en la isla mientras están activas.
 - **Reloj de escritorio**: hora y fecha grandes sobre el fondo de pantalla, arriba, al centro o abajo (Preferencias → Escritorio).
 - **Sin barra superior** (opcional, encendido por defecto): todo queda en la isla y el panel Energía.
+- **Lo que se perdía sin la barra**: batería, avisos de micrófono, cámara, ubicación y pantalla compartida, idioma del teclado, espacios de trabajo, y un calendario con recordatorios (Super + M).
+- **Reloj lateral**: escondido en el borde de la pantalla; al llevar el mouse sale una burbuja con la hora, también sobre ventanas maximizadas.
+- **Dock**: un punto por ventana abierta, número de mensajes sin leer, acción al hacer clic en la app activa (minimizar, pasar de ventana o miniaturas), Super + 1…9, elegir el monitor.
+- **Sonido**: elegir la salida (parlantes, audífonos, HDMI…) y silenciar el micrófono en el panel Energía; con varios reproductores, clic derecho en la música para elegir cuál.
+- **Calma**: con batería o en modo Ahorro se apagan los efectos costosos; respeta «Reducir animaciones» de GNOME.
+- **Copia de la configuración**: exportar e importar todos los ajustes.
+- **Idiomas**: español e inglés (`po/`; para añadir uno, copia `po/en.po` y ejecuta `python3 po/traducir.py mo`).
 - **Pieles**: Clásica, Clásica oscura, Vidrio oscuro (vidrio ahumado con efecto lupa) y Aurora, con transparencia ajustable.
 - Tus propios íconos: elige tema o pon archivos en `~/.icons/isla-dock`.
 
