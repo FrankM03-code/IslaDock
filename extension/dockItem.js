@@ -11,8 +11,9 @@ import St from 'gi://St';
 
 import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
 
-import {Portal} from './isla/portal.js';
+import {AppsButton} from './isla/appsButton.js';
 import {ms} from './isla/timing.js';
+import {_} from './isla/i18n.js';
 
 export const INDICATOR_GAP = 1;
 export const INDICATOR_HEIGHT = 3;
@@ -89,15 +90,19 @@ export const DockItem = GObject.registerClass({
         this._tile.set_pivot_point(0.5, 1);
         this._tile.add_child(this._icon);
         this._holder = new IconHolder(this._tile);
-        // The applications button is drawn as a Portal instead of an icon.
+        // The applications button is the wide "Apps" button instead of an icon.
+        this._wide = 1;          // tile width / tile height
         if (kind === 'apps') {
-            this.portal = new Portal();
-            this._tile.add_child(this.portal);
+            this.appsButton = new AppsButton();
+            this._tile.add_child(this.appsButton);
             this._icon.hide();
             this.can_focus = true;
-            this.accessible_name = 'Aplicaciones';
-            this.connect('key-focus-in', () => this.portal.setFocused(true));
-            this.connect('key-focus-out', () => this.portal.setFocused(false));
+            this.accessible_name = _('Aplicaciones');
+            this.connect('key-focus-in', () => this.appsButton.setFocused(true));
+            this.connect('key-focus-out', () => this.appsButton.setFocused(false));
+            this.connect('notify::pressed', () => this.appsButton.setPressed(this.pressed));
+            // Its width is only known once it has its style (on the stage).
+            this.appsButton.connect('style-changed', () => this._fitApps());
         }
         // Energía and Portapapeles: a grey circle with a symbol (sized in configure()).
         if (kind === 'power' || kind === 'clipboard') {
@@ -109,7 +114,7 @@ export const DockItem = GObject.registerClass({
             this._tile.add_child(this._power);
             this._icon.hide();
             this.can_focus = true;
-            this.accessible_name = kind === 'power' ? 'Energía' : 'Portapapeles';
+            this.accessible_name = kind === 'power' ? _('Energía') : _('Portapapeles');
             if (kind === 'power')
                 this._watchLongPress();
         }
@@ -125,7 +130,7 @@ export const DockItem = GObject.registerClass({
 
         this._desaturate = null;
         this.connect('notify::hover', () => {
-            this.portal?.setHover(this.hover);
+            this.appsButton?.setHover(this.hover);
             this._updateCalm(true);
             this.emit('hover-changed', this.hover);
         });
@@ -135,8 +140,6 @@ export const DockItem = GObject.registerClass({
                 this._longDone = false;
                 return;
             }
-            if (this.portal && button === 1)
-                this.portal.burst();
             this.emit('activate', button);
         });
 
@@ -272,7 +275,8 @@ export const DockItem = GObject.registerClass({
         const tilePx = p.max * sf;
         this._tile.set_size(tilePx, tilePx);
         this._icon.icon_size = p.max;
-        this.portal?.setSize(tilePx);
+        this.appsButton?.setSize(p.max);
+        this._fitApps(false);
         if (this._power) {
             const d = Math.round(tilePx * POWER_CIRCLE);
             this._power.set_size(d, d);
@@ -295,15 +299,30 @@ export const DockItem = GObject.registerClass({
         this.setSize(p.base, false);
     }
 
+    // The tile as wide as the Apps button, and the holder with it.
+    _fitApps(apply = true) {
+        if (!this.appsButton || !this._p || !this.appsButton.get_stage())
+            return;
+        const tilePx = this._p.max * this._p.scale;
+        const [, w] = this.appsButton.get_preferred_width(-1);
+        if (!w)
+            return;
+        const changed = Math.abs(w / tilePx - this._wide) >= 0.001;
+        this._wide = w / tilePx;
+        this._tile.set_size(Math.ceil(w), tilePx);
+        if (apply && changed && this.zoom)
+            this.setSize(this.zoom, false, true);
+    }
+
     // Animates the icon to `size` logical px (the dock reflows around it).
-    setSize(size, animate = true) {
-        if (!this._p || size === this.zoom && animate)
+    setSize(size, animate = true, force = false) {
+        if (!this._p || size === this.zoom && animate && !force)
             return;
         this.zoom = size;
         const sf = this._p.scale;
         const scale = size / this._p.max;
         const duration = animate ? ms(ZOOM_TIME) : 0;
-        this._holder.ease({width: size * sf, duration, mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+        this._holder.ease({width: size * sf * this._wide, duration, mode: Clutter.AnimationMode.EASE_OUT_QUAD});
         this._tile.ease({scale_x: scale, scale_y: scale, duration, mode: Clutter.AnimationMode.EASE_OUT_QUAD});
     }
 

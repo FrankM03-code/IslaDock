@@ -26,6 +26,7 @@ import {DockItem, DockSeparator} from '../dockItem.js';
 import {RowLayout} from './row.js';
 import {dockMonitor} from './monitor.js';
 import {downloadsDir} from './stack/downloadsModel.js';
+import {_} from './i18n.js';
 
 // Magnification by distance to the hovered icon, as a factor of the base size.
 const ZOOM = [1.45, 1.22, 1.08];
@@ -74,9 +75,10 @@ export class AppsRow extends Signals.EventEmitter {
             this._on(this._settings, `changed::${key}`, () => this._rebuild());
         for (const key of ['tamano-base', 'magnificacion', 'desaturar-en-reposo'])
             this._on(this._settings, `changed::${key}`, () => this.configure());
-        for (const key of ['portal-giro', 'isla-oscura'])
-            this._on(this._settings, `changed::${key}`, () => this._updatePortal());
-        // The Portal stays lit while the app grid is open.
+        if (this._state.calm)
+            this._on(this._state.calm, 'changed', () => this.configure());
+        this._on(this._settings, 'changed::isla-oscura', () => this._updatePortal());
+        // The Apps button stays open while the app grid is open.
         this._on(Main.overview, 'shown', () => this._updatePortal());
         this._on(Main.overview, 'hidden', () => this._updatePortal());
         if (Main.overview.dash?.showAppsButton)
@@ -109,7 +111,7 @@ export class AppsRow extends Signals.EventEmitter {
         try {
             Gio.AppInfo.launch_default_for_uri(uri, global.create_app_launch_context(0, -1));
         } catch (e) {
-            Main.notifyError('No se pudo abrir', e.message);
+            Main.notifyError(_('No se pudo abrir'), e.message);
         }
     }
 
@@ -134,21 +136,20 @@ export class AppsRow extends Signals.EventEmitter {
         this._updatePortal();
     }
 
-    // Contrast with the skin, spinning, and lit while the app grid is open.
+    // Contrast with the skin, and open while the app grid is open.
     _updatePortal() {
-        const portal = this._items?.get('apps')?.portal;
-        if (!portal)
+        const button = this._items?.get('apps')?.appsButton;
+        if (!button)
             return;
-        portal.setGraphite(this._skin?.portalGraphite ?? false);
-        portal.spin = this._settings.get_boolean('portal-giro');
+        button.setLight(this._skin?.portalGraphite ?? false);
         const showApps = Main.overview.dash?.showAppsButton;
-        portal.setOpen(Main.overview.visible && !!showApps?.checked);
+        button.setOpen(Main.overview.visible && !!showApps?.checked);
     }
 
     configure() {
         const skin = this._skin;
         const base = this._settings.get_int('tamano-base');
-        const magnify = this._settings.get_boolean('magnificacion');
+        const magnify = this._settings.get_boolean('magnificacion') && !this._state.calm?.magnifyOff;
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         this._p = {
             base,
@@ -243,8 +244,8 @@ export class AppsRow extends Signals.EventEmitter {
     _createItem(entry) {
         if (entry.kind === 'separator')
             return new DockSeparator();
-        const label = {app: entry.app?.get_name(), downloads: 'Descargas', trash: 'Papelera', apps: 'Aplicaciones',
-            clipboard: 'Portapapeles', power: 'Energía'}[entry.kind];
+        const label = {app: entry.app?.get_name(), downloads: _('Descargas'), trash: _('Papelera'), apps: _('Aplicaciones'),
+            clipboard: _('Portapapeles'), power: _('Energía')}[entry.kind];
         const item = new DockItem({kind: entry.kind, key: entry.key, app: entry.app ?? null, label});
         item.connect('activate', (_i, button) => this._onActivate(item, button));
         item.connect('hover-changed', (_i, hover) => this._onItemHover(item, hover));
@@ -504,9 +505,9 @@ export class AppsRow extends Signals.EventEmitter {
 
     _fillMenu(menu, item) {
         if (item.kind === 'downloads') {
-            menu.addAction('Abrir carpeta', () => this._launch(GLib.filename_to_uri(this._downloadsDir(), null)));
+            menu.addAction(_('Abrir carpeta'), () => this._launch(GLib.filename_to_uri(this._downloadsDir(), null)));
             menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            for (const [value, label] of [['cascade', 'Vista: cascada'], ['grid', 'Vista: cuadrícula'], ['list', 'Vista: lista']]) {
+            for (const [value, label] of [['cascade', _('Vista: cascada')], ['grid', _('Vista: cuadrícula')], ['list', _('Vista: lista')]]) {
                 const option = menu.addAction(label, () => this._settings.set_string('stack-view', value));
                 option.setOrnament(this._settings.get_string('stack-view') === value
                     ? PopupMenu.Ornament.DOT : PopupMenu.Ornament.NO_DOT);
@@ -514,9 +515,9 @@ export class AppsRow extends Signals.EventEmitter {
             return;
         }
         if (item.kind === 'trash') {
-            menu.addAction('Abrir la papelera', () => this._launch('trash:///'));
+            menu.addAction(_('Abrir la papelera'), () => this._launch('trash:///'));
             if (this._trashFull)
-                menu.addAction('Vaciar la papelera…', () => this._confirmEmptyTrash());
+                menu.addAction(_('Vaciar la papelera…'), () => this._confirmEmptyTrash());
             return;
         }
         const app = item.app;
@@ -528,7 +529,7 @@ export class AppsRow extends Signals.EventEmitter {
         if (windows.length)
             menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         if (app.can_open_new_window())
-            menu.addAction('Nueva ventana', () => app.open_new_window(-1));
+            menu.addAction(_('Nueva ventana'), () => app.open_new_window(-1));
         const info = app.get_app_info();
         // The app's own actions ("new-window" is already covered above).
         const own = (info?.list_actions() ?? []).filter(a => !(app.can_open_new_window() && /^new[-_]?window$/i.test(a)));
@@ -538,28 +539,28 @@ export class AppsRow extends Signals.EventEmitter {
         const favorites = AppFavorites.getAppFavorites();
         const id = app.get_id();
         if (favorites.isFavorite(id))
-            menu.addAction('Quitar del dock', () => favorites.removeFavorite(id));
+            menu.addAction(_('Quitar del dock'), () => favorites.removeFavorite(id));
         else if (info)
-            menu.addAction('Fijar en el dock', () => favorites.addFavorite(id));
+            menu.addAction(_('Fijar en el dock'), () => favorites.addFavorite(id));
         if (app.state !== Shell.AppState.STOPPED)
-            menu.addAction('Cerrar todas las ventanas', () => app.request_quit());
+            menu.addAction(_('Cerrar todas las ventanas'), () => app.request_quit());
     }
 
     _confirmEmptyTrash() {
         const dialog = new ModalDialog.ModalDialog();
         dialog.contentLayout.add_child(new Dialog.MessageDialogContent({
-            title: '¿Vaciar la papelera?',
-            description: 'Todo lo que está en la papelera se borrará para siempre.',
+            title: _('¿Vaciar la papelera?'),
+            description: _('Todo lo que está en la papelera se borrará para siempre.'),
         }));
-        dialog.addButton({label: 'Cancelar', action: () => dialog.close(), key: Clutter.KEY_Escape});
+        dialog.addButton({label: _('Cancelar'), action: () => dialog.close(), key: Clutter.KEY_Escape});
         dialog.addButton({
-            label: 'Vaciar',
+            label: _('Vaciar'),
             action: () => {
                 dialog.close();
                 try {
                     Gio.Subprocess.new(['gio', 'trash', '--empty'], Gio.SubprocessFlags.NONE);
                 } catch (e) {
-                    Main.notifyError('No se pudo vaciar la papelera', e.message);
+                    Main.notifyError(_('No se pudo vaciar la papelera'), e.message);
                 }
             },
         });
@@ -640,7 +641,7 @@ export class AppsRow extends Signals.EventEmitter {
         const {base} = this._p;
         this._appItems.forEach((item, i) => {
             const d = this._hovered < 0 ? Infinity : Math.abs(i - this._hovered);
-            // The Portal keeps its size so it stays centered in the island.
+            // The Apps button keeps its size so it stays centered in the island.
             const zoom = item.kind === 'apps' || item.kind === 'power' || item.kind === 'clipboard' ? 1 : d < ZOOM.length ? ZOOM[d] : 1;
             item.setSize(Math.round(base * zoom));
         });
@@ -707,7 +708,7 @@ export class AppsRow extends Signals.EventEmitter {
         item.setProgress(busy && progress === null);
         item.setRing(progress);
         item.setDot(fresh);
-        item.title = busy ? `Descargas · ${transfer ?? 'descargando…'}` : 'Descargas';
+        item.title = busy ? `${_('Descargas')} · ${transfer ?? _('descargando…')}` : _('Descargas');
         // The tooltip that is showing follows the download.
         if (this._tooltipItem === item && this._tooltip.visible && this._tooltip.text !== item.title) {
             this._tooltip.text = item.title;
