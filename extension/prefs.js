@@ -428,6 +428,26 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         }
         page.add(group);
 
+        const side = new Adw.PreferencesGroup({
+            title: 'Reloj lateral',
+            description: 'Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora. ' +
+                'Sirve cuando las ventanas maximizadas tapan el reloj del escritorio.',
+        });
+        side.add(switchRow(settings, 'reloj-lateral', 'Mostrar el reloj lateral'));
+        side.add(comboRow(settings, 'reloj-lateral-estilo', 'Estilo', [
+            ['pildora', 'Píldora'],
+            ['texto', 'Solo texto'],
+            ['pestana', 'Pestaña vertical'],
+        ]));
+        side.add(comboRow(settings, 'reloj-lateral-borde', 'Borde', [
+            ['derecho', 'Derecho'],
+            ['izquierdo', 'Izquierdo'],
+        ]));
+        side.add(switchRow(settings, 'reloj-lateral-segundos', 'Mostrar los segundos'));
+        side.add(switchRow(settings, 'reloj-lateral-calendario', 'Un clic abre el calendario',
+            'Con las notificaciones recientes'));
+        page.add(side);
+
         const hasInter = PangoCairo.FontMap.get_default().list_families().some(f => f.get_name() === 'Inter');
         if (!hasInter) {
             const font = new Adw.PreferencesGroup({

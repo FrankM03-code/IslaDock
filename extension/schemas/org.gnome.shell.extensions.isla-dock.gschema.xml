@@ -241,5 +241,27 @@
       <default>true</default>
       <summary>Indicador de espacios de trabajo en la isla</summary>
     </key>
+    <key name="reloj-lateral" type="b">
+      <default>true</default>
+      <summary>Reloj lateral en burbuja, escondido en el borde</summary>
+    </key>
+    <key name="reloj-lateral-estilo" type="s">
+      <choices><choice value='texto'/><choice value='pildora'/><choice value='pestana'/></choices>
+      <default>'pildora'</default>
+      <summary>Reloj lateral: solo texto, píldora o pestaña vertical</summary>
+    </key>
+    <key name="reloj-lateral-borde" type="s">
+      <choices><choice value='derecho'/><choice value='izquierdo'/></choices>
+      <default>'derecho'</default>
+      <summary>Reloj lateral: borde de la pantalla</summary>
+    </key>
+    <key name="reloj-lateral-segundos" type="b">
+      <default>false</default>
+      <summary>Reloj lateral: mostrar los segundos</summary>
+    </key>
+    <key name="reloj-lateral-calendario" type="b">
+      <default>true</default>
+      <summary>Reloj lateral: un clic abre el calendario y las notificaciones</summary>
+    </key>
   </schema>
 </schemalist>

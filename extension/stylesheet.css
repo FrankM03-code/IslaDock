@@ -566,3 +566,40 @@
 .isla-capsule.oscura .isla-espacio-boton:hover .isla-espacio,
 .isla-skin-vidrio-oscuro .isla-espacio-boton:hover .isla-espacio,
 .isla-skin-aurora .isla-espacio-boton:hover .isla-espacio { background-color: rgba(255, 255, 255, 0.65); }
+
+/* ---------- side clock (reloj lateral) ---------- */
+.isla-rl-marca {
+  border-radius: 2px; background-color: rgba(120, 122, 132, 0.60);
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.35);
+}
+.isla-rl { color: #FFFFFF; }
+.isla-rl-hora, .isla-rl-fecha, .isla-rl-dia, .isla-rl-punto, .isla-rl-segundos {
+  font-feature-settings: "tnum"; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+/* texto: no background; a line joins it to the edge */
+.isla-rl-texto { padding: 6px 0; }
+.isla-rl-texto .isla-rl-fila { spacing: 12px; }
+.isla-rl-texto .isla-rl-hora { font-size: 40px; font-weight: 200; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.75); }
+.isla-rl-texto .isla-rl-fecha { text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75); }
+.isla-rl-texto .isla-rl-fecha { font-size: 11px; font-weight: 600; letter-spacing: 2px; color: rgba(255, 255, 255, 0.85); }
+.isla-rl-texto .isla-rl-linea {
+  width: 2px; height: 58px; border-radius: 1px; background-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
+}
+.isla-rl-texto.derecha { padding-right: 1px; }
+.isla-rl-texto.izquierda { padding-left: 1px; }
+/* pildora: a dark see-through capsule, one line */
+.isla-rl-pildora { background-color: rgba(0, 0, 0, 0.35); border-radius: 999px; padding: 8px 16px; }
+.isla-rl-pildora .isla-rl-fila { spacing: 8px; }
+.isla-rl-pildora .isla-rl-hora { font-size: 16px; font-weight: 600; }
+.isla-rl-pildora .isla-rl-punto { font-size: 14px; color: rgba(255, 255, 255, 0.6); }
+.isla-rl-pildora .isla-rl-fecha { font-size: 14px; color: rgba(255, 255, 255, 0.85); }
+/* pestana: a narrow tab on the edge, the time stacked */
+.isla-rl-pestana { background-color: rgba(0, 0, 0, 0.35); padding: 12px 10px; }
+.isla-rl-pestana.derecha { border-radius: 14px 0 0 14px; }
+.isla-rl-pestana.izquierda { border-radius: 0 14px 14px 0; }
+.isla-rl-pestana .isla-rl-columna { spacing: 0; }
+.isla-rl-pestana .isla-rl-hora { font-size: 24px; font-weight: 300; }
+.isla-rl-pestana .isla-rl-segundos { font-size: 13px; color: rgba(255, 255, 255, 0.7); }
+.isla-rl-pestana .isla-rl-dia { font-size: 10px; font-weight: 600; letter-spacing: 1px; color: rgba(255, 255, 255, 0.8);
+  padding-top: 6px; text-align: center; }

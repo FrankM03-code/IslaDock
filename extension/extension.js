@@ -28,6 +28,7 @@ import {DesktopClock} from './isla/clock.js';
 import {BatteryStatus} from './isla/battery.js';
 import {KeyboardStatus} from './isla/keyboard.js';
 import {WorkspacesStatus} from './isla/workspaces.js';
+import {SideClock} from './isla/sideClock.js';
 import {IslaState} from './isla/state.js';
 
 // Modules that a setting can switch off: [key or null, factory].
@@ -54,6 +55,7 @@ const MODULES = {
     battery: [null, ctx => new BatteryStatus(ctx)],
     keyboard: [null, ctx => new KeyboardStatus(ctx)],
     workspaces: ['espacios-trabajo', ctx => new WorkspacesStatus(ctx)],
+    sideClock: ['reloj-lateral', ctx => new SideClock(ctx)],
 };
 
 export default class IslaDockExtension extends Extension {
