@@ -537,11 +537,11 @@ export class AppsRow extends Signals.EventEmitter {
         const favorites = AppFavorites.getAppFavorites();
         const id = app.get_id();
         if (favorites.isFavorite(id))
-            menu.addAction('Quitar de favoritos', () => favorites.removeFavorite(id));
+            menu.addAction('Quitar del dock', () => favorites.removeFavorite(id));
         else if (info)
-            menu.addAction('Añadir a favoritos', () => favorites.addFavorite(id));
+            menu.addAction('Fijar en el dock', () => favorites.addFavorite(id));
         if (app.state !== Shell.AppState.STOPPED)
-            menu.addAction('Cerrar todo', () => app.request_quit());
+            menu.addAction('Cerrar todas las ventanas', () => app.request_quit());
     }
 
     _confirmEmptyTrash() {
