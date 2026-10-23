@@ -64,6 +64,10 @@ export class AppsRow extends Signals.EventEmitter {
         this._on(AppFavorites.getAppFavorites(), 'changed', () => this._rebuild());
         this._on(this._appSystem, 'app-state-changed', () => this._later('apps', 50, () => this._rebuild()));
         this._on(this._appSystem, 'installed-changed', () => this._refreshIcons());
+        // One mark per open window under each icon, another look for the app in front.
+        const tracker = Shell.WindowTracker.get_default();
+        this._on(tracker, 'tracked-windows-changed', () => this._later('windows', 50, () => this._refreshState()));
+        this._on(tracker, 'notify::focus-app', () => this._refreshState());
         this._on(this._resolver, 'changed', () => this._refreshIcons());
         for (const key of ['mostrar-descargas', 'mostrar-papelera', 'mostrar-aplicaciones', 'mostrar-portapapeles', 'mostrar-energia'])
             this._on(this._settings, `changed::${key}`, () => this._rebuild());
@@ -323,8 +327,12 @@ export class AppsRow extends Signals.EventEmitter {
 
     _refreshState() {
         for (const item of this._appItems) {
-            if (item.kind === 'app')
-                item.setRunning(item.app.state !== Shell.AppState.STOPPED);
+            if (item.kind === 'app') {
+                const app = item.app;
+                const windows = app.state === Shell.AppState.STOPPED ? 0
+                    : Math.max(1, app.get_windows().filter(w => !w.skip_taskbar).length);
+                item.setRunning(windows, Shell.WindowTracker.get_default().focus_app === app);
+            }
             else if (item.kind === 'downloads')
                 this._showDownloads(item);
         }

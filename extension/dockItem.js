@@ -17,6 +17,10 @@ import {ms} from './isla/timing.js';
 export const INDICATOR_GAP = 1;
 export const INDICATOR_HEIGHT = 3;
 const INDICATOR_WIDTH = 4;
+const INDICATOR_FOCUSED = 8;   // the app in front: longer marks
+const INDICATOR_SPACING = 2;
+const INDICATOR_MAX = 4;       // one per window, up to this many
+const INDICATOR_SOFT = 150;    // opacity of the marks of apps not in front
 
 const HOVER_TIME = 120;
 const ZOOM_TIME = 130;
@@ -72,7 +76,8 @@ export const DockItem = GObject.registerClass({
         this.key = key;
         this.app = app;
         this.title = label;
-        this.running = false;
+        this.running = 0;        // open windows
+        this.focused = false;
         this.progress = false;
         this.zoom = 0;
 
@@ -108,8 +113,8 @@ export const DockItem = GObject.registerClass({
             if (kind === 'power')
                 this._watchLongPress();
         }
-        this._indicator = new St.Widget({
-            style_class: 'isla-indicator',
+        this._indicator = new St.BoxLayout({
+            style_class: 'isla-indicadores',
             x_align: Clutter.ActorAlign.CENTER,
             visible: false,
         });
@@ -276,7 +281,6 @@ export const DockItem = GObject.registerClass({
         }
         this._holder.set_height(p.base * sf);
 
-        this._indicator.set_size(INDICATOR_WIDTH * sf, INDICATOR_HEIGHT * sf);
         this._indicator.margin_top = INDICATOR_GAP * sf;
         this._updateIndicator();
 
@@ -319,10 +323,13 @@ export const DockItem = GObject.registerClass({
         this._updateCalm(true);
     }
 
-    setRunning(running) {
-        if (this.running === running)
+    // `windows`: how many are open (0 = not running); `focused`: the app in front.
+    setRunning(windows, focused = false) {
+        windows = Number(windows);
+        if (this.running === windows && this.focused === focused)
             return;
-        this.running = running;
+        this.running = windows;
+        this.focused = focused;
         this._updateIndicator();
     }
 
@@ -337,17 +344,31 @@ export const DockItem = GObject.registerClass({
         if (!this._p)
             return;
         const sf = this._p.scale;
+        const marks = this.progress ? 1 : Math.max(1, Math.min(INDICATOR_MAX, this.running));
+        const box = this._indicator;
+        while (box.get_n_children() > marks)
+            box.get_last_child().destroy();
+        while (box.get_n_children() < marks)
+            box.add_child(new St.Widget({style_class: 'isla-indicator'}));
+        box.style = `spacing: ${Math.round(INDICATOR_SPACING * sf)}px;`;
+        box.opacity = 255;
+        box.show();
+        const [mark] = box.get_children();
         if (this.progress) {
-            this._indicator.style_class = 'isla-indicator progreso';
-            this._indicator.set_size(26 * sf, 2 * sf);
-            this._indicator.show();
+            mark.style_class = 'isla-indicator progreso';
+            mark.opacity = 255;
+            mark.set_size(26 * sf, 2 * sf);
             return;
         }
-        this._indicator.style_class = 'isla-indicator';
-        this._indicator.set_size(INDICATOR_WIDTH * sf, INDICATOR_HEIGHT * sf);
+        const width = this.focused ? INDICATOR_FOCUSED : INDICATOR_WIDTH;
+        for (const m of box.get_children()) {
+            m.style_class = this.focused ? 'isla-indicator enfocada' : 'isla-indicator';
+            m.set_size(width * sf, INDICATOR_HEIGHT * sf);
+            // St has no CSS opacity: the others' marks are softer, in every skin's color.
+            m.opacity = this.focused ? 255 : INDICATOR_SOFT;
+        }
         // Keeps its place when hidden so the icons don't move.
-        this._indicator.opacity = this.running ? 255 : 0;
-        this._indicator.show();
+        box.opacity = this.running ? 255 : 0;
     }
 
     // Two jumps of 18 px, like an app being launched.
