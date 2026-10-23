@@ -10,6 +10,8 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Volume from 'resource:///org/gnome/shell/ui/status/volume.js';
 
+import {onButton} from './press.js';
+
 const STEP = 0.05;
 const LONG_PRESS = 600;
 const DRAG_UP = 40;
@@ -75,6 +77,8 @@ export class Gestures {
     _onPress(event) {
         const button = event.get_button();
         if (button !== Clutter.BUTTON_PRIMARY && button !== Clutter.BUTTON_MIDDLE)
+            return Clutter.EVENT_PROPAGATE;
+        if (onButton(event, this._capsule))
             return Clutter.EVENT_PROPAGATE;
         this._cancelPress();
         const [, y] = event.get_coords();

@@ -13,6 +13,8 @@ import {Notices} from './isla/notices.js';
 import {Previews} from './isla/previews.js';
 import {PrefsWindow} from './isla/prefsWindow.js';
 import {Search} from './isla/search.js';
+import {Recording} from './isla/recording.js';
+import {Clipboard} from './isla/clipboard/clipboard.js';
 import {Timer} from './isla/timer.js';
 import {Progress} from './isla/progress.js';
 import {Stack} from './isla/stack/stack.js';
@@ -32,12 +34,14 @@ const MODULES = {
     media: ['isla-musica', ctx => new Media(ctx)],
     notices: [null, ctx => new Notices(ctx)],
     timer: [null, ctx => new Timer(ctx)],
+    recording: [null, ctx => new Recording(ctx)],
     search: [null, ctx => new Search(ctx)],
     previews: ['isla-vistas-previas', ctx => new Previews(ctx)],
     progress: ['isla-progreso', ctx => new Progress(ctx)],
     stack: [null, ctx => new Stack(ctx)],
     folders: [null, ctx => new Folders(ctx)],
     topbar: ['ocultar-barra-superior', () => new TopBar()],
+    clipboard: ['mostrar-portapapeles', ctx => new Clipboard(ctx)],
     power: [null, ctx => new Power(ctx)],
     floating: ['avisos-flotantes', ctx => new FloatingNotices(ctx)],
     prefsWindow: [null, ctx => new PrefsWindow(ctx)],
@@ -68,7 +72,7 @@ export default class IslaDockExtension extends Extension {
         }
         this._state = new IslaState();
         this._isla = new Isla({settings: this._settings, resolver: this._resolver, state: this._state});
-        this._ctx = {state: this._state, settings: this._settings, capsule: this._isla.capsule, title: this.metadata.name,
+        this._ctx = {state: this._state, settings: this._settings, capsule: this._isla.capsule, title: this.metadata.name, uuid: this.uuid,
             resolver: this._resolver, dir: this.dir};
         for (const [name, [key]] of Object.entries(MODULES)) {
             this._sync(name);

@@ -12,6 +12,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {Mode} from './state.js';
+import {chromeParams} from './chrome.js';
 
 const SHOW_DELAY = 400;
 const HIDE_DELAY = 300;
@@ -23,7 +24,7 @@ export class Previews {
         this._state = state;
         this._timers = {};
         this._card = new St.BoxLayout({style_class: 'isla-vista', reactive: true, track_hover: true, visible: false});
-        Main.layoutManager.addChrome(this._card, {affectsInputRegion: true});
+        Main.layoutManager.addChrome(this._card, chromeParams({affectsInputRegion: true}));
         this._card.connect('notify::hover', () => {
             if (this._card.hover)
                 this._cancel('hide');

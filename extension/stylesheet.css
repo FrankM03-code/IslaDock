@@ -34,6 +34,14 @@
 /* ---------- open ---------- */
 
 .isla-panels { spacing: 8px; }
+/* Each panel of the open dock is a capsule exactly as tall as the row of icons (40 px). */
+.isla-pildora {
+  height: 40px; padding: 0 6px 0 6px; border-radius: 20px;
+  background-color: rgba(30, 32, 40, 0.06);
+}
+.isla-capsule.oscura .isla-pildora,
+.isla-skin-vidrio-oscuro .isla-pildora,
+.isla-skin-aurora .isla-pildora { background-color: rgba(255, 255, 255, 0.08); }
 .isla-item { padding: 0; }
 /* Symbolic icons (the applications button) need a color of their own. */
 .isla-icon { color: #3A3D45; }
@@ -78,18 +86,15 @@
 .isla-onda { spacing: 2px; }
 .isla-onda-barra { width: 3px; height: 14px; border-radius: 2px; background-color: #3A3D45; }
 .isla-capsule.oscura .isla-onda-barra { background-color: #F4F5FA; }
-.isla-musica { spacing: 10px; }
-.isla-caratula-boton { padding: 0; border-radius: 10px; }
+.isla-musica { spacing: 8px; }
+.isla-caratula-boton { padding: 0; border-radius: 8px; }
 .isla-caratula {
-  width: 40px; height: 40px; border-radius: 10px;
+  width: 28px; height: 28px; border-radius: 8px;
   background-color: rgba(30, 32, 40, 0.08);
   background-size: cover;
 }
-.isla-caratula-icono { icon-size: 20px; color: rgba(30, 32, 40, 0.55); }
-.isla-musica-texto { min-width: 60px; }
-.isla-musica-titulo, .isla-musica-artista { max-width: 170px; }
-.isla-musica-titulo { font-size: 13px; font-weight: 600; color: #1E2028; }
-.isla-musica-artista { font-size: 11px; color: rgba(30, 32, 40, 0.65); }
+.isla-caratula-icono { icon-size: 16px; color: rgba(30, 32, 40, 0.55); }
+.isla-musica-titulo { max-width: 110px; font-size: 12px; font-weight: 600; color: #1E2028; }
 .isla-musica-botones { spacing: 2px; }
 .isla-boton-redondo { width: 32px; height: 32px; border-radius: 16px; color: #1E2028; }
 .isla-boton-redondo:hover { background-color: rgba(30, 32, 40, 0.08); }
@@ -97,7 +102,6 @@
 .isla-boton-icono { icon-size: 16px; }
 .isla-capsule.oscura .isla-musica-titulo,
 .isla-capsule.oscura .isla-boton-redondo { color: #F4F5FA; }
-.isla-capsule.oscura .isla-musica-artista { color: rgba(244, 245, 250, 0.65); }
 .isla-capsule.oscura .isla-caratula { background-color: rgba(255, 255, 255, 0.10); }
 .isla-capsule.oscura .isla-caratula-icono { color: rgba(244, 245, 250, 0.6); }
 .isla-capsule.oscura .isla-boton-redondo:hover { background-color: rgba(255, 255, 255, 0.10); }
@@ -109,12 +113,29 @@
 .isla-tempo-mini.listo .isla-anillo,
 .isla-tempo-mini.listo .isla-tempo-hora { color: #E8772E; }
 .isla-tempo-hora { font-family: monospace; font-size: 12px; font-weight: 600; color: #1E2028; }
-.isla-tempo { spacing: 10px; }
-.isla-tempo-grande { font-family: monospace; font-size: 20px; font-weight: bold; color: #1E2028; }
-.isla-tempo-detalle { font-size: 11px; color: rgba(30, 32, 40, 0.65); }
+.isla-tempo { spacing: 8px; padding-left: 7px; }
+.isla-tempo-grande { font-family: monospace; font-size: 14px; font-weight: bold; color: #1E2028; }
 .isla-capsule.oscura .isla-tempo-hora,
 .isla-capsule.oscura .isla-tempo-grande { color: #F4F5FA; }
-.isla-capsule.oscura .isla-tempo-detalle { color: rgba(244, 245, 250, 0.65); }
+.isla-tempo.pausa .isla-anillo,
+.isla-tempo.pausa .isla-tempo-grande { color: #8A8D96; }
+.isla-tempo.listo .isla-anillo,
+.isla-tempo.listo .isla-tempo-grande { color: #E8772E; }
+
+/* ---------- screen recording ---------- */
+.isla-grabacion-mini { spacing: 6px; }
+.isla-grabacion-punto { width: 9px; height: 9px; border-radius: 5px; background-color: #E24B4A; }
+.isla-grabacion-punto.blanco { background-color: #FFFFFF; }
+.isla-grabacion-hora { font-family: monospace; font-size: 12px; font-weight: 600; color: #E24B4A; }
+.isla-grabacion {
+  height: 40px; padding: 0 6px 0 14px; spacing: 8px; border-radius: 20px;
+  background-color: rgba(226, 75, 74, 0.94); color: #FFFFFF;
+}
+.isla-grabacion-tiempo { font-family: monospace; font-size: 14px; font-weight: bold; color: #FFFFFF; }
+.isla-grabacion-stop { width: 28px; height: 28px; padding: 0; border-radius: 14px; background-color: rgba(255, 255, 255, 0.95); }
+.isla-grabacion-stop:hover { background-color: #FFFFFF; }
+.isla-grabacion-stop:active { background-color: rgba(255, 255, 255, 0.80); }
+.isla-grabacion-cuadro { width: 10px; height: 10px; border-radius: 2px; background-color: #A32D2D; }
 .isla-entrada-minutos { margin-top: 12px; min-width: 120px; }
 
 /* ---------- search ---------- */
@@ -196,7 +217,7 @@
 }
 .isla-vo-sombra { border-radius: 26px; background-color: rgba(0, 0, 0, 0.02); box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45); }
 .isla-tarjeta.isla-skin-vidrio-oscuro {
-  border-radius: 26px; padding: 6px 16px 6px 8px; min-width: 284px; transition-duration: 200ms;
+  border-radius: 26px; padding: 6px 10px 6px 8px; transition-duration: 200ms;
   background-color: transparent; border-width: 0;
 }
 .isla-skin-vidrio-oscuro .isla-icon { color: #FFFFFF; }
@@ -214,7 +235,6 @@
 .isla-skin-vidrio-oscuro .isla-aviso-icono,
 .isla-skin-vidrio-oscuro .isla-caratula-icono,
 .isla-skin-vidrio-oscuro .isla-anillo { color: #FFFFFF; }
-.isla-skin-vidrio-oscuro .isla-tempo-detalle,
 .isla-skin-vidrio-oscuro .isla-aviso-cuerpo,
 .isla-skin-vidrio-oscuro .isla-resultado-detalle,
 .isla-skin-vidrio-oscuro .isla-progreso-porcentaje,
@@ -224,19 +244,11 @@
 .isla-skin-vidrio-oscuro .isla-level-fill { background-color: #FFFFFF; }
 .isla-skin-vidrio-oscuro .isla-resultado.seleccionado { background-color: rgba(255, 255, 255, 0.10); }
 .isla-skin-vidrio-oscuro .isla-boton-redondo:hover { background-color: rgba(255, 255, 255, 0.10); }
-/* Music: title 14 px / artist 12 px, cover and card as tall as the island, a 40 px glass play button. */
-.isla-skin-vidrio-oscuro .isla-musica { spacing: 12px; }
-.isla-skin-vidrio-oscuro .isla-musica-titulo { font-size: 14px; font-weight: 500; color: #FFFFFF; }
-.isla-skin-vidrio-oscuro .isla-musica-artista { font-size: 12px; color: rgba(255, 255, 255, 0.65); }
-.isla-tarjeta.isla-skin-vidrio-oscuro .isla-musica-titulo,
-.isla-tarjeta.isla-skin-vidrio-oscuro .isla-musica-artista { max-width: 150px; }
-.isla-skin-vidrio-oscuro .isla-caratula-boton { border-radius: 20px; }
-.isla-tarjeta.isla-skin-vidrio-oscuro .isla-caratula { width: 46px; height: 46px; border-radius: 20px; background-color: rgba(255, 255, 255, 0.10); }
-.isla-skin-vidrio-oscuro .isla-musica-botones { spacing: 4px; }
-.isla-tarjeta.isla-skin-vidrio-oscuro .isla-boton-redondo { width: 36px; height: 36px; border-radius: 18px; }
-.isla-tarjeta.isla-skin-vidrio-oscuro .isla-boton-redondo .isla-boton-icono { icon-size: 20px; }
-.isla-tarjeta.isla-skin-vidrio-oscuro .isla-boton-play { width: 40px; height: 40px; border-radius: 20px; }
-.isla-tarjeta.isla-skin-vidrio-oscuro .isla-boton-play .isla-boton-icono { icon-size: 18px; }
+/* Music: one row as tall as the icons, a round cover and a glass play button. */
+.isla-skin-vidrio-oscuro .isla-musica-titulo { font-size: 13px; font-weight: 500; color: #FFFFFF; }
+.isla-skin-vidrio-oscuro .isla-caratula-boton,
+.isla-skin-vidrio-oscuro .isla-caratula { border-radius: 14px; }
+.isla-tarjeta.isla-skin-vidrio-oscuro .isla-caratula { background-color: rgba(255, 255, 255, 0.10); }
 .isla-tarjeta.isla-skin-vidrio-oscuro.vo-plano .isla-boton-play {
   background-color: rgba(255, 255, 255, 0.10); border: 1px solid rgba(255, 255, 255, 0.30);
 }
@@ -264,8 +276,8 @@
 .isla-skin-aurora .isla-aviso-icono,
 .isla-skin-aurora .isla-icon,
 .isla-skin-aurora .isla-anillo { color: #F4F5FA; }
-.isla-skin-aurora .isla-musica-artista,
-.isla-skin-aurora .isla-tempo-detalle,
+.isla-skin-aurora .isla-tempo.pausa .isla-anillo,
+.isla-skin-aurora .isla-tempo.pausa .isla-tempo-grande,
 .isla-skin-aurora .isla-aviso-cuerpo,
 .isla-skin-aurora .isla-resultado-detalle,
 .isla-skin-aurora .isla-progreso-porcentaje,
@@ -421,3 +433,81 @@
 .isla-reloj-linea, .isla-reloj-punto, .isla-reloj-barra { background-color: #ffffff; }
 .isla-reloj-dia.hoy { background-color: #ffffff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); }
 .isla-reloj-dia.hoy .isla-reloj-texto { color: #222222; text-shadow: none; }
+
+/* ---------- Portapapeles (INSTRUCCIONES-PORTAPAPELES.md) ----------
+   Dark like the Energía panel; .clara over a light island. */
+.isla-clip-panel {
+  width: 340px; padding: 10px; spacing: 6px; border-radius: 18px;
+  background-color: #2c2c2e; border: 1px solid rgba(85, 85, 85, 0.75);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); color: #e4e4e8;
+}
+.isla-clip-busqueda { height: 34px; padding: 0 10px; spacing: 8px; border-radius: 10px; background-color: rgba(255, 255, 255, 0.08); }
+.isla-clip-lupa { icon-size: 15px; color: rgba(255, 255, 255, 0.6); }
+.isla-clip-campo, .isla-clip-campo:focus, .isla-clip-campo:hover {
+  background: none; border: none; box-shadow: none; padding: 0; color: #ffffff; font-size: 13px; caret-color: #ffffff;
+}
+.isla-clip-campo StLabel.hint-text { color: rgba(255, 255, 255, 0.45); }
+.isla-clip-atajo { font-family: monospace; font-size: 11px; color: rgba(255, 255, 255, 0.45); }
+/* One track, the active segment grows with its name. */
+.isla-clip-segmento { padding: 3px; spacing: 2px; border-radius: 10px; background-color: rgba(0, 0, 0, 0.25); }
+.isla-clip-seg {
+  height: 28px; min-width: 34px; padding: 0 10px; border-radius: 7px; border: none; background: none; box-shadow: none;
+  color: rgba(255, 255, 255, 0.55); font-size: 12px; transition-duration: 150ms;
+}
+.isla-clip-seg:hover { color: #ffffff; background-color: rgba(255, 255, 255, 0.06); }
+.isla-clip-seg:checked { color: #ffffff; background-color: rgba(255, 255, 255, 0.16); }
+.isla-clip-seg:focus { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4); }
+.isla-clip-seg-contenido { spacing: 6px; }
+.isla-clip-seg-icono { icon-size: 16px; }
+.isla-clip-seccion { font-size: 11px; color: rgba(255, 255, 255, 0.5); padding: 8px 10px 2px 10px; }
+.isla-clip-fila { padding: 8px 10px; border-radius: 10px; border: none; background: none; color: #ffffff; }
+.isla-clip-fila:hover, .isla-clip-fila:focus { background-color: rgba(255, 255, 255, 0.08); }
+.isla-clip-fila-contenido { spacing: 10px; }
+.isla-clip-miniatura { width: 32px; height: 32px; border-radius: 7px; background-color: rgba(255, 255, 255, 0.10); color: #e4e4e8; }
+.isla-clip-miniatura.color { border: 1px solid rgba(255, 255, 255, 0.25); }
+.isla-clip-miniatura.link { background-color: rgba(55, 138, 221, 0.35); color: #b5d4f4; }
+.isla-clip-miniatura.image { background-color: #5f5e5a; }
+.isla-clip-miniatura-icono { icon-size: 15px; }
+.isla-clip-valor { font-size: 13px; }
+.isla-clip-valor.mono { font-family: monospace; font-size: 12px; }
+.isla-clip-tiempo { font-size: 11px; color: rgba(255, 255, 255, 0.5); }
+.isla-clip-pin { width: 24px; height: 24px; border-radius: 12px; border: none; background: none; color: rgba(255, 255, 255, 0.7); }
+.isla-clip-pin:hover { background-color: rgba(255, 255, 255, 0.12); }
+.isla-clip-pin:checked { color: #fac775; }
+.isla-clip-pin-icono { icon-size: 15px; }
+.isla-clip-vacio { padding: 24px 0; font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+.isla-clip-pie { padding: 8px 4px 2px 4px; spacing: 8px; border-top: 1px solid rgba(255, 255, 255, 0.10); }
+.isla-clip-estado { font-size: 12px; color: rgba(255, 255, 255, 0.55); }
+.isla-clip-borrar { padding: 2px 6px; border-radius: 6px; border: none; background: none; color: rgba(255, 255, 255, 0.6); font-size: 12px; }
+.isla-clip-borrar:hover, .isla-clip-borrar:focus { color: #ffffff; background-color: rgba(255, 255, 255, 0.08); }
+.isla-clip-borrar-contenido { spacing: 4px; }
+.isla-clip-borrar-icono { icon-size: 14px; }
+/* Over a light island */
+.isla-clip-panel.clara { color: #1E1E1E; }
+.isla-clip-panel.clara .isla-clip-busqueda { background-color: rgba(30, 30, 30, 0.07); }
+.isla-clip-panel.clara .isla-clip-lupa { color: rgba(30, 30, 30, 0.55); }
+.isla-clip-panel.clara .isla-clip-campo { color: #1E1E1E; caret-color: #1E1E1E; }
+.isla-clip-panel.clara .isla-clip-campo StLabel.hint-text { color: rgba(30, 30, 30, 0.45); }
+.isla-clip-panel.clara .isla-clip-atajo { color: rgba(30, 30, 30, 0.45); }
+.isla-clip-panel.clara .isla-clip-segmento { background-color: rgba(30, 30, 30, 0.10); }
+.isla-clip-panel.clara .isla-clip-seg { color: rgba(30, 30, 30, 0.55); }
+.isla-clip-panel.clara .isla-clip-seg:hover { color: #1E1E1E; background-color: rgba(255, 255, 255, 0.45); }
+.isla-clip-panel.clara .isla-clip-seg:checked { color: #1E1E1E; background-color: rgba(255, 255, 255, 0.90); }
+.isla-clip-panel.clara .isla-clip-seg:focus { box-shadow: inset 0 0 0 1px rgba(47, 125, 225, 0.6); }
+.isla-clip-panel.clara .isla-clip-seccion,
+.isla-clip-panel.clara .isla-clip-tiempo,
+.isla-clip-panel.clara .isla-clip-vacio { color: rgba(30, 30, 30, 0.55); }
+.isla-clip-panel.clara .isla-clip-fila { color: #1E1E1E; }
+.isla-clip-panel.clara .isla-clip-fila:hover,
+.isla-clip-panel.clara .isla-clip-fila:focus { background-color: rgba(47, 125, 225, 0.12); }
+.isla-clip-panel.clara .isla-clip-miniatura { background-color: rgba(30, 30, 30, 0.08); color: #2A2A2E; }
+.isla-clip-panel.clara .isla-clip-miniatura.color { border-color: rgba(30, 30, 30, 0.20); }
+.isla-clip-panel.clara .isla-clip-miniatura.link { background-color: rgba(47, 125, 225, 0.16); color: #2F7DE1; }
+.isla-clip-panel.clara .isla-clip-pin { color: rgba(30, 30, 30, 0.6); }
+.isla-clip-panel.clara .isla-clip-pin:hover { background-color: rgba(30, 30, 30, 0.08); }
+.isla-clip-panel.clara .isla-clip-pin:checked { color: #C98A1E; }
+.isla-clip-panel.clara .isla-clip-pie { border-top-color: rgba(30, 30, 30, 0.12); }
+.isla-clip-panel.clara .isla-clip-estado { color: rgba(30, 30, 30, 0.55); }
+.isla-clip-panel.clara .isla-clip-borrar { color: rgba(30, 30, 30, 0.6); }
+.isla-clip-panel.clara .isla-clip-borrar:hover,
+.isla-clip-panel.clara .isla-clip-borrar:focus { color: #1E1E1E; background-color: rgba(30, 30, 30, 0.08); }

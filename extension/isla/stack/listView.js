@@ -72,7 +72,7 @@ export class ListView {
         if (entry.detail !== undefined)
             return entry.detail;
         if (entry.partial)
-            return 'descargando';
+            return entry.transfer ?? 'descargando';
         const when = relativeTime(entry.time);
         const size = entry.isDir || !entry.size ? '' : GLib.format_size(entry.size);
         return [when, size].filter(Boolean).join(' · ');
@@ -92,8 +92,10 @@ export class ListView {
         name.clutter_text.ellipsize = Pango.EllipsizeMode.MIDDLE;
         text.add_child(name);
         const detail = this._detail(entry);
-        if (detail)
-            text.add_child(new St.Label({text: detail, style: `font-size: 11px; color: ${s.textSecondary};`}));
+        if (detail) {
+            row._detail = new St.Label({text: detail, style: `font-size: 11px; color: ${s.textSecondary};`});
+            text.add_child(row._detail);
+        }
         if (entry.partial)
             text.add_child(progressBar(Math.round(200 * this._sf), Math.round(3 * this._sf), s.accent, entry.progress));
         box.add_child(text);
@@ -147,6 +149,14 @@ export class ListView {
             row.ease({opacity: 255, delay: ms(60 + i * STAGGER), duration: ms(IN_TIME),
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD});
         });
+    }
+
+    // How much has arrived, how fast.
+    updateTransfer() {
+        for (const row of this._rows) {
+            if (row.entry.partial && row._detail)
+                row._detail.text = this._detail(row.entry);
+        }
     }
 
     animateOut(done) {

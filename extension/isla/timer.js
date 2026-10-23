@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Timer and Pomodoro (B1). Right click on the island: 5, 15, 25 minutes, a
 // custom time, a Pomodoro (25 min of work and 5 of rest, 4 blocks) or stop.
-// Folded: a ring that closes and the time left; open: a big ring, the time,
-// pause and stop. When it ends: the theme's "complete" sound, a GNOME
+// Folded: a ring that closes and the time left; open: one row as tall as the
+// icons with the ring, the time, pause and stop (also in the right-click menu). When it ends: the theme's "complete" sound, a GNOME
 // notification, the island beats 3 times and stays first until touched.
 // The state lives in GSettings, so it survives a restart of the Shell.
 import Clutter from 'gi://Clutter';
@@ -15,6 +15,8 @@ import * as Dialog from 'resource:///org/gnome/shell/ui/dialog.js';
 import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
+import {pillSizes, pillStyle, roundButton} from './pill.js';
+import {onButton} from './press.js';
 import {Priority} from './state.js';
 
 const WORK = 25 * 60, REST = 5 * 60, BLOCKS = 4;
@@ -65,11 +67,16 @@ export class Timer {
         this._buildMenu();
         this._ids = [
             [capsule, capsule.connect('button-release-event', (_a, event) => {
-                if (event.get_button() !== Clutter.BUTTON_SECONDARY)
+                if (event.get_button() !== Clutter.BUTTON_SECONDARY || onButton(event, capsule))
                     return Clutter.EVENT_PROPAGATE;
                 this._openMenu();
                 return Clutter.EVENT_STOP;
             })],
+            [settings, settings.connect('changed::tamano-base', () => {
+                this._applySize();
+                state.command('resize');
+            })],
+            [state, state.connect('compact-changed', (_s, compact) => this._setCompact(compact))],
             [state, state.connect('command', (_s, name) => {
                 if (name === 'island-click' && this._data?.done)
                     this._acknowledge();
@@ -87,29 +94,40 @@ export class Timer {
         this._mini.add_child(this._miniRing);
         this._mini.add_child(this._miniTime);
 
-        this._panel = new St.BoxLayout({style_class: 'isla-tempo'});
-        this._ring = ringArea(40, 3.5);
+        this._panel = new St.BoxLayout({style_class: 'isla-tempo isla-pildora', y_align: Clutter.ActorAlign.CENTER});
+        this._ring = ringArea(26, 3);
         this._ring.connect('notify::mapped', a => a.mapped && a.queue_repaint());
-        const text = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, y_align: Clutter.ActorAlign.CENTER});
-        this._time = new St.Label({style_class: 'isla-tempo-grande'});
-        this._caption = new St.Label({style_class: 'isla-tempo-detalle'});
-        text.add_child(this._time);
-        text.add_child(this._caption);
-        const buttons = new St.BoxLayout({style_class: 'isla-musica-botones', y_align: Clutter.ActorAlign.CENTER});
-        const button = (icon, fn) => {
-            const b = new St.Button({style_class: 'isla-boton-redondo', can_focus: false,
-                child: new St.Icon({icon_name: icon, style_class: 'isla-boton-icono'})});
-            b.connect('clicked', fn);
-            buttons.add_child(b);
-            return b;
-        };
-        this._pauseButton = button('media-playback-pause-symbolic', () => this._togglePause());
-        button('media-playback-stop-symbolic', () => this.stop());
-        // Touching the panel of a finished timer acknowledges it.
-        this._panelButton = new St.Button({can_focus: false, child: this._ring});
+        this._time = new St.Label({style_class: 'isla-tempo-grande', y_align: Clutter.ActorAlign.CENTER});
+        // What the old second line said ("En pausa", "bloque 2 de 4"…) is now the accessible name.
+        this._caption = '';
+        this._pauseButton = new St.Button({style_class: 'isla-boton-redondo', can_focus: false, y_align: Clutter.ActorAlign.CENTER,
+            child: new St.Icon({icon_name: 'media-playback-pause-symbolic', style_class: 'isla-boton-icono'})});
+        this._pauseButton.connect('clicked', () => this._togglePause());
+        this._stopButton = new St.Button({style_class: 'isla-boton-redondo', can_focus: false, y_align: Clutter.ActorAlign.CENTER,
+            accessible_name: 'Detener', child: new St.Icon({icon_name: 'media-playback-stop-symbolic', style_class: 'isla-boton-icono'})});
+        this._stopButton.connect('clicked', () => this.stop());
+        // Touching the ring of a finished timer acknowledges it.
+        this._panelButton = new St.Button({can_focus: false, child: this._ring, y_align: Clutter.ActorAlign.CENTER});
         this._panelButton.connect('clicked', () => this._data?.done && this._acknowledge());
-        for (const actor of [this._panelButton, text, buttons])
+        for (const actor of [this._panelButton, this._time, this._pauseButton, this._stopButton])
             this._panel.add_child(actor);
+        // Compact (a dock wider than the screen): only the ring, pause and stop.
+        this._setCompact(this._state.compact);
+        this._applySize();
+    }
+
+    // As tall as the icons ('tamano-base').
+    _applySize() {
+        const z = pillSizes(this._settings);
+        this._panel.style = pillStyle(z, {left: 7});
+        this._ring.style = `width: ${z.px(26)}px; height: ${z.px(26)}px;`;
+        this._time.style = `font-size: ${z.font(14)}px;`;
+        roundButton(this._pauseButton, z);
+        roundButton(this._stopButton, z);
+    }
+
+    _setCompact(compact) {
+        this._time.visible = !compact;
     }
 
     _buildMenu() {
@@ -307,11 +325,12 @@ export class Timer {
         this._miniTime.text = text;
         this._time.text = text;
         if (d.done)
-            this._caption.text = 'Toca la isla para cerrarlo';
+            this._caption = 'Toca la isla para cerrarlo';
         else if (d.kind === 'pomodoro')
-            this._caption.text = `${d.phase === 'trabajo' ? 'Trabajo' : 'Descanso'} · bloque ${d.block} de ${BLOCKS}`;
+            this._caption = `${d.phase === 'trabajo' ? 'Trabajo' : 'Descanso'} · bloque ${d.block} de ${BLOCKS}`;
         else
-            this._caption.text = d.paused !== null ? 'En pausa' : `Temporizador de ${clock(d.total)}`;
+            this._caption = d.paused !== null ? 'En pausa' : `Temporizador de ${clock(d.total)}`;
+        this._panel.accessible_name = `${text} · ${this._caption}`;
         this._pauseButton.visible = !d.done;
         this._pauseButton.child.icon_name = d.paused !== null ? 'media-playback-start-symbolic' : 'media-playback-pause-symbolic';
         for (const ring of [this._miniRing, this._ring]) {
@@ -320,6 +339,7 @@ export class Timer {
                 ring.queue_repaint();
         }
         this._mini.style_class = `isla-tempo-mini${d.done ? ' listo' : ''}`;
+        this._panel.style_class = `isla-tempo isla-pildora${d.done ? ' listo' : ''}${d.paused !== null ? ' pausa' : ''}`;
     }
 
     destroy() {

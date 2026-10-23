@@ -96,6 +96,10 @@ class IslaStackCell extends St.Button {
         this.connect('key-focus-out', lit);
     }
 
+    setDetail(text) {
+        this._time.text = text;
+    }
+
     // Sizes come from the surface: reading the actor's here would relayout.
     _draw() {
         const cr = this._area.get_context();
@@ -157,7 +161,7 @@ export class CascadeView {
         const shown = files.slice(0, more ? Math.max(1, max - 1) : max);
         const accent = this._labels?.accent ?? true;
         const cells = shown.map((entry, i) => new Cell({entry, style: this._style, sf: this._sf, newest: accent && i === 0,
-            detail: entry.detail ?? (entry.partial ? 'descargando' : relativeTime(entry.time))}));
+            detail: entry.detail ?? (entry.partial ? entry.transfer ?? 'descargando' : relativeTime(entry.time))}));
         if (more || !shown.length) {
             const rest = total - shown.length;
             const folder = this._labels?.folder ?? 'Abrir carpeta';
@@ -213,6 +217,14 @@ export class CascadeView {
 
     animateOut(done) {
         this.actor.ease({opacity: 0, duration: ms(OUT_TIME), mode: Clutter.AnimationMode.EASE_OUT_QUAD, onStopped: done});
+    }
+
+    // How much has arrived, how fast.
+    updateTransfer() {
+        for (const cell of this._cells) {
+            if (cell.entry?.partial)
+                cell.setDetail(cell.entry.transfer ?? 'descargando');
+        }
     }
 
     focus(index) {

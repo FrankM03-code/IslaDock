@@ -33,6 +33,8 @@ export class StackPopup {
             [state, state.connect('mode-changed', (_s, mode) => mode !== Mode.EXPANDED && this.close())],
             [Main.overview, Main.overview.connect('showing', () => this.close(false))],
             [model, model.connect('changed', () => this._refill())],
+            // How much of each download has arrived: new texts, same view.
+            [model, model.connect('transfer', () => this._view?.updateTransfer())],
         ];
     }
 

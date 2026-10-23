@@ -16,7 +16,9 @@ convierte en el dock completo.
 - **Gestos**: rueda = volumen, Shift + rueda = cambiar canción, clic central = pausa,
   arrastrar hacia arriba = aplicaciones.
 - **Búsqueda rápida** (Ctrl + Espacio): apps, archivos recientes y cuentas.
-- **Temporizador y Pomodoro** (clic derecho sobre la isla).
+- **Temporizador y Pomodoro** (clic derecho sobre la isla), con pausa y detener en la misma isla.
+- **Grabación de pantalla**: mientras grabas, una cápsula roja con el tiempo y el botón para detenerla.
+- **Portapapeles** (Super + V): historial de lo copiado (texto, enlaces, colores e imágenes), con búsqueda y fijados.
 - **Vista previa de ventanas** al dejar el mouse sobre una app (se puede apagar).
 - **Progreso de tareas** de las apps que lo publican.
 - **Pila de descargas**: tus últimos archivos en cascada diagonal, en cuadrícula o en una lista minimalista.
@@ -33,7 +35,7 @@ convierte en el dock completo.
 
 ## Requisitos
 
-GNOME Shell 48.
+GNOME Shell 48, 49 y 50.
 
 ## Instalar
 

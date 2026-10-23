@@ -51,6 +51,10 @@ export class AppsRow extends Signals.EventEmitter {
         this.actor = new St.Widget({style_class: 'isla-apps', layout_manager: this._layout, y_align: Clutter.ActorAlign.END});
         this.actor._delegate = this;   // drop target for reordering
         this.actor.connect('destroy', () => this._dropSources(true));
+        // Energía and its line go in a row of their own: the island puts it last, after the panels.
+        this._tailLayout = new RowLayout(0);
+        this.tail = new St.Widget({style_class: 'isla-apps-cola', layout_manager: this._tailLayout, y_align: Clutter.ActorAlign.END,
+            visible: false});
         this._tooltip = new St.Label({style_class: 'isla-tooltip', visible: false, opacity: 0});
         Main.layoutManager.uiGroup.add_child(this._tooltip);
         this._menuManager = new PopupMenu.PopupMenuManager(this.actor);
@@ -61,7 +65,7 @@ export class AppsRow extends Signals.EventEmitter {
         this._on(this._appSystem, 'app-state-changed', () => this._later('apps', 50, () => this._rebuild()));
         this._on(this._appSystem, 'installed-changed', () => this._refreshIcons());
         this._on(this._resolver, 'changed', () => this._refreshIcons());
-        for (const key of ['mostrar-descargas', 'mostrar-papelera', 'mostrar-aplicaciones', 'mostrar-energia'])
+        for (const key of ['mostrar-descargas', 'mostrar-papelera', 'mostrar-aplicaciones', 'mostrar-portapapeles', 'mostrar-energia'])
             this._on(this._settings, `changed::${key}`, () => this._rebuild());
         for (const key of ['tamano-base', 'magnificacion', 'desaturar-en-reposo'])
             this._on(this._settings, `changed::${key}`, () => this.configure());
@@ -149,8 +153,9 @@ export class AppsRow extends Signals.EventEmitter {
             calm: this._settings.get_boolean('desaturar-en-reposo') && !skin?.forcesColorIcons,
         };
         const spacing = (skin?.itemSpacing ?? 6) / 32;
-        this._layout.spacing = Math.round(base * spacing * sf);
+        this._layout.spacing = this._tailLayout.spacing = Math.round(base * spacing * sf);
         this._layout.layout_changed();
+        this._tailLayout.layout_changed();
         for (const actor of this._items.values())
             actor.configure(this._p);
         this._hovered = -1;
@@ -170,6 +175,21 @@ export class AppsRow extends Signals.EventEmitter {
 
     _downloadsDir() {
         return downloadsDir(this._settings);
+    }
+
+    get clipboardItem() {
+        return this._items?.get('clipboard') ?? null;
+    }
+
+    // Something was copied: the clipboard button hops.
+    bounceClipboard() {
+        const item = this.clipboardItem;
+        if (!item?.mapped)
+            return;
+        const sf = this._p.scale;
+        item.remove_transition('translation-y');
+        item.ease({translation_y: -6 * sf, duration: 200, mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => item.ease({translation_y: 0, duration: 200, mode: Clutter.AnimationMode.EASE_OUT_BOUNCE})});
     }
 
     get downloadsItem() {
@@ -203,12 +223,15 @@ export class AppsRow extends Signals.EventEmitter {
         if (entries.length && extras.length)
             entries.push({kind: 'separator', key: 'sep-2'});
         entries.push(...extras);
-        // Energía: last, after its own thin line.
-        if (this._settings.get_boolean('mostrar-energia')) {
-            if (entries.length)
-                entries.push({kind: 'separator', key: 'sep-3'});
-            entries.push({kind: 'power', key: 'power'});
-        }
+        // Portapapeles and Energía: last, after their own thin line.
+        const tail = [];
+        if (this._settings.get_boolean('mostrar-portapapeles'))
+            tail.push({kind: 'clipboard', key: 'clipboard'});
+        if (this._settings.get_boolean('mostrar-energia'))
+            tail.push({kind: 'power', key: 'power'});
+        if (entries.length && tail.length)
+            entries.push({kind: 'separator', key: 'sep-3'});
+        entries.push(...tail);
         return entries;
     }
 
@@ -216,7 +239,7 @@ export class AppsRow extends Signals.EventEmitter {
         if (entry.kind === 'separator')
             return new DockSeparator();
         const label = {app: entry.app?.get_name(), downloads: 'Descargas', trash: 'Papelera', apps: 'Aplicaciones',
-            power: 'Energía'}[entry.kind];
+            clipboard: 'Portapapeles', power: 'Energía'}[entry.kind];
         const item = new DockItem({kind: entry.kind, key: entry.key, app: entry.app ?? null, label});
         item.connect('activate', (_i, button) => this._onActivate(item, button));
         item.connect('hover-changed', (_i, hover) => this._onItemHover(item, hover));
@@ -248,7 +271,9 @@ export class AppsRow extends Signals.EventEmitter {
             actor.destroy();
             this._items.delete(key);
         }
-        entries.forEach((entry, i) => {
+        const inTail = entry => entry.kind === 'power' || entry.kind === 'clipboard' || entry.key === 'sep-3';
+        const rows = [[this.actor, entries.filter(e => !inTail(e))], [this.tail, entries.filter(inTail)]];
+        for (const [row, list] of rows) list.forEach((entry, i) => {
             let actor = this._items.get(entry.key);
             if (actor && entry.kind === 'app' && actor.app !== entry.app) {
                 actor.destroy();
@@ -258,12 +283,16 @@ export class AppsRow extends Signals.EventEmitter {
                 actor = this._createItem(entry);
                 actor.configure(this._p);
                 this._items.set(entry.key, actor);
-                this.actor.insert_child_at_index(actor, i);
-            } else if (this.actor.get_child_at_index(i) !== actor) {
-                this.actor.set_child_at_index(actor, i);
+                row.insert_child_at_index(actor, i);
+            } else if (actor.get_parent() !== row) {
+                actor.get_parent().remove_child(actor);
+                row.insert_child_at_index(actor, i);
+            } else if (row.get_child_at_index(i) !== actor) {
+                row.set_child_at_index(actor, i);
             }
         });
-        this._appItems = this.actor.get_children().filter(a => a.kind !== 'separator');
+        this.tail.visible = this.tail.get_n_children() > 0;
+        this._appItems = [...this.actor.get_children(), ...this.tail.get_children()].filter(a => a.kind !== 'separator');
         for (const item of this._appItems)
             item.setBadge?.(item.app ? this._badges.get(item.app.get_id()) ?? null : null);
         this._hovered = -1;
@@ -326,6 +355,12 @@ export class AppsRow extends Signals.EventEmitter {
                 Main.overview.hide();
             else
                 Main.overview.showApps();
+            return;
+        }
+        // Portapapeles: its history panel.
+        if (item.kind === 'clipboard') {
+            this._hideTooltip();
+            this._state.command('clipboard-toggle', item);
             return;
         }
         // Energía: the panel with a click, suspend with a right click or a long press.
@@ -479,7 +514,7 @@ export class AppsRow extends Signals.EventEmitter {
         if (!(source instanceof DockItem) || source.kind !== 'app' || !this._items || !this._appItems.includes(source))
             return DND.DragMotionResult.CONTINUE;
         const children = this.actor.get_children();
-        const end = children.findIndex(a => a.kind === 'downloads' || a.kind === 'trash' || a.kind === 'apps' || a.kind === 'power' ||
+        const end = children.findIndex(a => a.kind === 'downloads' || a.kind === 'trash' || a.kind === 'apps' || a.kind === 'power' || a.kind === 'clipboard' ||
             a.key === 'sep-2' || a.key === 'sep-3');
         const limit = end < 0 ? children.length : end;
         let index = 0;
@@ -548,7 +583,7 @@ export class AppsRow extends Signals.EventEmitter {
         this._appItems.forEach((item, i) => {
             const d = this._hovered < 0 ? Infinity : Math.abs(i - this._hovered);
             // The Portal keeps its size so it stays centered in the island.
-            const zoom = item.kind === 'apps' || item.kind === 'power' ? 1 : d < ZOOM.length ? ZOOM[d] : 1;
+            const zoom = item.kind === 'apps' || item.kind === 'power' || item.kind === 'clipboard' ? 1 : d < ZOOM.length ? ZOOM[d] : 1;
             item.setSize(Math.round(base * zoom));
         });
         if (this._tooltipItem)
@@ -609,12 +644,17 @@ export class AppsRow extends Signals.EventEmitter {
     }
 
     _showDownloads(item) {
-        const {busy, fresh, progress} = this._downloads;
+        const {busy, fresh, progress, transfer} = this._downloads;
         // The ring shows a real percentage; without one, the strip under the icon.
         item.setProgress(busy && progress === null);
         item.setRing(progress);
         item.setDot(fresh);
-        item.title = busy ? 'Descargas · descargando…' : 'Descargas';
+        item.title = busy ? `Descargas · ${transfer ?? 'descargando…'}` : 'Descargas';
+        // The tooltip that is showing follows the download.
+        if (this._tooltipItem === item && this._tooltip.visible && this._tooltip.text !== item.title) {
+            this._tooltip.text = item.title;
+            this._placeTooltip();
+        }
     }
 
     _watchTrash() {
@@ -657,6 +697,7 @@ export class AppsRow extends Signals.EventEmitter {
         this._trashMonitor?.cancel();
         this._tooltip.destroy();
         this.actor.destroy();
+        this.tail.destroy();
         this._items = null;
         this._appItems = [];
         this.disconnectAll();

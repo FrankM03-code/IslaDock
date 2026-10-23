@@ -12,6 +12,7 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import {averageColor} from './dots.js';
+import {pillSizes, pillStyle, roundButton} from './pill.js';
 import {Priority} from './state.js';
 
 const MPRIS_PREFIX = 'org.mpris.MediaPlayer2.';
@@ -36,8 +37,9 @@ const BARS = 4;
 const BAR_REST = 4 / 14;
 
 export class Media {
-    constructor({state}) {
+    constructor({state, settings}) {
         this._state = state;
+        this._settings = settings;
         this._players = new Map();    // bus name -> {player, root, playingSince}
         this._current = null;
         this._buildActors();
@@ -68,6 +70,11 @@ export class Media {
             this._coverShown = false;
             this._update();
         });
+        this._compactId = state.connect('compact-changed', (_s, compact) => this._setCompact(compact));
+        this._sizeId = this._settings.connect('changed::tamano-base', () => {
+            this._applySize();
+            state.command('resize');
+        });
     }
 
     // ---------- actors ----------
@@ -95,35 +102,50 @@ export class Media {
             });
         });
 
-        this._panel = new St.BoxLayout({style_class: 'isla-musica'});
+        // One row as tall as the icons: cover, "Title · Artist", previous, play, next.
+        // Compact (a dock wider than the screen): only the cover and play, the title as the accessible name.
+        this._panel = new St.BoxLayout({style_class: 'isla-musica isla-pildora', y_align: Clutter.ActorAlign.CENTER});
         this._coverButton = new St.Button({style_class: 'isla-caratula-boton', can_focus: false, y_align: Clutter.ActorAlign.CENTER});
         this._cover = new St.Bin({style_class: 'isla-caratula'});
         this._coverIcon = new St.Icon({icon_name: 'audio-x-generic-symbolic', fallback_icon_name: 'media-playback-start-symbolic',
             style_class: 'isla-caratula-icono', x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
         this._coverButton.set_child(this._cover);
         this._coverButton.connect('clicked', () => this._raise());
-        const text = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, y_align: Clutter.ActorAlign.CENTER,
-            style_class: 'isla-musica-texto'});
-        this._title = new St.Label({style_class: 'isla-musica-titulo'});
-        this._artist = new St.Label({style_class: 'isla-musica-artista'});
-        for (const label of [this._title, this._artist])
-            label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-        text.add_child(this._title);
-        text.add_child(this._artist);
+        this._title = new St.Label({style_class: 'isla-musica-titulo', y_align: Clutter.ActorAlign.CENTER});
+        this._title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         const buttons = new St.BoxLayout({style_class: 'isla-musica-botones', y_align: Clutter.ActorAlign.CENTER});
         const button = (icon, what) => {
-            const b = new St.Button({style_class: 'isla-boton-redondo', can_focus: false,
+            const b = new St.Button({style_class: 'isla-boton-redondo', can_focus: false, y_align: Clutter.ActorAlign.CENTER,
                 child: new St.Icon({icon_name: icon, style_class: 'isla-boton-icono'})});
             b.connect('clicked', () => this.command(what));
             buttons.add_child(b);
             return b;
         };
-        button('media-skip-backward-symbolic', 'previous');
+        this._skips = [button('media-skip-backward-symbolic', 'previous')];
         this._playButton = button('media-playback-start-symbolic', 'playpause');
         this._playButton.add_style_class_name('isla-boton-play');
-        button('media-skip-forward-symbolic', 'next');
-        for (const actor of [this._coverButton, text, buttons])
+        this._skips.push(button('media-skip-forward-symbolic', 'next'));
+        for (const actor of [this._coverButton, this._title, buttons])
             this._panel.add_child(actor);
+        this._setCompact(this._state.compact);
+        this._applySize();
+    }
+
+    // As tall as the icons ('tamano-base'). The cover keeps its size in _coverBox:
+    // its style also carries the picture.
+    _applySize() {
+        const z = pillSizes(this._settings);
+        this._panel.style = pillStyle(z);
+        this._coverBox = `width: ${z.px(28)}px; height: ${z.px(28)}px;`;
+        this._cover.style = `${this._coverBox}${this._coverImage ?? ''}`;
+        this._title.style = `font-size: ${z.font(12)}px; max-width: ${z.px(110)}px;`;
+        for (const b of [...this._skips, this._playButton])
+            roundButton(b, z);
+    }
+
+    _setCompact(compact) {
+        this._title.visible = !compact;
+        this._skips.forEach(b => (b.visible = !compact));
     }
 
     // ---------- players ----------
@@ -209,9 +231,9 @@ export class Media {
         }
         const artist = [].concat(meta['xesam:artist'] ?? []).join(', ');
         const playing = this._status(entry) === 'Playing';
-        this._title.text = title;
-        this._artist.text = artist || entry.root?.Identity || '';
-        this._artist.visible = !!this._artist.text;
+        const by = artist || entry.root?.Identity || '';
+        this._title.text = by ? `${title} · ${by}` : title;
+        this._panel.accessible_name = this._title.text;
         this._playButton.child.icon_name = playing ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic';
         this._setCover(meta['mpris:artUrl']);
         this._setWave(playing);
@@ -232,9 +254,11 @@ export class Media {
         const local = url?.startsWith('file://') ? url : null;
         if (local) {
             this._cover.set_child(null);
-            this._cover.style = `background-image: url("${local}");`;
+            this._coverImage = `background-image: url("${local}");`;
+            this._cover.style = `${this._coverBox}${this._coverImage}`;
         } else {
-            this._cover.style = null;
+            this._coverImage = null;
+            this._cover.style = this._coverBox;
             this._cover.set_child(this._coverIcon);
         }
         this._coverColor = local ? this._colorOf(local) : null;
@@ -328,6 +352,8 @@ export class Media {
         Gio.DBus.session.signal_unsubscribe(this._ownerId);
         this._state.disconnect(this._commandId);
         this._state.disconnect(this._skinId);
+        this._state.disconnect(this._compactId);
+        this._settings.disconnect(this._sizeId);
         for (const name of [...this._players.keys()])
             this._remove(name);
         this._state.removeActivity('music');

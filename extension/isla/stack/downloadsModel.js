@@ -7,6 +7,7 @@
 // Signals:
 //   'changed'            the list was read again
 //   'finished' (entry)   a download in progress turned into its final file
+//   'transfer'           (sent by the stack) the downloads' entry.transfer texts changed
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 

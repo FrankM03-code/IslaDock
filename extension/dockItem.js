@@ -57,7 +57,7 @@ export const DockItem = GObject.registerClass({
         'drag-ended': {},
     },
 }, class IslaItem extends St.Button {
-    // kind: 'app' | 'downloads' | 'trash' | 'apps' | 'power'
+    // kind: 'app' | 'downloads' | 'trash' | 'apps' | 'clipboard' | 'power'
     _init({kind, key, app = null, label = ''}) {
         super._init({
             style_class: 'isla-item',
@@ -93,18 +93,19 @@ export const DockItem = GObject.registerClass({
             this.connect('key-focus-in', () => this.portal.setFocused(true));
             this.connect('key-focus-out', () => this.portal.setFocused(false));
         }
-        // Energía: a grey circle with the shutdown symbol (sized in configure()).
-        if (kind === 'power') {
+        // Energía and Portapapeles: a grey circle with a symbol (sized in configure()).
+        if (kind === 'power' || kind === 'clipboard') {
             this._power = new St.Widget({style_class: 'isla-energia-boton', layout_manager: new Clutter.BinLayout(),
                 x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
-            this._powerIcon = new St.Icon({icon_name: 'system-shutdown-symbolic', x_align: Clutter.ActorAlign.CENTER,
-                y_align: Clutter.ActorAlign.CENTER});
+            this._powerIcon = new St.Icon({icon_name: kind === 'power' ? 'system-shutdown-symbolic' : 'edit-paste-symbolic',
+                x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
             this._power.add_child(this._powerIcon);
             this._tile.add_child(this._power);
             this._icon.hide();
             this.can_focus = true;
-            this.accessible_name = 'Energía';
-            this._watchLongPress();
+            this.accessible_name = kind === 'power' ? 'Energía' : 'Portapapeles';
+            if (kind === 'power')
+                this._watchLongPress();
         }
         this._indicator = new St.Widget({
             style_class: 'isla-indicator',

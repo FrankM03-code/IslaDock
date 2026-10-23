@@ -360,6 +360,9 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         extras.add(switchRow(settings, 'mostrar-papelera', 'Papelera', 'Clic derecho para vaciarla'));
         extras.add(switchRow(settings, 'mostrar-aplicaciones', 'Aplicaciones (botón Portal)', 'Ver y buscar todo lo que tienes instalado'));
         extras.add(switchRow(settings, 'portal-giro', 'El aro del Portal gira'));
+        extras.add(switchRow(settings, 'mostrar-portapapeles', 'Portapapeles',
+            'Historial de lo copiado (texto, enlaces, colores e imágenes). Super+V lo abre desde cualquier lugar; ' +
+            'mientras esté activo, Super+V deja de abrir las notificaciones (sigue Super+M)'));
         extras.add(switchRow(settings, 'mostrar-energia', 'Energía',
             'Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína, volumen, captura, bloquear, apagar… ' +
             'Clic derecho o mantener pulsado: suspender'));

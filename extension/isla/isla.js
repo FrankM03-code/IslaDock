@@ -19,6 +19,7 @@ import {Dots} from './dots.js';
 import {Mode, Priority} from './state.js';
 import {createSkin} from './skins/index.js';
 import {ms, setSpeed} from './timing.js';
+import {chromeParams} from './chrome.js';
 
 const BOTTOM = 14;            // gap to the bottom edge
 const EDGE = 4;               // reactive strip on the screen edge
@@ -36,6 +37,7 @@ const ROOM = 520;             // height of the invisible strip that holds the is
 const HIDE_TIME = 250;
 const OVERLAP_DELAY = 100;
 const SKIN_FADE = 150;
+const PANEL_ORDER = ['recording', 'timer', 'music'];
 const CARD_GAP = 12;          // between the island and the glass card of some skins
 const CARD_FADE = 200;
 const CARD_FADE_OUT = 140;    // gone before the island finishes folding (CLOSE_TIME)
@@ -288,11 +290,12 @@ export class Isla {
         // Open: apps | activity panels
         this._apps = new AppsRow({settings: this._settings, resolver, state: this._state});
         this._panelSep = new St.Widget({style_class: 'isla-vsep isla-vsep-alta', y_align: Clutter.ActorAlign.CENTER});
-        this._panels = new St.BoxLayout({style_class: 'isla-panels', orientation: Clutter.Orientation.VERTICAL,
-            y_align: Clutter.ActorAlign.CENTER});
+        // Side by side, never stacked: the open dock keeps the height of one row of icons.
+        this._panels = new St.BoxLayout({style_class: 'isla-panels', y_align: Clutter.ActorAlign.CENTER});
         this._openLayout = new RowLayout(0);
         this._open = this._page_(new St.Widget({style_class: 'isla-page-expandida', layout_manager: this._openLayout}));
-        for (const actor of [this._apps.actor, this._panelSep, this._panels])
+        // Energía goes last, to the right of the panels.
+        for (const actor of [this._apps.actor, this._panelSep, this._panels, this._apps.tail])
             this._open.add_child(actor);
 
         // Notice: whatever the notices module hands over, clickable.
@@ -321,10 +324,10 @@ export class Isla {
         this._strip.add_child(this._capsule);
         this._strip.add_child(this._card);
         this._card.hide();   // adding it shows it
-        Main.layoutManager.addChrome(this._strip, {affectsInputRegion: false, affectsStruts: false, trackFullscreen: true});
-        Main.layoutManager.trackChrome(this._capsule, {affectsInputRegion: true});
+        Main.layoutManager.addChrome(this._strip, chromeParams({affectsInputRegion: false, affectsStruts: false, trackFullscreen: true}));
+        Main.layoutManager.trackChrome(this._capsule, chromeParams({affectsInputRegion: true}));
         // Not trackFullscreen (inherited from the strip otherwise): that would show it by itself.
-        Main.layoutManager.trackChrome(this._card, {affectsInputRegion: true, trackFullscreen: false});
+        Main.layoutManager.trackChrome(this._card, chromeParams({affectsInputRegion: true, trackFullscreen: false}));
 
         this._edge = new St.Widget({reactive: true});
         this._edge.connect('enter-event', () => {
@@ -333,7 +336,7 @@ export class Isla {
                 this._later('edge', EDGE_GRACE, () => this._maybeFold());
             }
         });
-        Main.layoutManager.addChrome(this._edge, {affectsInputRegion: true, affectsStruts: false, trackFullscreen: true});
+        Main.layoutManager.addChrome(this._edge, chromeParams({affectsInputRegion: true, affectsStruts: false, trackFullscreen: true}));
 
         this._page = null;
     }
@@ -461,7 +464,10 @@ export class Isla {
         // The blurred wallpaper copy must not slide with the island.
         this._on(this._capsule, 'notify::translation-y', () => (this._blur.slide = this._capsule.translation_y));
         this._on(St.Settings.get(), 'notify::enable-animations', () => this._updateBreathing());
-        this._on(Main.layoutManager, 'monitors-changed', () => this._place());
+        this._on(Main.layoutManager, 'monitors-changed', () => {
+            this._place();
+            this._resize(false);
+        });
 
         this._on(this._capsule, 'notify::hover', () => this._onHover());
         this._on(this._card, 'notify::hover', () => this._onHover());
@@ -511,6 +517,10 @@ export class Isla {
                 this._apps.setDownloadsState(args[0]);
             else if (name === 'stack-open')
                 this._openStack();
+            else if (name === 'clipboard-open')
+                this._openOver('clipboard', () => this._apps.clipboardItem, 'clipboard-toggle');
+            else if (name === 'clipboard-bounce')
+                this._apps.bounceClipboard();
 
         });
 
@@ -573,7 +583,7 @@ export class Isla {
         const mode = this._settings.get_string('ocultar');
         if (mode === 'nunca' || this._state.mode !== Mode.COLLAPSED || this.hovered || this._inAppGrid())
             return false;
-        if (this._state.activities.some(a => a.priority === Priority.TIMER_DONE))
+        if (this._state.activities.some(a => a.priority <= Priority.TIMER_DONE))
             return false;
         return mode === 'siempre' || this._windowsOverlap();
     }
@@ -698,6 +708,8 @@ export class Isla {
         this._updateFoldedParts();
         if (this._state.mode === Mode.COLLAPSED)
             this._resize();
+        else if (this._state.mode === Mode.EXPANDED)
+            this._resize(false);   // more or fewer icons: the panels may need to go compact
     }
 
     _updateActivities() {
@@ -711,10 +723,14 @@ export class Isla {
                 this._miniBin.set_child(main.mini);
             }
         }
-        // Every panel, most important first.
+        // Every panel in a fixed order: recording, timer, music, the rest by importance.
         for (const child of this._panels.get_children())
             this._panels.remove_child(child);
-        for (const {panel} of all) {
+        const rank = a => {
+            const k = PANEL_ORDER.indexOf(a.id);
+            return k < 0 ? PANEL_ORDER.length : k;
+        };
+        for (const {panel} of [...all].sort((a, b) => rank(a) - rank(b))) {
             if (!panel)
                 continue;
             panel.get_parent()?.remove_child(panel);
@@ -785,7 +801,10 @@ export class Isla {
         const parent = this._usesCard ? this._card : this._open;
         if (this._panels.get_parent() !== parent) {
             this._panels.get_parent()?.remove_child(this._panels);
-            parent.add_child(this._panels);
+            if (parent === this._open)
+                parent.insert_child_below(this._panels, this._apps.tail);   // Energía stays last
+            else
+                parent.add_child(this._panels);
         }
         this._panelSep.visible = this._panels.get_n_children() > 0 && !this._usesCard;
         this._updateCard();
@@ -847,6 +866,7 @@ export class Isla {
         capsule.remove_transition('width');
         capsule.remove_transition('height');
         capsule.set_size(-1, -1);
+        this._fitPanels();
         const [, w1] = capsule.get_preferred_width(-1);
         const [, h1] = capsule.get_preferred_height(w1);
         if (!animate || !w0 || (Math.abs(w1 - w0) < 1 && Math.abs(h1 - h0) < 1))
@@ -866,12 +886,34 @@ export class Isla {
         });
     }
 
+    // Compact mode: when the open dock (and its card) would be wider than the
+    // monitor, the panels keep only their essentials (state 'compact-changed').
+    _fitPanels() {
+        if (this._state.mode !== Mode.EXPANDED || !this._panels.get_n_children())
+            return;
+        // The content box in between is never measured, so a panel that hides its
+        // text does not reach the capsule's cached width by itself: ask again each time.
+        const width = () => {
+            this._capsule.queue_relayout();
+            this._card.queue_relayout();
+            const [, w] = this._capsule.get_preferred_width(-1);
+            if (!this._usesCard)
+                return w;
+            const [, k] = this._card.get_preferred_width(-1);
+            return w + k + CARD_GAP * this._sf;
+        };
+        this._state.setCompact(false);
+        this._state.setCompact(width() > this._monitor.width - 16 * this._sf);
+        this._capsule.queue_relayout();
+        this._card.queue_relayout();
+    }
+
     // The icons appear growing from 0.6 (efecto-iconos): one after the other
     // ('uno-a-uno'), all together ('todos') or from the middle out to both
     // sides, rising a little ('centro').
     _iconsIn() {
         const effect = this._settings.get_string('efecto-iconos');
-        const items = this._apps.actor.get_children();
+        const items = [...this._apps.actor.get_children(), ...this._apps.tail.get_children()];
         const middle = (items.length - 1) / 2;
         const rise = effect === 'centro' ? Math.round(10 * this._sf) : 0;
         items.forEach((item, k) => {
@@ -963,13 +1005,18 @@ export class Isla {
     // ---------- Downloads stack ----------
     // From a "Descarga lista" notice: open the island, then the stack over its button.
     _openStack() {
+        this._openOver('stack', () => this._apps.downloadsItem, 'stack-toggle');
+    }
+
+    // Opens the island (from a shortcut) and then a popup over one of its buttons.
+    _openOver(name, item, command) {
         if (this._state.mode !== Mode.EXPANDED && !this._state.setMode(Mode.EXPANDED))
             return;
-        this._state.hold('stack-opening');
-        this._later('stack', ms(OPEN_TIME) + 60, () => {
-            this._state.release('stack-opening');
-            const item = this._apps.downloadsItem;
-            this._state.command('stack-toggle', item?.mapped ? item : this._capsule);
+        this._state.hold(`${name}-opening`);
+        this._later(name, ms(OPEN_TIME) + 60, () => {
+            this._state.release(`${name}-opening`);
+            const anchor = item();
+            this._state.command(command, anchor?.mapped ? anchor : this._capsule);
         });
     }
 

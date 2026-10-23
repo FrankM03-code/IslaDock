@@ -22,6 +22,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as SystemActions from 'resource:///org/gnome/shell/misc/systemActions.js';
 import * as Volume from 'resource:///org/gnome/shell/ui/status/volume.js';
 import {Slider} from 'resource:///org/gnome/shell/ui/slider.js';
+import {showScreenshotUI} from 'resource:///org/gnome/shell/ui/screenshot.js';
 
 import {dressFrame, islandLook} from '../look.js';
 import {createToggles, openSettings} from './services.js';
@@ -36,7 +37,7 @@ const RADIUS = 18;
 
 // [icon, fallback, title, extra class, action, SystemActions property that hides it]
 const SYSTEM = [
-    ['screenshot-ui-area-symbolic', 'camera-photo-symbolic', 'Captura de pantalla', '', a => a.activateScreenshotUI(), null],
+    ['screenshot-ui-area-symbolic', 'camera-photo-symbolic', 'Captura de pantalla', '', () => showScreenshotUI(), null],
     ['preferences-system-symbolic', 'emblem-system-symbolic', 'Configuración', '', () => openSettings(), null],
     ['system-lock-screen-symbolic', null, 'Bloquear', 'isla-pd-bloquear', a => a.activateLockScreen(), 'can-lock-screen'],
     ['system-log-out-symbolic', null, 'Cerrar sesión', 'isla-pd-salir', a => a.activateLogout(), 'can-logout'],

@@ -3,10 +3,12 @@
   "name": "IslaDock",
   "description": "Un dock en forma de isla: una cápsula pequeña que avisa qué está abierto, qué suena y cuánto falta, y que al acercarte se convierte en el dock completo. Con pila de descargas, carpetas a mano, búsqueda rápida, temporizador, panel de Energía (red, Bluetooth, volumen, apagar…), Cafeína, aviso de mayúsculas, fondo desenfocado en el cajón de aplicaciones, notificaciones flotantes, reloj de escritorio y varias pieles.\n\nCreado y diseñado por Frank Molina.",
   "shell-version": [
-    "48"
+    "48",
+    "49",
+    "50"
   ],
   "settings-schema": "org.gnome.shell.extensions.isla-dock",
-  "version-name": "1.4",
+  "version-name": "1.5",
   "url": "https://github.com/FrankM03-code/IslaDock",
   "donations": {
     "paypal": "frankmolina29"

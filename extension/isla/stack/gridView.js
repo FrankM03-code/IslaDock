@@ -128,7 +128,8 @@ export class GridView {
         const accent = this._labels?.accent ?? true;
         this._tiles = files.slice(0, max).map((entry, i) => this._tile(entry, accent && i === 0));
         this._tiles.forEach((tile, i) => this._layout.attach(tile, i % COLUMNS, Math.floor(i / COLUMNS), 1, 1));
-        this._count.text = this._labels?.count ? this._labels.count(total) : `Recientes: ${total}`;
+        this._total = total;
+        this.updateTransfer();
         if (focused >= 0)
             this.focus(Math.min(focused, this._tiles.length - 1));
     }
@@ -150,6 +151,17 @@ export class GridView {
         this.actor.set_size(w, h);
         this.actor.set_position(Math.round(x), Math.round(y));
         this.actor.set_pivot_point(Math.min(1, Math.max(0, (centerX - x) / w)), 1);
+    }
+
+    // The tiles are too narrow for it: how much has arrived, how fast, goes in the footer.
+    updateTransfer() {
+        const partials = this._tiles.filter(t => t.entry.partial);
+        if (partials.length === 1 && partials[0].entry.transfer)
+            this._count.text = `Descargando: ${partials[0].entry.transfer}`;
+        else if (partials.length > 1)
+            this._count.text = `Descargando ${partials.length} archivos`;
+        else
+            this._count.text = this._labels?.count ? this._labels.count(this._total) : `Recientes: ${this._total}`;
     }
 
     animateIn() {

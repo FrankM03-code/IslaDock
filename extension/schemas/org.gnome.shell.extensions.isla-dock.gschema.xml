@@ -153,6 +153,18 @@
       <default>true</default>
       <summary>Quitar la barra superior de GNOME (sus controles pasan al botón Energía)</summary>
     </key>
+    <key name="mostrar-portapapeles" type="b">
+      <default>true</default>
+      <summary>Historial del portapapeles (botón antes de Energía)</summary>
+    </key>
+    <key name="atajo-portapapeles" type="as">
+      <default>['&lt;Super&gt;v']</default>
+      <summary>Atajo para abrir el historial del portapapeles</summary>
+    </key>
+    <key name="portapapeles-liberado" type="as">
+      <default>[]</default>
+      <summary>Atajos quitados a "toggle-message-tray" de GNOME para el portapapeles (se devuelven al apagarlo)</summary>
+    </key>
     <key name="mostrar-energia" type="b">
       <default>true</default>
       <summary>Botón Energía al final del dock</summary>

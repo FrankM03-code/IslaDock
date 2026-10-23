@@ -77,6 +77,8 @@ export class AuroraSkin extends SkinBase {
         this._extra = new Set();
         this._timeline = new Clutter.Timeline({actor: halo, duration: 1000, repeat_count: -1});
         this._timeline.connect('new-frame', () => this._tick());
+        // At Shell shutdown the halo can be disposed from C before the skin is torn down.
+        halo.connect('destroy', () => this._timeline?.stop());
         this.connect(halo, 'notify::mapped', () => this._run());
         this.connect(St.Settings.get(), 'notify::enable-animations', () => this._run());
         this._last = GLib.get_monotonic_time();

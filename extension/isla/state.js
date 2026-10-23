@@ -8,6 +8,7 @@
 //   'mode-changed' (newMode, oldMode)
 //   'activities-changed'
 //   'dnd-changed' (on)
+//   'compact-changed' (on)      the open dock would not fit the screen: panels drop their text
 //   'command' (name, ...args)   e.g. 'media', 'playpause' | 'toggle-dnd' | 'volume-level', 0.4
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
@@ -20,6 +21,7 @@ export const Mode = {
 
 // Lower number = more important (section 3 of ISLA.md). The notice itself is a mode.
 export const Priority = {
+    RECORDING: 1,
     TIMER_DONE: 2,
     MUSIC: 3,
     PROGRESS: 4,
@@ -41,6 +43,7 @@ export class IslaState extends Signals.EventEmitter {
         this._order = 0;
         this.dnd = false;
         this.notice = null;
+        this.compact = false;
         this._holds = new Set();
     }
 
@@ -102,6 +105,13 @@ export class IslaState extends Signals.EventEmitter {
             return;
         this.dnd = on;
         this.emit('dnd-changed', on);
+    }
+
+    setCompact(on) {
+        if (this.compact === on)
+            return;
+        this.compact = on;
+        this.emit('compact-changed', on);
     }
 
     command(name, ...args) {
