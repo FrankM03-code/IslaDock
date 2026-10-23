@@ -20,10 +20,9 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {chromeParams} from './chrome.js';
 import {ms} from './timing.js';
+import {_, localName} from './i18n.js';
 
 const KEYS = ['reloj-lateral-estilo', 'reloj-lateral-borde', 'reloj-lateral-segundos'];
-const DAYS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
-const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 const ZONE_WIDTH = 4;      // px of edge that wake it
 const ZONE_HEIGHT = 160;
@@ -62,7 +61,7 @@ export class SideClock {
         this._zone.add_child(this._mark);
         this._zone.connect('notify::hover', () => this._onHover());
 
-        this._bubble = new St.Button({reactive: true, track_hover: true, can_focus: false, accessible_name: 'Reloj'});
+        this._bubble = new St.Button({reactive: true, track_hover: true, can_focus: false, accessible_name: _('Reloj')});
         this._bubble.connect('notify::hover', () => this._onHover());
         this._bubble.connect('clicked', () => {
             if (!this._settings.get_boolean('reloj-lateral-calendario'))
@@ -159,15 +158,15 @@ export class SideClock {
         const h24 = this._interface.get_string('clock-format') !== '12h';
         const seconds = this._settings.get_boolean('reloj-lateral-segundos');
         let hours = now.get_hour();
-        const ampm = hours < 12 ? 'a. m.' : 'p. m.';
+        const ampm = hours < 12 ? _('a. m.') : _('p. m.');
         if (!h24)
             hours = hours % 12 || 12;
         const hh = h24 ? String(hours).padStart(2, '0') : String(hours);
         const mm = String(now.get_minute()).padStart(2, '0');
         const ss = String(now.get_second()).padStart(2, '0');
         const time = `${hh}:${mm}${seconds ? `:${ss}` : ''}${h24 ? '' : ` ${ampm}`}`;
-        const day = DAYS[now.get_day_of_week() - 1];
-        const date = `${day} ${now.get_day_of_month()} ${MONTHS[now.get_month() - 1]}`;
+        const day = localName(now, '%a');
+        const date = `${day} ${now.get_day_of_month()} ${localName(now, '%b')}`;
         const p = this._parts;
         if (this._style === 'pildora') {
             p.time.text = time;
