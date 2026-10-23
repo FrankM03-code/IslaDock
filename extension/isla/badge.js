@@ -10,7 +10,7 @@ import {ms} from './timing.js';
 export class IslandBadge {
     // styleClass adds its color.
     constructor(capsule, gicon, styleClass) {
-        this._badge = new St.Bin({style_class: `isla-insignia ${styleClass}`, reactive: false, visible: false,
+        this._badge = new St.Bin({style_class: `isla-insignia-isla ${styleClass}`, reactive: false, visible: false,
             child: new St.Icon({gicon, style_class: 'isla-insignia-icono'})});
         // The capsule's layout calls _allocateIn with its own box.
         this._badge._allocateIn = box => {
