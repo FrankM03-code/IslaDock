@@ -247,6 +247,8 @@ export class AppsRow extends Signals.EventEmitter {
         const item = new DockItem({kind: entry.kind, key: entry.key, app: entry.app ?? null, label});
         item.connect('activate', (_i, button) => this._onActivate(item, button));
         item.connect('hover-changed', (_i, hover) => this._onItemHover(item, hover));
+        if (entry.kind === 'app')
+            item.connect('scroll-event', (_i, event) => this._onItemScroll(item, event));
         item.connect('drag-started', () => {
             this._dragging = item;
             this.resetZoom();
@@ -423,10 +425,57 @@ export class AppsRow extends Signals.EventEmitter {
         const ws = global.workspace_manager.get_active_workspace();
         const windows = app.get_windows().filter(w => !w.skip_taskbar && w.located_on_workspace(ws));
         if (tracker.focus_app === app && windows.length && windows.some(w => !w.minimized)) {
-            windows.forEach(w => w.minimize());
+            // The app in front: 'clic-enfocada' says what a click does (with one window, it minimizes).
+            const action = this._settings.get_string('clic-enfocada');
+            if (action === 'rotar' && windows.length > 1)
+                this._cycleWindows(app, 1);
+            else if (action === 'miniaturas' && windows.length > 1)
+                this._state.command('previews-show', item);
+            else
+                windows.forEach(w => w.minimize());
             return;
         }
         app.activate();
+    }
+
+    // The app's windows on this workspace, one after the other.
+    _cycleWindows(app, step) {
+        const ws = global.workspace_manager.get_active_workspace();
+        const windows = app.get_windows().filter(w => !w.skip_taskbar && w.located_on_workspace(ws))
+            .sort((a, b) => a.get_stable_sequence() - b.get_stable_sequence());
+        if (!windows.length)
+            return;
+        const at = windows.indexOf(global.display.focus_window);
+        const next = windows[((at < 0 ? -step : at) + step + windows.length) % windows.length];
+        Main.activateWindow(next);
+    }
+
+    // The wheel over an open app ('rueda-ventanas'): its windows in turn. Anywhere
+    // else (or with this off) the wheel stays the island's: the volume.
+    _onItemScroll(item, event) {
+        if (!this._settings.get_boolean('rueda-ventanas') || !item.app || item.running < 1)
+            return Clutter.EVENT_PROPAGATE;
+        const dir = event.get_scroll_direction();
+        let step = 0;
+        if (dir === Clutter.ScrollDirection.UP || dir === Clutter.ScrollDirection.LEFT)
+            step = -1;
+        else if (dir === Clutter.ScrollDirection.DOWN || dir === Clutter.ScrollDirection.RIGHT)
+            step = 1;
+        else if (dir === Clutter.ScrollDirection.SMOOTH) {
+            const [dx, dy] = event.get_scroll_delta();
+            const d = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
+            // A touchpad sends many small steps: one window per gesture.
+            const now = event.get_time();
+            if (Math.abs(d) < 0.5 || now - (this._lastScroll ?? 0) < 250)
+                return Clutter.EVENT_STOP;
+            this._lastScroll = now;
+            step = d > 0 ? 1 : -1;
+        }
+        if (step) {
+            Main.overview.hide();
+            this._cycleWindows(item.app, step);
+        }
+        return Clutter.EVENT_STOP;
     }
 
     // ---------- right-click menu ----------

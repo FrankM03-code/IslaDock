@@ -34,6 +34,14 @@ export class Previews {
         this._ids = [
             state.connect('item-hover', (_s, item, hover) => this._onItemHover(item, hover)),
             state.connect('mode-changed', (_s, mode) => mode !== Mode.EXPANDED && this.hide()),
+            // A click on the app in front can ask for them at once ('clic-enfocada').
+            state.connect('command', (_s, name, item) => {
+                if (name === 'previews-show' && item?.app && this._state.mode === Mode.EXPANDED) {
+                    this._cancel('show');
+                    this._cancel('hide');
+                    this._show(item);
+                }
+            }),
         ];
     }
 

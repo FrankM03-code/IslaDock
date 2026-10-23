@@ -362,6 +362,13 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         size.add(base);
         size.add(switchRow(settings, 'magnificacion', 'Agrandar al pasar el mouse'));
         size.add(switchRow(settings, 'desaturar-en-reposo', 'Íconos en gris (apagados)', 'Toman color al pasar el mouse'));
+        size.add(comboRow(settings, 'clic-enfocada', 'Clic en la app que está al frente', [
+            ['minimizar', 'Minimizar'],
+            ['rotar', 'Pasar a su siguiente ventana'],
+            ['miniaturas', 'Mostrar sus miniaturas'],
+        ], 'Con una sola ventana, siempre minimiza. Clic central: ventana nueva'));
+        size.add(switchRow(settings, 'rueda-ventanas', 'La rueda sobre una app pasa por sus ventanas',
+            'Sobre el resto de la isla la rueda sigue cambiando el volumen'));
         const themes = listIconThemes();
         size.add(comboRow(settings, 'tema-iconos', 'Tema de íconos',
             [['', 'El del sistema'], ...themes.map(t => [t.id, t.path.startsWith(GLib.get_home_dir()) ? `${t.name}  (tuyo)` : t.name])],
