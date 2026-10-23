@@ -333,6 +333,15 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             'El número junto al ícono. Sin batería no aparece nada'));
         status.add(switchRow(settings, 'espacios-trabajo', 'Espacios de trabajo',
             'Un punto por espacio: clic para ir a uno, la rueda pasa al siguiente. Con uno solo no aparece'));
+        const appIndicator = new Gio.Settings({schema_id: 'org.gnome.shell'}).get_strv('enabled-extensions')
+            .includes('appindicatorsupport@rgcjonas.gmail.com');
+        status.add(switchRow(settings, 'bandeja', 'Íconos de bandeja',
+            appIndicator ? 'Telegram, qBittorrent, Discord… Usa los de la extensión AppIndicator, que está activa'
+                : 'Telegram, qBittorrent, Discord… Clic: abrir · clic derecho: su menú'));
+        status.add(comboRow(settings, 'bandeja-lado', 'Lugar de la bandeja', [
+            ['derecha', 'Antes de Energía'],
+            ['izquierda', 'Al comienzo del dock'],
+        ]));
         page.add(status);
 
         const tools = new Adw.PreferencesGroup({

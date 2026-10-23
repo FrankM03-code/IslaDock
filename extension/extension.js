@@ -30,6 +30,7 @@ import {KeyboardStatus} from './isla/keyboard.js';
 import {WorkspacesStatus} from './isla/workspaces.js';
 import {SideClock} from './isla/sideClock.js';
 import {PrivacyStatus} from './isla/privacy.js';
+import {Tray} from './isla/tray/tray.js';
 import {IslaState} from './isla/state.js';
 
 // Modules that a setting can switch off: [key or null, factory].
@@ -58,6 +59,7 @@ const MODULES = {
     workspaces: ['espacios-trabajo', ctx => new WorkspacesStatus(ctx)],
     sideClock: ['reloj-lateral', ctx => new SideClock(ctx)],
     privacy: [null, ctx => new PrivacyStatus(ctx)],
+    tray: ['bandeja', ctx => new Tray(ctx)],
 };
 
 export default class IslaDockExtension extends Extension {

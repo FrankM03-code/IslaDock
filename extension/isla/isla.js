@@ -303,7 +303,10 @@ export class Isla {
         // Status items, then Energía last, to the right of the panels.
         this._statusOpen = new St.BoxLayout({style_class: 'isla-estado isla-estado-abierto', y_align: Clutter.ActorAlign.CENTER,
             visible: false});
-        for (const actor of [this._apps.actor, this._panelSep, this._panels, this._statusOpen, this._apps.tail])
+        // Some (the tray, when asked) go at the start instead.
+        this._statusStart = new St.BoxLayout({style_class: 'isla-estado isla-estado-abierto', y_align: Clutter.ActorAlign.CENTER,
+            visible: false});
+        for (const actor of [this._statusStart, this._apps.actor, this._panelSep, this._panels, this._statusOpen, this._apps.tail])
             this._open.add_child(actor);
 
         // Notice: whatever the notices module hands over, clickable.
@@ -763,10 +766,13 @@ export class Isla {
     // The status items move into their two boxes in order; their owners keep them.
     _updateStatus() {
         const all = this._state.statuses;
-        for (const [box, part] of [[this._statusFolded, 'folded'], [this._statusOpen, 'open']]) {
+        const boxes = [[this._statusFolded, 'folded', null], [this._statusOpen, 'open', 'end'], [this._statusStart, 'open', 'start']];
+        for (const [box, part, side] of boxes) {
             for (const child of box.get_children())
                 box.remove_child(child);
             for (const item of all) {
+                if (side && item.side !== side)
+                    continue;
                 const actor = item[part];
                 if (!actor)
                     continue;
@@ -789,6 +795,7 @@ export class Isla {
         this._statusFolded.visible = hasStatus;
         this._statusSep.visible = hasStatus && (hasMini || this._dots.count > 0);
         this._statusOpen.visible = this._statusOpen.get_children().some(c => c.visible);
+        this._statusStart.visible = this._statusStart.get_children().some(c => c.visible);
     }
 
     // ---------- modes ----------
@@ -1147,7 +1154,7 @@ export class Isla {
         this._blur.configure(false);
         // Activity and status actors belong to their modules.
         this._miniBin.set_child(null);
-        for (const box of [this._statusFolded, this._statusOpen]) {
+        for (const box of [this._statusFolded, this._statusOpen, this._statusStart]) {
             for (const child of box.get_children())
                 box.remove_child(child);
         }

@@ -615,3 +615,15 @@
 .isla-privacidad-abierta .isla-privacidad-icono { icon-size: 16px; }
 .isla-privacidad-caja, .isla-privacidad-iconos { spacing: 6px; }
 .isla-privacidad-texto { font-size: 12px; font-weight: 600; }
+
+/* Tray icons (StatusNotifierItem) */
+.isla-bandeja { spacing: 2px; }
+.isla-bandeja-boton { padding: 6px; border-radius: 10px; color: #3A3D45; }
+.isla-bandeja-boton:hover, .isla-bandeja-boton:focus { background-color: rgba(30, 32, 40, 0.10); }
+.isla-bandeja-icono { icon-size: 20px; }
+.isla-capsule.oscura .isla-bandeja-boton,
+.isla-skin-vidrio-oscuro .isla-bandeja-boton,
+.isla-skin-aurora .isla-bandeja-boton { color: #F4F5FA; }
+.isla-capsule.oscura .isla-bandeja-boton:hover,
+.isla-skin-vidrio-oscuro .isla-bandeja-boton:hover,
+.isla-skin-aurora .isla-bandeja-boton:hover { background-color: rgba(255, 255, 255, 0.12); }

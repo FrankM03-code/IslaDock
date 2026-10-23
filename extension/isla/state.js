@@ -90,11 +90,12 @@ export class IslaState extends Signals.EventEmitter {
 
     // A small, always-there status item (battery, keyboard layout, workspaces…):
     // `folded` sits at the right end of the folded island, `open` just before
-    // Energía in the open dock (either may be null). Lower order goes first.
-    setStatus(id, {order, folded = null, open = null}) {
+    // Energía in the open dock, or at its start with side 'start' (either actor
+    // may be null). Lower order goes first.
+    setStatus(id, {order, folded = null, open = null, side = 'end'}) {
         const old = this._status.get(id);
-        this._status.set(id, {id, order, folded, open});
-        if (!old || old.order !== order || old.folded !== folded || old.open !== open)
+        this._status.set(id, {id, order, folded, open, side});
+        if (!old || old.order !== order || old.folded !== folded || old.open !== open || old.side !== side)
             this.emit('status-changed');
     }
 

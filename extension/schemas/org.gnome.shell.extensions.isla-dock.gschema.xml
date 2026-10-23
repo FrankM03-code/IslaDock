@@ -263,5 +263,14 @@
       <default>true</default>
       <summary>Reloj lateral: un clic abre el calendario y las notificaciones</summary>
     </key>
+    <key name="bandeja" type="b">
+      <default>true</default>
+      <summary>Íconos de bandeja (AppIndicator / StatusNotifierItem) en el dock</summary>
+    </key>
+    <key name="bandeja-lado" type="s">
+      <choices><choice value='derecha'/><choice value='izquierda'/></choices>
+      <default>'derecha'</default>
+      <summary>Bandeja: antes de Energía (derecha) o al comienzo del dock (izquierda)</summary>
+    </key>
   </schema>
 </schemalist>
