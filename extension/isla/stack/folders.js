@@ -44,13 +44,13 @@ class FoldersModel extends Signals.EventEmitter {
         return {title: 'Carpetas', folder: 'Carpeta personal', count: () => '', accent: false};
     }
 
-    _entry(path, key, iconName, extra) {
+    _entry(path, key, iconName, extra, display = GLib.path_get_basename(path)) {
         const file = Gio.File.new_for_path(path);
         const fallback = new Gio.ThemedIcon({name: iconName});
         return {
             file, path, extra,
             uri: file.get_uri(),
-            display: GLib.path_get_basename(path),
+            display,
             gicon: this._resolver?.lookup(key, fallback, [iconName]) ?? fallback,
             detail: '',
         };
@@ -71,7 +71,11 @@ class FoldersModel extends Signals.EventEmitter {
             if (!path || seen.has(path) || !GLib.file_test(path, GLib.FileTest.IS_DIR))
                 continue;
             seen.add(path);
-            files.push(this._entry(path, 'carpeta', 'folder', true));
+            // The home folder, when added, keeps its own name and the house, and goes first.
+            if (path === home)
+                files.unshift(this._entry(path, 'personal', 'user-home', true, 'Carpeta personal'));
+            else
+                files.push(this._entry(path, 'carpeta', 'folder', true));
         }
         this.files = files;
         this.emit('changed');

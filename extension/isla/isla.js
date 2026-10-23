@@ -35,6 +35,9 @@ const LEVEL_TIME = 1000;
 const ICON_STAGGER = 25;
 const ROOM = 520;             // height of the invisible strip that holds the island
 const HIDE_TIME = 250;
+const NUDGE_TIME = 2500;      // a hidden island stays out this long after a notification
+const NUDGE_SHIFT = 5;        // px of the shake, each side
+const NUDGE_STEP = 70;
 const OVERLAP_DELAY = 100;
 const SKIN_FADE = 150;
 const PANEL_ORDER = ['recording', 'timer', 'music'];
@@ -499,6 +502,8 @@ export class Isla {
                 this._showNotice(args[0]);
             else if (name === 'pulse')
                 this._pulse(args[0] ?? 3);
+            else if (name === 'nudge')
+                this._nudge();
             else if (name === 'fold')
                 this._maybeFold(true);
             else if (name === 'maybe-fold' && !this.hovered)
@@ -572,7 +577,8 @@ export class Isla {
     // ---------- hiding ----------
     // nunca: always there · inteligente: away while a window touches it ·
     // siempre: away until the pointer reaches the bottom edge. Notices, an
-    // open island and a finished timer always show.
+    // open island and a finished timer always show; a notification brings it
+    // out for a moment (see _nudge).
     _updateAutohide() {
         // Windows are watched always: hiding and the blur both depend on them.
         this._watchWindows();
@@ -581,7 +587,7 @@ export class Isla {
 
     _shouldHide() {
         const mode = this._settings.get_string('ocultar');
-        if (mode === 'nunca' || this._state.mode !== Mode.COLLAPSED || this.hovered || this._inAppGrid())
+        if (mode === 'nunca' || this._state.mode !== Mode.COLLAPSED || this.hovered || this._inAppGrid() || this._peeking)
             return false;
         if (this._state.activities.some(a => a.priority <= Priority.TIMER_DONE))
             return false;
@@ -958,6 +964,42 @@ export class Isla {
             autoReverse: true, repeatCount: times * 2 - 1});
     }
 
+    // ---------- a notification arrived: a soft shake ----------
+    // A hidden island peeks out, shakes and goes back; a visible one just shakes.
+    _nudge() {
+        if (!this._peeking) {
+            this._peeking = true;
+            // Like the cards: over a maximized window drawn straight to the screen.
+            global.compositor.disable_unredirect();
+            this._checkHide();
+        }
+        const wasHidden = this._capsule.translation_y > 0;
+        this._later('nudge-shake', wasHidden ? ms(HIDE_TIME) : 0, () => this._shake());
+        this._later('nudge', NUDGE_TIME, () => this._endNudge());
+    }
+
+    _shake() {
+        const c = this._capsule;
+        const d = NUDGE_SHIFT * this._sf;
+        const steps = [d, -d, d * 0.6, -d * 0.6, d * 0.3, 0];
+        c.remove_transition('translation-x');
+        const step = i => {
+            if (i >= steps.length)
+                return;
+            c.ease({translation_x: steps[i], duration: ms(NUDGE_STEP), mode: Clutter.AnimationMode.EASE_IN_OUT_SINE,
+                onStopped: done => done && step(i + 1)});
+        };
+        step(0);
+    }
+
+    _endNudge() {
+        if (!this._peeking)
+            return;
+        this._peeking = false;
+        global.compositor.enable_unredirect();
+        this._checkHide();
+    }
+
     // ---------- volume level ----------
     _showLevel(value) {
         this._levelValue = Math.max(0, Math.min(1, value));
@@ -1067,6 +1109,7 @@ export class Isla {
     }
 
     destroy() {
+        this._endNudge();
         this._restoreGnomeDash();
         this._unwatchWindows();
         this._dropSources();

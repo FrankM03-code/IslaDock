@@ -8,7 +8,8 @@
 // Same rules as GNOME's banners: none in do-not-disturb, none for low urgency,
 // critical ones stay until they are dealt with. The cards look like the island
 // (its color, transparency, edge and blur, Aurora's halo, Vidrio oscuro's
-// lens), so the set reads as one.
+// lens), so the set reads as one. Each new card also nudges the dock, which
+// peeks out for a moment when a window keeps it hidden.
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
@@ -136,13 +137,30 @@ export class FloatingNotices {
         this._box.show();
         while (this._cards.length > MAX_CARDS)
             this._cards[this._cards.length - 1].dismiss();
+        this._holdRedirect(true);
         card.animateIn();
+        this._state.command('nudge');
     }
 
     _remove(card) {
         this._cards = this._cards.filter(c => c !== card);
-        if (!this._cards.length)
+        if (!this._cards.length) {
             this._box.hide();
+            this._holdRedirect(false);
+        }
+    }
+
+    // On X11 a window that fills the monitor (maximized, with no top bar) may be
+    // drawn straight to the screen, over the shell: GNOME's banners stop that
+    // while they show, and so do the cards.
+    _holdRedirect(on) {
+        if (on === !!this._redirectHeld)
+            return;
+        this._redirectHeld = on;
+        if (on)
+            global.compositor.disable_unredirect();
+        else
+            global.compositor.enable_unredirect();
     }
 
     // Top center of the primary monitor, under the top bar when it is there.
@@ -177,6 +195,7 @@ export class FloatingNotices {
             this._forget(notification);
         this._cards.forEach(c => c.destroy());
         this._cards = [];
+        this._holdRedirect(false);
         this._restoreGnomeBanners();
         Main.layoutManager.disconnect(this._monitorsId);
         this._box.disconnect(this._boxId);

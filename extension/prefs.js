@@ -531,8 +531,9 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         const sync = () => {
             rows.forEach(r => group.remove(r));
             rows = settings.get_strv('carpetas-extra').map(path => {
-                const row = new Adw.ActionRow({title: GLib.path_get_basename(path) || path, subtitle: path});
-                row.add_prefix(new Gtk.Image({icon_name: 'folder-symbolic'}));
+                const home = path === GLib.get_home_dir();
+                const row = new Adw.ActionRow({title: home ? 'Carpeta personal' : GLib.path_get_basename(path) || path, subtitle: path});
+                row.add_prefix(new Gtk.Image({icon_name: home ? 'user-home-symbolic' : 'folder-symbolic'}));
                 const remove = new Gtk.Button({icon_name: 'user-trash-symbolic', valign: Gtk.Align.CENTER, tooltip_text: 'Quitar de la lista'});
                 remove.add_css_class('flat');
                 remove.connect('clicked', () =>
