@@ -603,3 +603,15 @@
 .isla-rl-pestana .isla-rl-segundos { font-size: 13px; color: rgba(255, 255, 255, 0.7); }
 .isla-rl-pestana .isla-rl-dia { font-size: 10px; font-weight: 600; letter-spacing: 1px; color: rgba(255, 255, 255, 0.8);
   padding-top: 6px; text-align: center; }
+
+/* Privacy: microphone, camera, location, shared screen in use (GNOME's privacy orange). */
+.isla-privacidad {
+  height: 20px; padding: 0 7px; spacing: 4px; border-radius: 10px;
+  background-color: rgba(240, 132, 30, 0.95); color: #FFFFFF;
+}
+.isla-privacidad-icono { icon-size: 12px; }
+.isla-privacidad-abierta { height: 40px; padding: 0 12px; border-radius: 20px; }
+.isla-privacidad-abierta:hover, .isla-privacidad-abierta:focus { background-color: rgba(240, 132, 30, 1); }
+.isla-privacidad-abierta .isla-privacidad-icono { icon-size: 16px; }
+.isla-privacidad-caja, .isla-privacidad-iconos { spacing: 6px; }
+.isla-privacidad-texto { font-size: 12px; font-weight: 600; }
