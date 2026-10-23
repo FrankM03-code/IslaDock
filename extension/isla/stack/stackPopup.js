@@ -17,6 +17,7 @@ import {GridView} from './gridView.js';
 import {ListView} from './listView.js';
 import * as FileActions from './fileActions.js';
 import {Mode} from '../state.js';
+import {dockWorkArea} from '../monitor.js';
 
 const VIEWS = {cascade: CascadeView, grid: GridView, list: ListView};
 
@@ -104,7 +105,7 @@ export class StackPopup {
         const [ax] = anchor.get_transformed_position();
         const [aw] = anchor.get_transformed_size();
         const [, cy] = capsule?.get_transformed_position() ?? anchor.get_transformed_position();
-        const area = Main.layoutManager.getWorkAreaForMonitor(Main.layoutManager.primaryIndex);
+        const area = dockWorkArea();
         this._view.place(ax + aw / 2, cy, area);
     }
 

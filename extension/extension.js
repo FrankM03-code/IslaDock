@@ -32,6 +32,7 @@ import {SideClock} from './isla/sideClock.js';
 import {PrivacyStatus} from './isla/privacy.js';
 import {Tray} from './isla/tray/tray.js';
 import {CalendarPanel} from './isla/calendar.js';
+import {dockMonitorIndex, setDockSettings} from './isla/monitor.js';
 import {IslaState} from './isla/state.js';
 
 // Modules that a setting can switch off: [key or null, factory].
@@ -71,6 +72,7 @@ export default class IslaDockExtension extends Extension {
         if (this._settings.get_string('isla-piel') === 'vidrio-liquido')
             this._settings.set_string('isla-piel', 'vidrio-oscuro');
         this._resolver = new IconResolver(this.dir, this._settings);
+        setDockSettings(this._settings);
         this._modules = new Map();
         this._ids = [];
         if (Main.layoutManager._startingUp)
@@ -85,6 +87,9 @@ export default class IslaDockExtension extends Extension {
             this._startId = 0;
         }
         this._state = new IslaState();
+        this._dockMonitor = dockMonitorIndex();
+        if (!this._monitorIds)
+            this._watchMonitor();
         this._isla = new Isla({settings: this._settings, resolver: this._resolver, state: this._state});
         this._ctx = {state: this._state, settings: this._settings, capsule: this._isla.capsule, title: this.metadata.name, uuid: this.uuid,
             resolver: this._resolver, dir: this.dir};
@@ -93,6 +98,38 @@ export default class IslaDockExtension extends Extension {
             if (key)
                 this._ids.push(this._settings.connect(`changed::${key}`, () => this._sync(name)));
         }
+    }
+
+    // The island and everything around it read their monitor when made: moving
+    // the dock to another monitor (or the monitor going away) makes them again.
+    _watchMonitor() {
+        const check = () => {
+            if (dockMonitorIndex() !== this._dockMonitor)
+                this._rebuild();
+        };
+        this._monitorIds = [
+            [this._settings, this._settings.connect('changed::monitor-isla', check)],
+            [Main.layoutManager, Main.layoutManager.connect('monitors-changed', check)],
+        ];
+    }
+
+    _teardown() {
+        this._ids.forEach(id => this._settings.disconnect(id));
+        this._ids = [];
+        // Modules first: they hand back what they lent to the island.
+        for (const module of this._modules.values())
+            module.destroy();
+        this._modules.clear();
+        this._isla?.destroy();
+        this._isla = null;
+        this._state?.destroy();
+        this._state = null;
+        this._ctx = null;
+    }
+
+    _rebuild() {
+        this._teardown();
+        this._build();
     }
 
     _sync(name) {
@@ -115,17 +152,10 @@ export default class IslaDockExtension extends Extension {
         if (this._startId)
             Main.layoutManager.disconnect(this._startId);
         this._startId = 0;
-        this._ids.forEach(id => this._settings.disconnect(id));
-        this._ids = [];
-        // Modules first: they hand back what they lent to the island.
-        for (const module of this._modules.values())
-            module.destroy();
-        this._modules.clear();
-        this._isla?.destroy();
-        this._isla = null;
-        this._state?.destroy();
-        this._state = null;
-        this._ctx = null;
+        this._monitorIds?.forEach(([obj, id]) => obj.disconnect(id));
+        this._monitorIds = null;
+        this._teardown();
+        setDockSettings(null);
         this._resolver.destroy();
         this._resolver = null;
         this._settings = null;

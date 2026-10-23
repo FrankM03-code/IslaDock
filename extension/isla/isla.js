@@ -14,6 +14,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {AppsRow} from './apps.js';
 import {RowLayout} from './row.js';
+import {dockMonitor, dockMonitorIndex} from './monitor.js';
 import {BlurLayer} from './blur.js';
 import {Dots} from './dots.js';
 import {Mode, Priority} from './state.js';
@@ -236,7 +237,7 @@ export class Isla {
     }
 
     get _monitor() {
-        return Main.layoutManager.primaryMonitor;
+        return dockMonitor();
     }
 
     get _sf() {
@@ -271,7 +272,7 @@ export class Isla {
             track_hover: true,
             layout_manager: new CapsuleLayout(this),
         });
-        this._blur = new BlurLayer(Main.layoutManager.primaryIndex);
+        this._blur = new BlurLayer(dockMonitorIndex());
         this._bg = new St.Widget({style_class: 'isla-bg'});
         this._capsule.add_child(this._blur);
         this._capsule.add_child(this._bg);
@@ -628,7 +629,7 @@ export class Isla {
         const top = cy - this._capsule.translation_y;
         const bottom = top + ch + BOTTOM * this._sf;
         const ws = global.workspace_manager.get_active_workspace();
-        const monitor = Main.layoutManager.primaryIndex;
+        const monitor = dockMonitorIndex();
         const types = [Meta.WindowType.NORMAL, Meta.WindowType.DIALOG, Meta.WindowType.MODAL_DIALOG, Meta.WindowType.UTILITY];
         return global.get_window_actors().some(actor => {
             const w = actor.meta_window;

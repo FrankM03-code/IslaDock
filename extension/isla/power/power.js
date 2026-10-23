@@ -26,6 +26,7 @@ import {Slider} from 'resource:///org/gnome/shell/ui/slider.js';
 import {showScreenshotUI} from 'resource:///org/gnome/shell/ui/screenshot.js';
 
 import {dressFrame, islandLook} from '../look.js';
+import {dockWorkArea} from '../monitor.js';
 import {createToggles, openSettings} from './services.js';
 import {acquireBattery, describe, releaseBattery} from './battery.js';
 import {Mode} from '../state.js';
@@ -103,7 +104,7 @@ export class Power {
             const [bw] = button.get_transformed_size();
             const [, tw] = this._tooltip.get_preferred_width(-1);
             const [, th] = this._tooltip.get_preferred_height(-1);
-            const area = Main.layoutManager.getWorkAreaForMonitor(Main.layoutManager.primaryIndex);
+            const area = dockWorkArea();
             const x = Math.min(Math.max(bx + bw / 2 - tw / 2, area.x + 4), area.x + area.width - tw - 4);
             this._tooltip.set_position(Math.round(x), Math.round(by - th - 6));
         };
@@ -313,7 +314,7 @@ export class Power {
         const [, cy] = this._capsule?.get_transformed_position() ?? this._anchor.get_transformed_position();
         const [, w] = panel.get_preferred_width(-1);
         const [, h] = panel.get_preferred_height(w);
-        const area = Main.layoutManager.getWorkAreaForMonitor(Main.layoutManager.primaryIndex);
+        const area = dockWorkArea();
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         let x = ax + aw - w;
         x = Math.min(Math.max(x, area.x + 4 * sf), area.x + area.width - w - 4 * sf);

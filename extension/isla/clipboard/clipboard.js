@@ -22,6 +22,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {ClipboardHistory} from './history.js';
 import {ClipboardPanel, shortcutLabel} from './panel.js';
 import {dressFrame, islandLook} from '../look.js';
+import {dockWorkArea} from '../monitor.js';
 import {Mode} from '../state.js';
 import {ms} from '../timing.js';
 
@@ -161,7 +162,7 @@ export class Clipboard {
         const [, cy] = this._capsule?.get_transformed_position() ?? anchor.get_transformed_position();
         const [, w] = frame.get_preferred_width(-1);
         const [, h] = frame.get_preferred_height(w);
-        const area = Main.layoutManager.getWorkAreaForMonitor(Main.layoutManager.primaryIndex);
+        const area = dockWorkArea();
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         let x = ax + aw / 2 - w / 2;
         x = Math.min(Math.max(x, area.x + 4 * sf), area.x + area.width - w - 4 * sf);

@@ -13,6 +13,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {SkinBase} from './base.js';
 import {Lens} from './lens.js';
+import {dockMonitorIndex} from '../monitor.js';
 
 const MARGIN = 40;            // wallpaper around the lens for the bent edge
 const RADIUS = 26;
@@ -75,7 +76,7 @@ export class VidrioOscuroSkin extends SkinBase {
                 const shadow = new St.Widget({style_class: 'isla-vo-sombra', style: `border-radius: ${radius}px;`});
                 shadow._around = 0;
                 try {
-                    const lens = new Lens({monitorIndex: Main.layoutManager.primaryIndex, margin: MARGIN, scale: this._sf});
+                    const lens = new Lens({monitorIndex: dockMonitorIndex(), margin: MARGIN, scale: this._sf});
                     const s = this.isla._settings;
                     lens.configure({tint: s.get_double('glass-tint'), strength: s.get_double('glass-strength')});
                     lens.setRadius(radius * this._sf);
@@ -158,7 +159,7 @@ export class VidrioOscuroSkin extends SkinBase {
 
     _makeLens(target) {
         try {
-            const lens = new Lens({monitorIndex: Main.layoutManager.primaryIndex, margin: MARGIN, scale: this._sf});
+            const lens = new Lens({monitorIndex: dockMonitorIndex(), margin: MARGIN, scale: this._sf});
             lens._target = target;
             this.addLayer(lens, 'around');
             this._lenses.push(lens);

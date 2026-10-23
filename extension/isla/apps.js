@@ -24,6 +24,7 @@ import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
 import {DockItem, DockSeparator} from '../dockItem.js';
 import {RowLayout} from './row.js';
+import {dockMonitor} from './monitor.js';
 import {downloadsDir} from './stack/downloadsModel.js';
 
 // Magnification by distance to the hovered icon, as a factor of the base size.
@@ -674,7 +675,7 @@ export class AppsRow extends Signals.EventEmitter {
         const size = item.zoom || this._p.base;
         const iconTop = iy + (this._p.base - size) * sf;
         const [tw, th] = this._tooltip.get_size();
-        const mon = Main.layoutManager.primaryMonitor;
+        const mon = dockMonitor();
         const x = Math.min(Math.max(ix + iw / 2 - tw / 2, mon.x + 4), mon.x + mon.width - tw - 4);
         this._tooltip.set_position(Math.round(x), Math.round(iconTop - TOOLTIP_GAP * sf - th));
     }

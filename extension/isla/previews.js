@@ -13,6 +13,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {Mode} from './state.js';
 import {chromeParams} from './chrome.js';
+import {dockMonitor} from './monitor.js';
 
 const SHOW_DELAY = 400;
 const HIDE_DELAY = 300;
@@ -148,7 +149,7 @@ export class Previews {
         const [, natH] = this._card.get_preferred_height(natW);
         const [ix, iy] = item.get_transformed_position();
         const [iw] = item.get_transformed_size();
-        const mon = Main.layoutManager.primaryMonitor;
+        const mon = dockMonitor();
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         const x = Math.min(Math.max(ix + iw / 2 - natW / 2, mon.x + 8), mon.x + mon.width - natW - 8);
         this._card.set_position(Math.round(x), Math.round(iy - natH - GAP * sf));

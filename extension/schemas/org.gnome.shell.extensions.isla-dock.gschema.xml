@@ -289,5 +289,9 @@
       <default>false</default>
       <summary>La rueda sobre una app abierta pasa por sus ventanas (si no, la rueda es el volumen)</summary>
     </key>
+    <key name="monitor-isla" type="i">
+      <default>-1</default>
+      <summary>Monitor de la isla (-1 = el principal)</summary>
+    </key>
   </schema>
 </schemalist>

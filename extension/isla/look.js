@@ -8,9 +8,9 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {BlurLayer} from './blur.js';
+import {dockMonitorIndex} from './monitor.js';
 
 const css = (c, alpha = c.alpha / 255) => `rgba(${c.red}, ${c.green}, ${c.blue}, ${alpha.toFixed(3)})`;
 
@@ -55,7 +55,7 @@ function baseLook(state) {
 export function dressFrame(look, frame, content, radius) {
     const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
     if (look.blur) {
-        const blur = new BlurLayer(Main.layoutManager.primaryIndex);
+        const blur = new BlurLayer(dockMonitorIndex());
         frame.add_child(blur);
         if (!blur.configure(true, radius, 'all', sf, look.blur))
             blur.destroy();

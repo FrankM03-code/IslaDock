@@ -383,6 +383,8 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         size.add(folder);
         dock.add(size);
 
+        dock.add(this._monitorGroup(settings));
+
         const extras = new Adw.PreferencesGroup({title: 'Al final del dock'});
         extras.add(switchRow(settings, 'mostrar-descargas', 'Descargas', 'Su pila se configura más abajo'));
         extras.add(switchRow(settings, 'mostrar-papelera', 'Papelera', 'Clic derecho para vaciarla'));
@@ -402,6 +404,28 @@ export default class IslaDockPreferences extends ExtensionPreferences {
 
         window.add(this._desktopPage(settings));
         window.add(this._aboutPage());
+    }
+
+    // ---------- Dock: which monitor ----------
+    _monitorGroup(settings) {
+        const group = new Adw.PreferencesGroup({
+            title: 'Monitor',
+            description: 'Con varios monitores, la isla vive en uno. Si ese monitor se desconecta, pasa al principal.',
+        });
+        const monitors = Gdk.Display.get_default().get_monitors();
+        const options = [[-1, 'El principal']];
+        for (let i = 0; i < monitors.get_n_items(); i++) {
+            const m = monitors.get_item(i);
+            options.push([i, `Monitor ${i + 1}${m.model ? `  (${m.model})` : ''}`]);
+        }
+        const row = new Adw.ComboRow({title: 'Monitor de la isla', model: Gtk.StringList.new(options.map(([, label]) => label))});
+        row.selected = Math.max(0, options.findIndex(([v]) => v === settings.get_int('monitor-isla')));
+        row.connect('notify::selected', () => settings.set_int('monitor-isla', options[row.selected]?.[0] ?? -1));
+        row.sensitive = options.length > 2;
+        if (!row.sensitive)
+            row.subtitle = 'Ahora hay un solo monitor';
+        group.add(row);
+        return group;
     }
 
     // ---------- Escritorio: the desktop clock ----------
