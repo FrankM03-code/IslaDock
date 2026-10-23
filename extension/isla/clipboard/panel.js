@@ -9,34 +9,35 @@
 import Clutter from 'gi://Clutter';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
+import {_, N_, fmt} from '../i18n.js';
 
 const FILTERS = [
-    {key: 'all', label: 'Todo', icon: 'view-app-grid-symbolic'},
-    {key: 'text', label: 'Texto', icon: 'format-justify-left-symbolic'},
-    {key: 'link', label: 'Enlaces', icon: 'insert-link-symbolic'},
-    {key: 'image', label: 'Imágenes', icon: 'image-x-generic-symbolic'},
-    {key: 'color', label: 'Colores', icon: 'color-select-symbolic'},
+    {key: 'all', label: N_('Todo'), icon: 'view-app-grid-symbolic'},
+    {key: 'text', label: N_('Texto'), icon: 'format-justify-left-symbolic'},
+    {key: 'link', label: N_('Enlaces'), icon: 'insert-link-symbolic'},
+    {key: 'image', label: N_('Imágenes'), icon: 'image-x-generic-symbolic'},
+    {key: 'color', label: N_('Colores'), icon: 'color-select-symbolic'},
 ];
 const KIND_ICONS = {text: 'format-justify-left-symbolic', link: 'insert-link-symbolic'};
 const RECENT_VISIBLE = 5;
 const ROW_HEIGHT = 50;
 const STATUS_TIME = 1800;
-const IDLE_STATUS = 'Clic para copiar';
+const IDLE_STATUS = N_('Clic para copiar');
 // Looks like a command or code: shown in a monospace font.
 const CODE_RE = /^(sudo|git|npm|cd|ls|cat|grep|journalctl|gsettings|flatpak|apt|dnf|python3?|node)\b|[{};]|=>|\$\(|&&|\|\|/;
 
 export function timeAgo(ms) {
     const s = Math.floor((Date.now() - ms) / 1000);
     if (s < 60)
-        return 'ahora';
+        return _('ahora');
     const m = Math.floor(s / 60);
     if (m < 60)
-        return `hace ${m} min`;
+        return fmt(_('hace {n} min'), {n: m});
     const h = Math.floor(m / 60);
     if (h < 24)
-        return `hace ${h} h`;
+        return fmt(_('hace {n} h'), {n: h});
     const d = Math.floor(h / 24);
-    return d === 1 ? 'ayer' : `hace ${d} días`;
+    return d === 1 ? _('ayer') : fmt(_('hace {n} días'), {n: d});
 }
 
 // '<Super>v' -> 'Super+V'
@@ -75,7 +76,7 @@ export class ClipboardPanel {
     _buildSearch(shortcut) {
         const box = new St.BoxLayout({style_class: 'isla-clip-busqueda'});
         box.add_child(new St.Icon({icon_name: 'edit-find-symbolic', style_class: 'isla-clip-lupa', y_align: Clutter.ActorAlign.CENTER}));
-        this._entry = new St.Entry({style_class: 'isla-clip-campo', hint_text: 'Buscar en el portapapeles', can_focus: true,
+        this._entry = new St.Entry({style_class: 'isla-clip-campo', hint_text: _('Buscar en el portapapeles'), can_focus: true,
             x_expand: true, y_align: Clutter.ActorAlign.CENTER});
         this._entry.clutter_text.connect('text-changed', () => {
             this._query = this._entry.text.toLowerCase();
@@ -93,9 +94,9 @@ export class ClipboardPanel {
         this._segments = FILTERS.map(f => {
             const content = new St.BoxLayout({style_class: 'isla-clip-seg-contenido', x_align: Clutter.ActorAlign.CENTER});
             content.add_child(new St.Icon({icon_name: f.icon, style_class: 'isla-clip-seg-icono', y_align: Clutter.ActorAlign.CENTER}));
-            const label = new St.Label({text: f.label, y_align: Clutter.ActorAlign.CENTER});
+            const label = new St.Label({text: _(f.label), y_align: Clutter.ActorAlign.CENTER});
             content.add_child(label);
-            const button = new St.Button({style_class: 'isla-clip-seg', accessible_name: f.label, can_focus: true,
+            const button = new St.Button({style_class: 'isla-clip-seg', accessible_name: _(f.label), can_focus: true,
                 track_hover: true, child: content});
             button.connect('clicked', () => {
                 this._filter = f.key;
@@ -118,14 +119,14 @@ export class ClipboardPanel {
 
     _buildFooter() {
         const footer = new St.BoxLayout({style_class: 'isla-clip-pie'});
-        this._status = new St.Label({text: IDLE_STATUS, style_class: 'isla-clip-estado', x_expand: true,
+        this._status = new St.Label({text: _(IDLE_STATUS), style_class: 'isla-clip-estado', x_expand: true,
             y_align: Clutter.ActorAlign.CENTER});
         this._status.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         footer.add_child(this._status);
         const content = new St.BoxLayout({style_class: 'isla-clip-borrar-contenido'});
         content.add_child(new St.Icon({icon_name: 'user-trash-symbolic', style_class: 'isla-clip-borrar-icono',
             y_align: Clutter.ActorAlign.CENTER}));
-        content.add_child(new St.Label({text: 'Borrar no fijados', y_align: Clutter.ActorAlign.CENTER}));
+        content.add_child(new St.Label({text: _('Borrar no fijados'), y_align: Clutter.ActorAlign.CENTER}));
         this._clear = new St.Button({style_class: 'isla-clip-borrar', can_focus: true, child: content});
         this._clear.connect('clicked', () => this._history.clearUnpinned());
         footer.add_child(this._clear);
@@ -158,7 +159,7 @@ export class ClipboardPanel {
             i.value.toLowerCase().includes(this._query));
         this._clear.visible = this._history.items.some(i => !i.pinned);
         if (!shown.length) {
-            const empty = this._history.items.length ? 'Sin resultados' : 'Copia algo y aparecerá aquí';
+            const empty = this._history.items.length ? _('Sin resultados') : _('Copia algo y aparecerá aquí');
             this._list.add_child(new St.Label({text: empty, style_class: 'isla-clip-vacio', x_align: Clutter.ActorAlign.CENTER}));
             this._scroll.style = null;
             this._keepFocus();
@@ -167,9 +168,9 @@ export class ClipboardPanel {
         const pinned = shown.filter(i => i.pinned);
         const recent = shown.filter(i => !i.pinned);
         if (pinned.length)
-            this._section('Fijados', pinned);
+            this._section(_('Fijados'), pinned);
         if (recent.length)
-            this._section('Recientes', recent);
+            this._section(_('Recientes'), recent);
         // Every pinned row and five recent ones; the rest scroll.
         const rows = pinned.length + Math.min(recent.length, RECENT_VISIBLE);
         const titles = (pinned.length ? 1 : 0) + (recent.length ? 1 : 0);
@@ -207,7 +208,7 @@ export class ClipboardPanel {
         text.add_child(new St.Label({text: timeAgo(item.time), style_class: 'isla-clip-tiempo'}));
         box.add_child(text);
         const pin = new St.Button({style_class: 'isla-clip-pin', can_focus: false, y_align: Clutter.ActorAlign.CENTER,
-            accessible_name: item.pinned ? 'Desfijar' : 'Fijar', opacity: item.pinned ? 255 : 0,
+            accessible_name: item.pinned ? _('Desfijar') : _('Fijar'), opacity: item.pinned ? 255 : 0,
             child: new St.Icon({icon_name: 'view-pin-symbolic', style_class: 'isla-clip-pin-icono'})});
         if (item.pinned)
             pin.add_style_pseudo_class('checked');
@@ -244,7 +245,7 @@ export class ClipboardPanel {
         if (!this._on.copy(item))
             return;
         const flat = item.value.replace(/\s+/g, ' ').trim();
-        this.showStatus(`Copiado: ${flat.length > 28 ? `${flat.slice(0, 28)}…` : flat}`);
+        this.showStatus(fmt(_('Copiado: {texto}'), {texto: flat.length > 28 ? `${flat.slice(0, 28)}…` : flat}));
         this._on.close();
     }
 
@@ -253,7 +254,7 @@ export class ClipboardPanel {
         this._clearStatus();
         this._statusId = setTimeout(() => {
             this._statusId = 0;
-            this._status.text = IDLE_STATUS;
+            this._status.text = _(IDLE_STATUS);
         }, STATUS_TIME);
     }
 

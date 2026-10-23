@@ -1,0 +1,1038 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: IslaDock\n"
+"Language: es\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Aplicaciones"
+msgstr "Aplicaciones"
+
+msgid "Energía"
+msgstr "Energía"
+
+msgid "Portapapeles"
+msgstr "Portapapeles"
+
+msgid "Clásica"
+msgstr "Clásica"
+
+msgid "Vidrio claro y desenfocado"
+msgstr "Vidrio claro y desenfocado"
+
+msgid "Clásica oscura"
+msgstr "Clásica oscura"
+
+msgid "El mismo vidrio, en tono oscuro"
+msgstr "El mismo vidrio, en tono oscuro"
+
+msgid "Vidrio oscuro"
+msgstr "Vidrio oscuro"
+
+msgid "Vidrio ahumado que dobla el fondo como una lupa"
+msgstr "Vidrio ahumado que dobla el fondo como una lupa"
+
+msgid "Aurora"
+msgstr "Aurora"
+
+msgid "Cápsula oscura con un halo que fluye"
+msgstr "Cápsula oscura con un halo que fluye"
+
+msgid "no trae ninguna opción válida"
+msgstr "no trae ninguna opción válida"
+
+msgid "Piel"
+msgstr "Piel"
+
+msgid "Cómo se ve la isla. Se cambia al instante."
+msgstr "Cómo se ve la isla. Se cambia al instante."
+
+msgid "Sin ventanas detrás, el borde dobla el fondo como una lupa; con una ventana detrás, vidrio plano."
+msgstr "Sin ventanas detrás, el borde dobla el fondo como una lupa; con una ventana detrás, vidrio plano."
+
+msgid "Efecto lupa en el borde"
+msgstr "Efecto lupa en el borde"
+
+msgid "Apágalo para usar siempre el vidrio plano"
+msgstr "Apágalo para usar siempre el vidrio plano"
+
+msgid "Oscuridad del vidrio"
+msgstr "Oscuridad del vidrio"
+
+msgid "Hacia la derecha, más oscuro"
+msgstr "Hacia la derecha, más oscuro"
+
+msgid "Claro"
+msgstr "Claro"
+
+msgid "Oscuro"
+msgstr "Oscuro"
+
+msgid "Fuerza de la lupa"
+msgstr "Fuerza de la lupa"
+
+msgid "Cuánto se dobla el fondo en el borde"
+msgstr "Cuánto se dobla el fondo en el borde"
+
+msgid "Nada"
+msgstr "Nada"
+
+msgid "Mucha"
+msgstr "Mucha"
+
+msgid "Música en una tarjeta aparte"
+msgstr "Música en una tarjeta aparte"
+
+msgid "Al lado de la isla, con su propio vidrio"
+msgstr "Al lado de la isla, con su propio vidrio"
+
+msgid "Transparencia de la isla"
+msgstr "Transparencia de la isla"
+
+msgid "Hacia la derecha se ve más lo que hay detrás"
+msgstr "Hacia la derecha se ve más lo que hay detrás"
+
+msgid "Sólida"
+msgstr "Sólida"
+
+msgid "Transparente"
+msgstr "Transparente"
+
+msgid "Velocidad de las animaciones"
+msgstr "Velocidad de las animaciones"
+
+msgid "Hacia la derecha, más calmadas"
+msgstr "Hacia la derecha, más calmadas"
+
+msgid "Rápida"
+msgstr "Rápida"
+
+msgid "Lenta"
+msgstr "Lenta"
+
+msgid "Atajo de la búsqueda rápida"
+msgstr "Atajo de la búsqueda rápida"
+
+msgid "Abre la isla como buscador"
+msgstr "Abre la isla como buscador"
+
+msgid "Sin atajo"
+msgstr "Sin atajo"
+
+msgid "Cambiar"
+msgstr "Cambiar"
+
+msgid "Volver a Ctrl + Espacio"
+msgstr "Volver a Ctrl + Espacio"
+
+msgid "Pulsa el nuevo atajo"
+msgstr "Pulsa el nuevo atajo"
+
+msgid "Por ejemplo Ctrl + Espacio. Esc para cancelar."
+msgstr "Por ejemplo Ctrl + Espacio. Esc para cancelar."
+
+msgid "Atajo de la búsqueda"
+msgstr "Atajo de la búsqueda"
+
+msgid "Isla"
+msgstr "Isla"
+
+msgid "Aspecto"
+msgstr "Aspecto"
+
+msgid "Cómo aparecen los íconos"
+msgstr "Cómo aparecen los íconos"
+
+msgid "Uno por uno"
+msgstr "Uno por uno"
+
+msgid "Todos a la vez"
+msgstr "Todos a la vez"
+
+msgid "Desde el centro hacia los lados"
+msgstr "Desde el centro hacia los lados"
+
+msgid "Al abrir la isla"
+msgstr "Al abrir la isla"
+
+msgid "Desenfocar lo que hay detrás"
+msgstr "Desenfocar lo que hay detrás"
+
+msgid "Apágalo si quieres la isla aún más liviana"
+msgstr "Apágalo si quieres la isla aún más liviana"
+
+msgid "Fondo desenfocado en el cajón de aplicaciones"
+msgstr "Fondo desenfocado en el cajón de aplicaciones"
+
+msgid "Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades"
+msgstr "Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades"
+
+msgid "Respiración"
+msgstr "Respiración"
+
+msgid "En reposo, el fondo late muy despacio"
+msgstr "En reposo, el fondo late muy despacio"
+
+msgid "Ahorrar batería"
+msgstr "Ahorrar batería"
+
+msgid "Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento ni respiración. "
+msgstr "Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento ni respiración. "
+
+msgid "Si en Accesibilidad apagas las animaciones, la isla también se calma"
+msgstr "Si en Accesibilidad apagas las animaciones, la isla también se calma"
+
+msgid "Esconder la isla"
+msgstr "Esconder la isla"
+
+msgid "Nunca"
+msgstr "Nunca"
+
+msgid "Cuando una ventana la toca"
+msgstr "Cuando una ventana la toca"
+
+msgid "Siempre (aparece al llevar el mouse abajo)"
+msgstr "Siempre (aparece al llevar el mouse abajo)"
+
+msgid "Funciones"
+msgstr "Funciones"
+
+msgid "Clic largo sobre la isla: No molestar. Arrastrar hacia arriba: aplicaciones."
+msgstr "Clic largo sobre la isla: No molestar. Arrastrar hacia arriba: aplicaciones."
+
+msgid "Música"
+msgstr "Música"
+
+msgid "Lo que suena, con sus botones (Shift + rueda cambia de canción)"
+msgstr "Lo que suena, con sus botones (Shift + rueda cambia de canción)"
+
+msgid "Notificaciones flotantes"
+msgstr "Notificaciones flotantes"
+
+msgid "Cada notificación aparece sola arriba en el centro, sin isla ni barra, y se va sola"
+msgstr "Cada notificación aparece sola arriba en el centro, sin isla ni barra, y se va sola"
+
+msgid "La rueda cambia el volumen"
+msgstr "La rueda cambia el volumen"
+
+msgid "Vista en miniatura de las ventanas"
+msgstr "Vista en miniatura de las ventanas"
+
+msgid "Al dejar el mouse sobre una app abierta (Firefox, Archivos…) aparece lo que tiene en pantalla"
+msgstr "Al dejar el mouse sobre una app abierta (Firefox, Archivos…) aparece lo que tiene en pantalla"
+
+msgid "Progreso de tareas"
+msgstr "Progreso de tareas"
+
+msgid "Descargas, copias… solo de las apps que lo publican (como en Dash to Dock)"
+msgstr "Descargas, copias… solo de las apps que lo publican (como en Dash to Dock)"
+
+msgid "Mensajes sin leer en los íconos"
+msgstr "Mensajes sin leer en los íconos"
+
+msgid "Un número sobre la app (Telegram, Thunderbird…), solo de las apps que lo publican"
+msgstr "Un número sobre la app (Telegram, Thunderbird…), solo de las apps que lo publican"
+
+msgid "Símbolo de mayúsculas en la isla"
+msgstr "Símbolo de mayúsculas en la isla"
+
+msgid "Mientras estén activas, un pequeño ⇪ en la esquina de la isla"
+msgstr "Mientras estén activas, un pequeño ⇪ en la esquina de la isla"
+
+msgid "Cafeína"
+msgstr "Cafeína"
+
+msgid "La pantalla no se apaga ni el equipo se suspende. También en el panel Energía"
+msgstr "La pantalla no se apaga ni el equipo se suspende. También en el panel Energía"
+
+msgid "No molestar"
+msgstr "No molestar"
+
+msgid "También con un clic largo sobre la isla"
+msgstr "También con un clic largo sobre la isla"
+
+msgid "Estado"
+msgstr "Estado"
+
+msgid "Lo que se pierde al quitar la barra superior: en la isla y antes de Energía."
+msgstr "Lo que se pierde al quitar la barra superior: en la isla y antes de Energía."
+
+msgid "Porcentaje de la batería"
+msgstr "Porcentaje de la batería"
+
+msgid "El número junto al ícono. Sin batería no aparece nada"
+msgstr "El número junto al ícono. Sin batería no aparece nada"
+
+msgid "Espacios de trabajo"
+msgstr "Espacios de trabajo"
+
+msgid "Un punto por espacio: clic para ir a uno, la rueda pasa al siguiente. Con uno solo no aparece"
+msgstr "Un punto por espacio: clic para ir a uno, la rueda pasa al siguiente. Con uno solo no aparece"
+
+msgid "Herramientas"
+msgstr "Herramientas"
+
+msgid "Clic derecho sobre la isla: temporizador de 5, 15 o 25 minutos, uno a tu medida o un Pomodoro."
+msgstr "Clic derecho sobre la isla: temporizador de 5, 15 o 25 minutos, uno a tu medida o un Pomodoro."
+
+msgid "Dock"
+msgstr "Dock"
+
+msgid "Íconos"
+msgstr "Íconos"
+
+msgid "Tamaño de los íconos"
+msgstr "Tamaño de los íconos"
+
+msgid "Con la isla abierta, en píxeles"
+msgstr "Con la isla abierta, en píxeles"
+
+msgid "Agrandar al pasar el mouse"
+msgstr "Agrandar al pasar el mouse"
+
+msgid "Íconos en gris (apagados)"
+msgstr "Íconos en gris (apagados)"
+
+msgid "Toman color al pasar el mouse"
+msgstr "Toman color al pasar el mouse"
+
+msgid "Clic en la app que está al frente"
+msgstr "Clic en la app que está al frente"
+
+msgid "Minimizar"
+msgstr "Minimizar"
+
+msgid "Pasar a su siguiente ventana"
+msgstr "Pasar a su siguiente ventana"
+
+msgid "Mostrar sus miniaturas"
+msgstr "Mostrar sus miniaturas"
+
+msgid "Con una sola ventana, siempre minimiza. Clic central: ventana nueva"
+msgstr "Con una sola ventana, siempre minimiza. Clic central: ventana nueva"
+
+msgid "La rueda sobre una app pasa por sus ventanas"
+msgstr "La rueda sobre una app pasa por sus ventanas"
+
+msgid "Sobre el resto de la isla la rueda sigue cambiando el volumen"
+msgstr "Sobre el resto de la isla la rueda sigue cambiando el volumen"
+
+msgid "Tema de íconos"
+msgstr "Tema de íconos"
+
+msgid "El del sistema"
+msgstr "El del sistema"
+
+msgid "{nombre}  (tuyo)"
+msgstr "{nombre}  (tuyo)"
+
+msgid "Los de ~/.icons aparecen aquí"
+msgstr "Los de ~/.icons aparecen aquí"
+
+msgid "Tus íconos sueltos"
+msgstr "Tus íconos sueltos"
+
+msgid "~/.icons/isla-dock o ~/.icons — .svg o .png con el nombre de la app"
+msgstr "~/.icons/isla-dock o ~/.icons — .svg o .png con el nombre de la app"
+
+msgid "Abrir carpeta"
+msgstr "Abrir carpeta"
+
+msgid "Al final del dock"
+msgstr "Al final del dock"
+
+msgid "Descargas"
+msgstr "Descargas"
+
+msgid "Su pila se configura más abajo"
+msgstr "Su pila se configura más abajo"
+
+msgid "Papelera"
+msgstr "Papelera"
+
+msgid "Clic derecho para vaciarla"
+msgstr "Clic derecho para vaciarla"
+
+msgid "Ver y buscar todo lo que tienes instalado"
+msgstr "Ver y buscar todo lo que tienes instalado"
+
+msgid "Historial de lo copiado (texto, enlaces, colores e imágenes). Super+V lo abre desde cualquier lugar; "
+msgstr "Historial de lo copiado (texto, enlaces, colores e imágenes). Super+V lo abre desde cualquier lugar; "
+
+msgid "mientras esté activo, Super+V deja de abrir las notificaciones (sigue Super+M)"
+msgstr "mientras esté activo, Super+V deja de abrir las notificaciones (sigue Super+M)"
+
+msgid "Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína, volumen, captura, bloquear, apagar… "
+msgstr "Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína, volumen, captura, bloquear, apagar… "
+
+msgid "Clic derecho o mantener pulsado: suspender"
+msgstr "Clic derecho o mantener pulsado: suspender"
+
+msgid "Quitar la barra superior de GNOME"
+msgstr "Quitar la barra superior de GNOME"
+
+msgid "Desaparece del todo; sus controles quedan en el botón Energía. Las esquinas activas siguen funcionando"
+msgstr "Desaparece del todo; sus controles quedan en el botón Energía. Las esquinas activas siguen funcionando"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Con varios monitores, la isla vive en uno. Si ese monitor se desconecta, pasa al principal."
+msgstr "Con varios monitores, la isla vive en uno. Si ese monitor se desconecta, pasa al principal."
+
+msgid "El principal"
+msgstr "El principal"
+
+msgid "Monitor {n}"
+msgstr "Monitor {n}"
+
+msgid "Monitor de la isla"
+msgstr "Monitor de la isla"
+
+msgid "Ahora hay un solo monitor"
+msgstr "Ahora hay un solo monitor"
+
+msgid "Escritorio"
+msgstr "Escritorio"
+
+msgid "Reloj en el escritorio"
+msgstr "Reloj en el escritorio"
+
+msgid "La hora y la fecha sobre tu fondo de pantalla, detrás de las ventanas. Los clics lo atraviesan."
+msgstr "La hora y la fecha sobre tu fondo de pantalla, detrás de las ventanas. Los clics lo atraviesan."
+
+msgid "Mostrar el reloj"
+msgstr "Mostrar el reloj"
+
+msgid "Estilo"
+msgstr "Estilo"
+
+msgid "Fino compacto"
+msgstr "Fino compacto"
+
+msgid "Lateral compacto"
+msgstr "Lateral compacto"
+
+msgid "Línea"
+msgstr "Línea"
+
+msgid "Esquina"
+msgstr "Esquina"
+
+msgid "Semana"
+msgstr "Semana"
+
+msgid "Anillo del día"
+msgstr "Anillo del día"
+
+msgid "Tamaño"
+msgstr "Tamaño"
+
+msgid "Se ajusta solo a tu pantalla; esto lo agranda o achica"
+msgstr "Se ajusta solo a tu pantalla; esto lo agranda o achica"
+
+msgid "Pequeño"
+msgstr "Pequeño"
+
+msgid "Grande"
+msgstr "Grande"
+
+msgid "Posición"
+msgstr "Posición"
+
+msgid "Arriba"
+msgstr "Arriba"
+
+msgid "En el centro de la pantalla"
+msgstr "En el centro de la pantalla"
+
+msgid "Abajo"
+msgstr "Abajo"
+
+msgid "Subir o bajar"
+msgstr "Subir o bajar"
+
+msgid "Ajuste fino desde la posición elegida"
+msgstr "Ajuste fino desde la posición elegida"
+
+msgid "Reloj lateral"
+msgstr "Reloj lateral"
+
+msgid "Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora. "
+msgstr "Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora. "
+
+msgid "Sirve cuando las ventanas maximizadas tapan el reloj del escritorio."
+msgstr "Sirve cuando las ventanas maximizadas tapan el reloj del escritorio."
+
+msgid "Mostrar el reloj lateral"
+msgstr "Mostrar el reloj lateral"
+
+msgid "Píldora"
+msgstr "Píldora"
+
+msgid "Solo texto"
+msgstr "Solo texto"
+
+msgid "Pestaña vertical"
+msgstr "Pestaña vertical"
+
+msgid "Borde"
+msgstr "Borde"
+
+msgid "Derecho"
+msgstr "Derecho"
+
+msgid "Izquierdo"
+msgstr "Izquierdo"
+
+msgid "Mostrar los segundos"
+msgstr "Mostrar los segundos"
+
+msgid "Un clic abre el calendario"
+msgstr "Un clic abre el calendario"
+
+msgid "Letra"
+msgstr "Letra"
+
+msgid "El reloj está diseñado con la letra Inter; mientras no esté instalada usa Cantarell. "
+msgstr "El reloj está diseñado con la letra Inter; mientras no esté instalada usa Cantarell. "
+
+msgid "Para instalarla: sudo apt install fonts-inter (y luego cerrar sesión)."
+msgstr "Para instalarla: sudo apt install fonts-inter (y luego cerrar sesión)."
+
+msgid "Acerca de"
+msgstr "Acerca de"
+
+msgid "Un dock en forma de isla para GNOME"
+msgstr "Un dock en forma de isla para GNOME"
+
+msgid "Creador y diseñador"
+msgstr "Creador y diseñador"
+
+msgid "Versión"
+msgstr "Versión"
+
+msgid "Licencia"
+msgstr "Licencia"
+
+msgid "GNU GPL 2.0 o posterior"
+msgstr "GNU GPL 2.0 o posterior"
+
+msgid "Copia de la configuración"
+msgstr "Copia de la configuración"
+
+msgid "Guarda todo lo que elegiste aquí en un archivo, para otro equipo o para volver atrás."
+msgstr "Guarda todo lo que elegiste aquí en un archivo, para otro equipo o para volver atrás."
+
+msgid "Exportar"
+msgstr "Exportar"
+
+msgid "Guardar la configuración en un archivo"
+msgstr "Guardar la configuración en un archivo"
+
+msgid "Exportar…"
+msgstr "Exportar…"
+
+msgid "Importar"
+msgstr "Importar"
+
+msgid "Cargar una configuración guardada"
+msgstr "Cargar una configuración guardada"
+
+msgid "Importar…"
+msgstr "Importar…"
+
+msgid "Configuración de IslaDock (.json)"
+msgstr "Configuración de IslaDock (.json)"
+
+msgid "Exportar la configuración"
+msgstr "Exportar la configuración"
+
+msgid "Configuración guardada"
+msgstr "Configuración guardada"
+
+msgid "No se pudo guardar: {error}"
+msgstr "No se pudo guardar: {error}"
+
+msgid "Importar la configuración"
+msgstr "Importar la configuración"
+
+msgid "Configuración cargada ({n} opciones; {malas} no válidas se dejaron igual)"
+msgstr "Configuración cargada ({n} opciones; {malas} no válidas se dejaron igual)"
+
+msgid "Configuración cargada ({n} opciones)"
+msgstr "Configuración cargada ({n} opciones)"
+
+msgid "Ese archivo no es una configuración de IslaDock: {error}"
+msgstr "Ese archivo no es una configuración de IslaDock: {error}"
+
+msgid "Apoya a IslaDock"
+msgstr "Apoya a IslaDock"
+
+msgid "Si IslaDock te es útil, puedes apoyar su desarrollo con una donación voluntaria."
+msgstr "Si IslaDock te es útil, puedes apoyar su desarrollo con una donación voluntaria."
+
+msgid "Donar con PayPal"
+msgstr "Donar con PayPal"
+
+msgid "Carpetas de Archivos"
+msgstr "Carpetas de Archivos"
+
+msgid "Clic en Archivos: tus carpetas, como la pila de descargas. Clic central: abre Archivos. "
+msgstr "Clic en Archivos: tus carpetas, como la pila de descargas. Clic central: abre Archivos. "
+
+msgid "Clic derecho sobre una carpeta añadida: quitarla."
+msgstr "Clic derecho sobre una carpeta añadida: quitarla."
+
+msgid "Mostrar las carpetas al hacer clic en Archivos"
+msgstr "Mostrar las carpetas al hacer clic en Archivos"
+
+msgid "Siempre está"
+msgstr "Siempre está"
+
+msgid "Carpeta personal"
+msgstr "Carpeta personal"
+
+msgid "Quitar de la lista"
+msgstr "Quitar de la lista"
+
+msgid "Añadir otra carpeta"
+msgstr "Añadir otra carpeta"
+
+msgid "Carpeta para añadir a Archivos"
+msgstr "Carpeta para añadir a Archivos"
+
+msgid "Pila de descargas"
+msgstr "Pila de descargas"
+
+msgid "Clic en Descargas: tus últimos archivos. Clic central: la carpeta. Clic derecho: cambiar la vista."
+msgstr "Clic en Descargas: tus últimos archivos. Clic central: la carpeta. Clic derecho: cambiar la vista."
+
+msgid "Vista"
+msgstr "Vista"
+
+msgid "Cascada diagonal"
+msgstr "Cascada diagonal"
+
+msgid "Cuadrícula"
+msgstr "Cuadrícula"
+
+msgid "Lista"
+msgstr "Lista"
+
+msgid "Máximo en cascada"
+msgstr "Máximo en cascada"
+
+msgid "Máximo en cuadrícula"
+msgstr "Máximo en cuadrícula"
+
+msgid "Máximo en lista"
+msgstr "Máximo en lista"
+
+msgid "Avisar cuando termina una descarga"
+msgstr "Avisar cuando termina una descarga"
+
+msgid "«Descarga lista» aparece arriba, como las demás notificaciones"
+msgstr "«Descarga lista» aparece arriba, como las demás notificaciones"
+
+msgid "Carpeta"
+msgstr "Carpeta"
+
+msgid "Descargas del sistema"
+msgstr "Descargas del sistema"
+
+msgid "Elegir…"
+msgstr "Elegir…"
+
+msgid "Carpeta de la pila de descargas"
+msgstr "Carpeta de la pila de descargas"
+
+msgid "Volver a Descargas del sistema"
+msgstr "Volver a Descargas del sistema"
+
+msgid "No se pudo abrir"
+msgstr "No se pudo abrir"
+
+msgid "Vista: cascada"
+msgstr "Vista: cascada"
+
+msgid "Vista: cuadrícula"
+msgstr "Vista: cuadrícula"
+
+msgid "Vista: lista"
+msgstr "Vista: lista"
+
+msgid "Abrir la papelera"
+msgstr "Abrir la papelera"
+
+msgid "Vaciar la papelera…"
+msgstr "Vaciar la papelera…"
+
+msgid "Nueva ventana"
+msgstr "Nueva ventana"
+
+msgid "Quitar del dock"
+msgstr "Quitar del dock"
+
+msgid "Fijar en el dock"
+msgstr "Fijar en el dock"
+
+msgid "Cerrar todas las ventanas"
+msgstr "Cerrar todas las ventanas"
+
+msgid "¿Vaciar la papelera?"
+msgstr "¿Vaciar la papelera?"
+
+msgid "Todo lo que está en la papelera se borrará para siempre."
+msgstr "Todo lo que está en la papelera se borrará para siempre."
+
+msgid "Cancelar"
+msgstr "Cancelar"
+
+msgid "Vaciar"
+msgstr "Vaciar"
+
+msgid "No se pudo vaciar la papelera"
+msgstr "No se pudo vaciar la papelera"
+
+msgid "descargando…"
+msgstr "descargando…"
+
+msgid "L M X J V S D"
+msgstr "L M X J V S D"
+
+msgid "{dia} de {mes}"
+msgstr "{dia} de {mes}"
+
+msgid "{n}% DEL DÍA"
+msgstr "{n}% DEL DÍA"
+
+msgid "Cerrar"
+msgstr "Cerrar"
+
+msgid "Teclado: {nombre}. Clic para cambiar"
+msgstr "Teclado: {nombre}. Clic para cambiar"
+
+msgid "Pantalla compartida"
+msgstr "Pantalla compartida"
+
+msgid "Cámara"
+msgstr "Cámara"
+
+msgid "Micrófono"
+msgstr "Micrófono"
+
+msgid "Ubicación"
+msgstr "Ubicación"
+
+msgid "En uso: {lista}"
+msgstr "En uso: {lista}"
+
+msgid "Grabando la pantalla"
+msgstr "Grabando la pantalla"
+
+msgid "Detener grabación"
+msgstr "Detener grabación"
+
+msgid "Buscar apps, archivos o hacer una cuenta…"
+msgstr "Buscar apps, archivos o hacer una cuenta…"
+
+msgid "Enter copia el resultado"
+msgstr "Enter copia el resultado"
+
+msgid "Reloj"
+msgstr "Reloj"
+
+msgid "a. m."
+msgstr "a. m."
+
+msgid "p. m."
+msgstr "p. m."
+
+msgid "Detener"
+msgstr "Detener"
+
+msgid "Temporizador"
+msgstr "Temporizador"
+
+msgid "{n} minutos"
+msgstr "{n} minutos"
+
+msgid "Personalizado…"
+msgstr "Personalizado…"
+
+msgid "Pomodoro (25 + 5 min, 4 bloques)"
+msgstr "Pomodoro (25 + 5 min, 4 bloques)"
+
+msgid "Reanudar"
+msgstr "Reanudar"
+
+msgid "Pausar"
+msgstr "Pausar"
+
+msgid "¿Cuántos minutos?"
+msgstr "¿Cuántos minutos?"
+
+msgid "Empezar"
+msgstr "Empezar"
+
+msgid "Pomodoro: descanso de 5 minutos"
+msgstr "Pomodoro: descanso de 5 minutos"
+
+msgid "Pomodoro: bloque {n} de {total}"
+msgstr "Pomodoro: bloque {n} de {total}"
+
+msgid "Pomodoro terminado"
+msgstr "Pomodoro terminado"
+
+msgid "Se acabó el tiempo"
+msgstr "Se acabó el tiempo"
+
+msgid "Toca la isla para cerrarlo"
+msgstr "Toca la isla para cerrarlo"
+
+msgid "Trabajo · bloque {n} de {total}"
+msgstr "Trabajo · bloque {n} de {total}"
+
+msgid "Descanso · bloque {n} de {total}"
+msgstr "Descanso · bloque {n} de {total}"
+
+msgid "En pausa"
+msgstr "En pausa"
+
+msgid "Temporizador de {tiempo}"
+msgstr "Temporizador de {tiempo}"
+
+msgid "Espacio de trabajo {n}"
+msgstr "Espacio de trabajo {n}"
+
+msgid "Cargada"
+msgstr "Cargada"
+
+msgid "Cargando · {tiempo} para llenarse"
+msgstr "Cargando · {tiempo} para llenarse"
+
+msgid "Cargando"
+msgstr "Cargando"
+
+msgid "Quedan {tiempo}"
+msgstr "Quedan {tiempo}"
+
+msgid "Captura de pantalla"
+msgstr "Captura de pantalla"
+
+msgid "Configuración"
+msgstr "Configuración"
+
+msgid "Bloquear"
+msgstr "Bloquear"
+
+msgid "Cerrar sesión"
+msgstr "Cerrar sesión"
+
+msgid "Reiniciar"
+msgstr "Reiniciar"
+
+msgid "Apagar"
+msgstr "Apagar"
+
+msgid "Silenciar"
+msgstr "Silenciar"
+
+msgid "Volumen"
+msgstr "Volumen"
+
+msgid "Ahorro de energía"
+msgstr "Ahorro de energía"
+
+msgid "Equilibrado"
+msgstr "Equilibrado"
+
+msgid "Rendimiento"
+msgstr "Rendimiento"
+
+msgid "No se pudo abrir Configuración"
+msgstr "No se pudo abrir Configuración"
+
+msgid "Red cableada"
+msgstr "Red cableada"
+
+msgid "Modo de energía: {modo}"
+msgstr "Modo de energía: {modo}"
+
+msgid "No se pudo cambiar el modo de energía"
+msgstr "No se pudo cambiar el modo de energía"
+
+msgid "Cafeína: la pantalla no se apaga"
+msgstr "Cafeína: la pantalla no se apaga"
+
+msgid "Luz nocturna"
+msgstr "Luz nocturna"
+
+msgid "Estilo oscuro"
+msgstr "Estilo oscuro"
+
+msgid "{carpeta} · {n} más"
+msgstr "{carpeta} · {n} más"
+
+msgid "Descarga"
+msgstr "Descarga"
+
+msgid "¿Mover «{nombre}» a la papelera?"
+msgstr "¿Mover «{nombre}» a la papelera?"
+
+msgid "Podrás sacarlo de la papelera si te arrepientes."
+msgstr "Podrás sacarlo de la papelera si te arrepientes."
+
+msgid "Mover a la papelera"
+msgstr "Mover a la papelera"
+
+msgid "No se pudo mover a la papelera"
+msgstr "No se pudo mover a la papelera"
+
+msgid "ahora"
+msgstr "ahora"
+
+msgid "ayer"
+msgstr "ayer"
+
+msgid "Carpetas"
+msgstr "Carpetas"
+
+msgid "Abrir"
+msgstr "Abrir"
+
+msgid "Copiar ruta"
+msgstr "Copiar ruta"
+
+msgid "Descargando: {avance}"
+msgstr "Descargando: {avance}"
+
+msgid "Descargando {n} archivos"
+msgstr "Descargando {n} archivos"
+
+msgid "Recientes: {n}"
+msgstr "Recientes: {n}"
+
+msgid "Descarga lista"
+msgstr "Descarga lista"
+
+msgid "Mostrar en la carpeta"
+msgstr "Mostrar en la carpeta"
+
+msgid "Mover a la papelera…"
+msgstr "Mover a la papelera…"
+
+msgid "Imagen {hora}.png"
+msgstr "Imagen {hora}.png"
+
+msgid "Todo"
+msgstr "Todo"
+
+msgid "Texto"
+msgstr "Texto"
+
+msgid "Enlaces"
+msgstr "Enlaces"
+
+msgid "Imágenes"
+msgstr "Imágenes"
+
+msgid "Colores"
+msgstr "Colores"
+
+msgid "Clic para copiar"
+msgstr "Clic para copiar"
+
+msgid "hace {n} min"
+msgstr "hace {n} min"
+
+msgid "hace {n} h"
+msgstr "hace {n} h"
+
+msgid "hace {n} días"
+msgstr "hace {n} días"
+
+msgid "Buscar en el portapapeles"
+msgstr "Buscar en el portapapeles"
+
+msgid "Borrar no fijados"
+msgstr "Borrar no fijados"
+
+msgid "Sin resultados"
+msgstr "Sin resultados"
+
+msgid "Copia algo y aparecerá aquí"
+msgstr "Copia algo y aparecerá aquí"
+
+msgid "Fijados"
+msgstr "Fijados"
+
+msgid "Recientes"
+msgstr "Recientes"
+
+msgid "Desfijar"
+msgstr "Desfijar"
+
+msgid "Fijar"
+msgstr "Fijar"
+
+msgid "Copiado: {texto}"
+msgstr "Copiado: {texto}"
+
+msgid "Salida de sonido"
+msgstr "Salida de sonido"
+
+msgid "Salida: {nombre}"
+msgstr "Salida: {nombre}"
+
+msgid "Silenciar el micrófono"
+msgstr "Silenciar el micrófono"
+
+msgid "%A %-d de %B"
+msgstr "%A %-d de %B"
+
+msgid "Con los eventos del día"
+msgstr "Con los eventos del día"
+
+msgid "Hoy"
+msgstr "Hoy"
+
+msgid "Hoy, {dia}"
+msgstr "Hoy, {dia}"
+
+msgid "Mes anterior"
+msgstr "Mes anterior"
+
+msgid "Mes siguiente"
+msgstr "Mes siguiente"
+
+msgid "Día"
+msgstr "Día"
+
+msgid "Guardar"
+msgstr "Guardar"
+
+msgid "Mes"
+msgstr "Mes"
+
+msgid "Nuevo recordatorio"
+msgstr "Nuevo recordatorio"
+
+msgid "Quitar recordatorio"
+msgstr "Quitar recordatorio"
+
+msgid "Recordatorio"
+msgstr "Recordatorio"
+
+msgid "Sin recordatorios"
+msgstr "Sin recordatorios"
+
+msgid "{campo} anterior"
+msgstr "{campo} anterior"
+
+msgid "{campo} siguiente"
+msgstr "{campo} siguiente"
+
+msgid "¿Qué quieres recordar?"
+msgstr "¿Qué quieres recordar?"

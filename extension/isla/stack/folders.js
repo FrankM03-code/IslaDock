@@ -12,6 +12,7 @@ import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
 import {StackPopup} from './stackPopup.js';
 import * as FileActions from './fileActions.js';
+import {_} from '../i18n.js';
 
 // [special dir, icon key for the resolver, theme icon]
 const SPECIAL = [
@@ -41,7 +42,7 @@ class FoldersModel extends Signals.EventEmitter {
 
     // What the popup shows instead of the downloads' wording.
     get labels() {
-        return {title: 'Carpetas', folder: 'Carpeta personal', count: () => '', accent: false};
+        return {title: _('Carpetas'), folder: _('Carpeta personal'), count: () => '', accent: false};
     }
 
     _entry(path, key, iconName, extra, display = GLib.path_get_basename(path)) {
@@ -73,7 +74,7 @@ class FoldersModel extends Signals.EventEmitter {
             seen.add(path);
             // The home folder, when added, keeps its own name and the house, and goes first.
             if (path === home)
-                files.unshift(this._entry(path, 'personal', 'user-home', true, 'Carpeta personal'));
+                files.unshift(this._entry(path, 'personal', 'user-home', true, _('Carpeta personal')));
             else
                 files.push(this._entry(path, 'carpeta', 'folder', true));
         }
@@ -88,13 +89,13 @@ class FoldersModel extends Signals.EventEmitter {
 
     // Abrir · Copiar ruta (· Quitar de la lista, only for the added ones)
     fillMenu(menu, entry, close) {
-        menu.addAction('Abrir', () => {
+        menu.addAction(_('Abrir'), () => {
             close();
             FileActions.launch(entry.uri);
         });
-        menu.addAction('Copiar ruta', () => FileActions.copyPath(entry));
+        menu.addAction(_('Copiar ruta'), () => FileActions.copyPath(entry));
         if (entry.extra) {
-            menu.addAction('Quitar de la lista', () => {
+            menu.addAction(_('Quitar de la lista'), () => {
                 const list = this._settings.get_strv('carpetas-extra').filter(p => p !== entry.path);
                 this._settings.set_strv('carpetas-extra', list);
             });

@@ -21,6 +21,7 @@ import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import {dressFrame, islandLook} from './look.js';
 import {ms} from './timing.js';
+import {_} from './i18n.js';
 
 const MAX_CARDS = 3;
 const SHOW_TIME = 5000;
@@ -234,7 +235,7 @@ class Card {
         text.add_child(this._body);
         this._close = new St.Button({style_class: 'isla-flotante-cerrar', reactive: true, can_focus: false,
             child: new St.Icon({icon_name: 'window-close-symbolic', icon_size: 12}), opacity: 0,
-            y_align: Clutter.ActorAlign.START, accessible_name: 'Cerrar'});
+            y_align: Clutter.ActorAlign.START, accessible_name: _('Cerrar')});
         box.add_child(this._icon);
         box.add_child(text);
         box.add_child(this._close);

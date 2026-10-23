@@ -13,6 +13,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {pillSizes, pillStyle, roundButton} from './pill.js';
 import {Priority} from './state.js';
+import {_} from './i18n.js';
 
 function elapsed(seconds) {
     const h = Math.floor(seconds / 3600), m = Math.floor(seconds / 60) % 60, s = seconds % 60;
@@ -49,11 +50,11 @@ export class Recording {
         this._mini.add_child(this._miniTime);
 
         this._panel = new St.BoxLayout({style_class: 'isla-grabacion', y_align: Clutter.ActorAlign.CENTER,
-            accessible_name: 'Grabando la pantalla'});
+            accessible_name: _('Grabando la pantalla')});
         this._dot = new St.Widget({style_class: 'isla-grabacion-punto blanco', y_align: Clutter.ActorAlign.CENTER});
         this._time = new St.Label({style_class: 'isla-grabacion-tiempo', y_align: Clutter.ActorAlign.CENTER});
         const stop = this._stop = new St.Button({style_class: 'isla-grabacion-stop', can_focus: false, y_align: Clutter.ActorAlign.CENTER,
-            accessible_name: 'Detener grabación',
+            accessible_name: _('Detener grabación'),
             child: new St.Widget({style_class: 'isla-grabacion-cuadro', x_align: Clutter.ActorAlign.CENTER,
                 y_align: Clutter.ActorAlign.CENTER})});
         stop.connect('clicked', () => this._ui.stopScreencast());

@@ -12,6 +12,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
+import {_} from '../i18n.js';
 
 const ATTRIBUTES = 'standard::name,standard::display-name,standard::content-type,standard::icon,standard::is-hidden,' +
     'standard::type,standard::size,time::modified,time::created,thumbnail::path';
@@ -29,7 +30,7 @@ export function downloadsDir(settings) {
 
 // Firefox: "name.ext.part" (and an empty "name.ext") · Chrome: "name.ext.crdownload".
 function finalName(name) {
-    return name.replace(PARTIAL_DOWNLOAD, '').replace(/^Unconfirmed \d+$/, 'Descarga');
+    return name.replace(PARTIAL_DOWNLOAD, '').replace(/^Unconfirmed \d+$/, _('Descarga'));
 }
 
 export class DownloadsModel extends Signals.EventEmitter {

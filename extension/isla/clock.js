@@ -10,11 +10,10 @@ import GnomeDesktop from 'gi://GnomeDesktop';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {_, N_, fmt, localName} from './i18n.js';
 
-const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
-const LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
-    'octubre', 'noviembre', 'diciembre'];
+// Monday to Sunday, one letter each (in Spanish, X is miércoles).
+const LETTERS = N_('L M X J V S D');
 
 const KEYS = ['reloj-estilo', 'reloj-tamano', 'reloj-monitor', 'reloj-desplazamiento', 'reloj-posicion'];
 
@@ -24,8 +23,8 @@ const BOTTOM_ROOM = 0.12;
 const capital = s => s[0].toUpperCase() + s.slice(1);
 
 function texts(now) {
-    const day = DAYS[now.get_day_of_week() - 1];
-    const date = `${now.get_day_of_month()} de ${MONTHS[now.get_month() - 1]}`;
+    const day = localName(now, '%A');
+    const date = fmt(_('{dia} de {mes}'), {dia: now.get_day_of_month(), mes: localName(now, '%B')});
     return {
         time: now.format('%H:%M'),
         day: capital(day),
@@ -216,7 +215,7 @@ export class DesktopClock {
         box.add_child(date);
         const strip = this._box(false, Clutter.ActorAlign.CENTER, 15, `margin-top: ${this._px(30)}px;`);
         this._parts.week = [];
-        for (const letter of LETTERS) {
+        for (const letter of _(LETTERS).split(' ')) {
             const column = new St.BoxLayout({
                 vertical: true,
                 style_class: 'isla-reloj-dia',
@@ -307,7 +306,7 @@ export class DesktopClock {
         if (this._parts.ring) {
             const seconds = now.get_hour() * 3600 + now.get_minute() * 60 + now.get_second();
             this._progress = seconds / 86400;
-            this._parts.percent.text = `${Math.floor(this._progress * 100)}% DEL DÍA`;
+            this._parts.percent.text = fmt(_('{n}% DEL DÍA'), {n: Math.floor(this._progress * 100)});
             this._parts.ring.queue_repaint();
         }
     }

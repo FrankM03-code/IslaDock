@@ -1,0 +1,1038 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: IslaDock\n"
+"Language: en\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Aplicaciones"
+msgstr "Applications"
+
+msgid "Energía"
+msgstr "Power"
+
+msgid "Portapapeles"
+msgstr "Clipboard"
+
+msgid "Clásica"
+msgstr "Classic"
+
+msgid "Vidrio claro y desenfocado"
+msgstr "Clear, blurred glass"
+
+msgid "Clásica oscura"
+msgstr "Classic dark"
+
+msgid "El mismo vidrio, en tono oscuro"
+msgstr "The same glass, in a dark tone"
+
+msgid "Vidrio oscuro"
+msgstr "Dark glass"
+
+msgid "Vidrio ahumado que dobla el fondo como una lupa"
+msgstr "Smoked glass that bends the background like a lens"
+
+msgid "Aurora"
+msgstr "Aurora"
+
+msgid "Cápsula oscura con un halo que fluye"
+msgstr "Dark capsule with a flowing halo"
+
+msgid "no trae ninguna opción válida"
+msgstr "it has no valid option"
+
+msgid "Piel"
+msgstr "Skin"
+
+msgid "Cómo se ve la isla. Se cambia al instante."
+msgstr "How the island looks. It changes at once."
+
+msgid "Sin ventanas detrás, el borde dobla el fondo como una lupa; con una ventana detrás, vidrio plano."
+msgstr "With no windows behind, the edge bends the background like a lens; with a window behind, flat glass."
+
+msgid "Efecto lupa en el borde"
+msgstr "Lens effect on the edge"
+
+msgid "Apágalo para usar siempre el vidrio plano"
+msgstr "Turn it off to always use flat glass"
+
+msgid "Oscuridad del vidrio"
+msgstr "Glass darkness"
+
+msgid "Hacia la derecha, más oscuro"
+msgstr "Darker to the right"
+
+msgid "Claro"
+msgstr "Light"
+
+msgid "Oscuro"
+msgstr "Dark"
+
+msgid "Fuerza de la lupa"
+msgstr "Lens strength"
+
+msgid "Cuánto se dobla el fondo en el borde"
+msgstr "How much the background bends at the edge"
+
+msgid "Nada"
+msgstr "None"
+
+msgid "Mucha"
+msgstr "A lot"
+
+msgid "Música en una tarjeta aparte"
+msgstr "Music on a separate card"
+
+msgid "Al lado de la isla, con su propio vidrio"
+msgstr "Next to the island, with its own glass"
+
+msgid "Transparencia de la isla"
+msgstr "Island transparency"
+
+msgid "Hacia la derecha se ve más lo que hay detrás"
+msgstr "To the right, more of what is behind shows"
+
+msgid "Sólida"
+msgstr "Solid"
+
+msgid "Transparente"
+msgstr "Transparent"
+
+msgid "Velocidad de las animaciones"
+msgstr "Animation speed"
+
+msgid "Hacia la derecha, más calmadas"
+msgstr "Calmer to the right"
+
+msgid "Rápida"
+msgstr "Fast"
+
+msgid "Lenta"
+msgstr "Slow"
+
+msgid "Atajo de la búsqueda rápida"
+msgstr "Quick search shortcut"
+
+msgid "Abre la isla como buscador"
+msgstr "Opens the island as a search field"
+
+msgid "Sin atajo"
+msgstr "No shortcut"
+
+msgid "Cambiar"
+msgstr "Change"
+
+msgid "Volver a Ctrl + Espacio"
+msgstr "Back to Ctrl + Space"
+
+msgid "Pulsa el nuevo atajo"
+msgstr "Press the new shortcut"
+
+msgid "Por ejemplo Ctrl + Espacio. Esc para cancelar."
+msgstr "For example Ctrl + Space. Esc to cancel."
+
+msgid "Atajo de la búsqueda"
+msgstr "Search shortcut"
+
+msgid "Isla"
+msgstr "Island"
+
+msgid "Aspecto"
+msgstr "Appearance"
+
+msgid "Cómo aparecen los íconos"
+msgstr "How the icons appear"
+
+msgid "Uno por uno"
+msgstr "One by one"
+
+msgid "Todos a la vez"
+msgstr "All at once"
+
+msgid "Desde el centro hacia los lados"
+msgstr "From the middle out to the sides"
+
+msgid "Al abrir la isla"
+msgstr "When the island opens"
+
+msgid "Desenfocar lo que hay detrás"
+msgstr "Blur what is behind"
+
+msgid "Apágalo si quieres la isla aún más liviana"
+msgstr "Turn it off for an even lighter island"
+
+msgid "Fondo desenfocado en el cajón de aplicaciones"
+msgstr "Blurred background in the app grid"
+
+msgid "Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades"
+msgstr "Your wallpaper, blurred, behind the applications and Activities"
+
+msgid "Respiración"
+msgstr "Breathing"
+
+msgid "En reposo, el fondo late muy despacio"
+msgstr "At rest, the background pulses very slowly"
+
+msgid "Ahorrar batería"
+msgstr "Save battery"
+
+msgid "Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento ni respiración. "
+msgstr "On battery or in Power Saver mode: no blur, no moving Aurora halo and no breathing. "
+
+msgid "Si en Accesibilidad apagas las animaciones, la isla también se calma"
+msgstr "If you turn animations off in Accessibility, the island calms down too"
+
+msgid "Esconder la isla"
+msgstr "Hide the island"
+
+msgid "Nunca"
+msgstr "Never"
+
+msgid "Cuando una ventana la toca"
+msgstr "When a window touches it"
+
+msgid "Siempre (aparece al llevar el mouse abajo)"
+msgstr "Always (shows when the mouse reaches the bottom)"
+
+msgid "Funciones"
+msgstr "Features"
+
+msgid "Clic largo sobre la isla: No molestar. Arrastrar hacia arriba: aplicaciones."
+msgstr "Long click on the island: Do Not Disturb. Drag upwards: applications."
+
+msgid "Música"
+msgstr "Music"
+
+msgid "Lo que suena, con sus botones (Shift + rueda cambia de canción)"
+msgstr "What is playing, with its buttons (Shift + wheel changes the song)"
+
+msgid "Notificaciones flotantes"
+msgstr "Floating notifications"
+
+msgid "Cada notificación aparece sola arriba en el centro, sin isla ni barra, y se va sola"
+msgstr "Each notification shows alone at the top center, with no island or bar, and goes away by itself"
+
+msgid "La rueda cambia el volumen"
+msgstr "The wheel changes the volume"
+
+msgid "Vista en miniatura de las ventanas"
+msgstr "Window thumbnails"
+
+msgid "Al dejar el mouse sobre una app abierta (Firefox, Archivos…) aparece lo que tiene en pantalla"
+msgstr "Resting the mouse on an open app (Firefox, Files…) shows what it has on screen"
+
+msgid "Progreso de tareas"
+msgstr "Task progress"
+
+msgid "Descargas, copias… solo de las apps que lo publican (como en Dash to Dock)"
+msgstr "Downloads, copies… only from apps that publish it (as in Dash to Dock)"
+
+msgid "Mensajes sin leer en los íconos"
+msgstr "Unread messages on the icons"
+
+msgid "Un número sobre la app (Telegram, Thunderbird…), solo de las apps que lo publican"
+msgstr "A number on the app (Telegram, Thunderbird…), only from apps that publish it"
+
+msgid "Símbolo de mayúsculas en la isla"
+msgstr "Caps Lock symbol on the island"
+
+msgid "Mientras estén activas, un pequeño ⇪ en la esquina de la isla"
+msgstr "While it is on, a small ⇪ on the island's corner"
+
+msgid "Cafeína"
+msgstr "Caffeine"
+
+msgid "La pantalla no se apaga ni el equipo se suspende. También en el panel Energía"
+msgstr "The screen does not turn off and the computer does not suspend. Also in the Power panel"
+
+msgid "No molestar"
+msgstr "Do Not Disturb"
+
+msgid "También con un clic largo sobre la isla"
+msgstr "Also with a long click on the island"
+
+msgid "Estado"
+msgstr "Status"
+
+msgid "Lo que se pierde al quitar la barra superior: en la isla y antes de Energía."
+msgstr "What is lost without the top bar: on the island and before Power."
+
+msgid "Porcentaje de la batería"
+msgstr "Battery percentage"
+
+msgid "El número junto al ícono. Sin batería no aparece nada"
+msgstr "The number next to the icon. Without a battery nothing shows"
+
+msgid "Espacios de trabajo"
+msgstr "Workspaces"
+
+msgid "Un punto por espacio: clic para ir a uno, la rueda pasa al siguiente. Con uno solo no aparece"
+msgstr "One dot per workspace: click to go to one, the wheel moves to the next. With only one it does not show"
+
+msgid "Herramientas"
+msgstr "Tools"
+
+msgid "Clic derecho sobre la isla: temporizador de 5, 15 o 25 minutos, uno a tu medida o un Pomodoro."
+msgstr "Right click on the island: a 5, 15 or 25 minute timer, one of your own or a Pomodoro."
+
+msgid "Dock"
+msgstr "Dock"
+
+msgid "Íconos"
+msgstr "Icons"
+
+msgid "Tamaño de los íconos"
+msgstr "Icon size"
+
+msgid "Con la isla abierta, en píxeles"
+msgstr "With the island open, in pixels"
+
+msgid "Agrandar al pasar el mouse"
+msgstr "Magnify on hover"
+
+msgid "Íconos en gris (apagados)"
+msgstr "Grey icons (dimmed)"
+
+msgid "Toman color al pasar el mouse"
+msgstr "They take color on hover"
+
+msgid "Clic en la app que está al frente"
+msgstr "Click on the app in front"
+
+msgid "Minimizar"
+msgstr "Minimize"
+
+msgid "Pasar a su siguiente ventana"
+msgstr "Go to its next window"
+
+msgid "Mostrar sus miniaturas"
+msgstr "Show its thumbnails"
+
+msgid "Con una sola ventana, siempre minimiza. Clic central: ventana nueva"
+msgstr "With a single window it always minimizes. Middle click: new window"
+
+msgid "La rueda sobre una app pasa por sus ventanas"
+msgstr "The wheel over an app goes through its windows"
+
+msgid "Sobre el resto de la isla la rueda sigue cambiando el volumen"
+msgstr "Over the rest of the island the wheel still changes the volume"
+
+msgid "Tema de íconos"
+msgstr "Icon theme"
+
+msgid "El del sistema"
+msgstr "The system's"
+
+msgid "{nombre}  (tuyo)"
+msgstr "{nombre}  (yours)"
+
+msgid "Los de ~/.icons aparecen aquí"
+msgstr "Those in ~/.icons show here"
+
+msgid "Tus íconos sueltos"
+msgstr "Your own icons"
+
+msgid "~/.icons/isla-dock o ~/.icons — .svg o .png con el nombre de la app"
+msgstr "~/.icons/isla-dock or ~/.icons — .svg or .png named after the app"
+
+msgid "Abrir carpeta"
+msgstr "Open folder"
+
+msgid "Al final del dock"
+msgstr "At the end of the dock"
+
+msgid "Descargas"
+msgstr "Downloads"
+
+msgid "Su pila se configura más abajo"
+msgstr "Its stack is set up below"
+
+msgid "Papelera"
+msgstr "Trash"
+
+msgid "Clic derecho para vaciarla"
+msgstr "Right click to empty it"
+
+msgid "Ver y buscar todo lo que tienes instalado"
+msgstr "See and search everything installed"
+
+msgid "Historial de lo copiado (texto, enlaces, colores e imágenes). Super+V lo abre desde cualquier lugar; "
+msgstr "History of what was copied (text, links, colors and images). Super+V opens it from anywhere; "
+
+msgid "mientras esté activo, Super+V deja de abrir las notificaciones (sigue Super+M)"
+msgstr "while it is on, Super+V no longer opens the notifications (Super+M still does)"
+
+msgid "Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína, volumen, captura, bloquear, apagar… "
+msgstr "Network, Bluetooth, power mode, night light, dark style, caffeine, volume, screenshot, lock, power off… "
+
+msgid "Clic derecho o mantener pulsado: suspender"
+msgstr "Right click or press and hold: suspend"
+
+msgid "Quitar la barra superior de GNOME"
+msgstr "Remove GNOME's top bar"
+
+msgid "Desaparece del todo; sus controles quedan en el botón Energía. Las esquinas activas siguen funcionando"
+msgstr "It goes away completely; its controls stay in the Power button. Hot corners keep working"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Con varios monitores, la isla vive en uno. Si ese monitor se desconecta, pasa al principal."
+msgstr "With several monitors, the island lives on one. If that monitor is unplugged, it moves to the primary one."
+
+msgid "El principal"
+msgstr "The primary one"
+
+msgid "Monitor {n}"
+msgstr "Monitor {n}"
+
+msgid "Monitor de la isla"
+msgstr "Island monitor"
+
+msgid "Ahora hay un solo monitor"
+msgstr "There is only one monitor now"
+
+msgid "Escritorio"
+msgstr "Desktop"
+
+msgid "Reloj en el escritorio"
+msgstr "Desktop clock"
+
+msgid "La hora y la fecha sobre tu fondo de pantalla, detrás de las ventanas. Los clics lo atraviesan."
+msgstr "The time and date on your wallpaper, behind the windows. Clicks go through it."
+
+msgid "Mostrar el reloj"
+msgstr "Show the clock"
+
+msgid "Estilo"
+msgstr "Style"
+
+msgid "Fino compacto"
+msgstr "Thin compact"
+
+msgid "Lateral compacto"
+msgstr "Side compact"
+
+msgid "Línea"
+msgstr "Line"
+
+msgid "Esquina"
+msgstr "Corner"
+
+msgid "Semana"
+msgstr "Week"
+
+msgid "Anillo del día"
+msgstr "Day ring"
+
+msgid "Tamaño"
+msgstr "Size"
+
+msgid "Se ajusta solo a tu pantalla; esto lo agranda o achica"
+msgstr "It fits your screen by itself; this makes it bigger or smaller"
+
+msgid "Pequeño"
+msgstr "Small"
+
+msgid "Grande"
+msgstr "Large"
+
+msgid "Posición"
+msgstr "Position"
+
+msgid "Arriba"
+msgstr "Top"
+
+msgid "En el centro de la pantalla"
+msgstr "In the middle of the screen"
+
+msgid "Abajo"
+msgstr "Bottom"
+
+msgid "Subir o bajar"
+msgstr "Move up or down"
+
+msgid "Ajuste fino desde la posición elegida"
+msgstr "Fine adjustment from the chosen position"
+
+msgid "Reloj lateral"
+msgstr "Side clock"
+
+msgid "Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora. "
+msgstr "Hidden on the edge, vertically centered: move the mouse to the edge and a bubble with the time slides out. "
+
+msgid "Sirve cuando las ventanas maximizadas tapan el reloj del escritorio."
+msgstr "Useful when maximized windows cover the desktop clock."
+
+msgid "Mostrar el reloj lateral"
+msgstr "Show the side clock"
+
+msgid "Píldora"
+msgstr "Pill"
+
+msgid "Solo texto"
+msgstr "Text only"
+
+msgid "Pestaña vertical"
+msgstr "Vertical tab"
+
+msgid "Borde"
+msgstr "Edge"
+
+msgid "Derecho"
+msgstr "Right"
+
+msgid "Izquierdo"
+msgstr "Left"
+
+msgid "Mostrar los segundos"
+msgstr "Show seconds"
+
+msgid "Un clic abre el calendario"
+msgstr "A click opens the calendar"
+
+msgid "Letra"
+msgstr "Font"
+
+msgid "El reloj está diseñado con la letra Inter; mientras no esté instalada usa Cantarell. "
+msgstr "The clock is designed with the Inter font; while it is not installed it uses Cantarell. "
+
+msgid "Para instalarla: sudo apt install fonts-inter (y luego cerrar sesión)."
+msgstr "To install it: sudo apt install fonts-inter (then log out)."
+
+msgid "Acerca de"
+msgstr "About"
+
+msgid "Un dock en forma de isla para GNOME"
+msgstr "An island-shaped dock for GNOME"
+
+msgid "Creador y diseñador"
+msgstr "Creator and designer"
+
+msgid "Versión"
+msgstr "Version"
+
+msgid "Licencia"
+msgstr "License"
+
+msgid "GNU GPL 2.0 o posterior"
+msgstr "GNU GPL 2.0 or later"
+
+msgid "Copia de la configuración"
+msgstr "Settings backup"
+
+msgid "Guarda todo lo que elegiste aquí en un archivo, para otro equipo o para volver atrás."
+msgstr "Save everything you chose here in a file, for another computer or to go back."
+
+msgid "Exportar"
+msgstr "Export"
+
+msgid "Guardar la configuración en un archivo"
+msgstr "Save the settings to a file"
+
+msgid "Exportar…"
+msgstr "Export…"
+
+msgid "Importar"
+msgstr "Import"
+
+msgid "Cargar una configuración guardada"
+msgstr "Load saved settings"
+
+msgid "Importar…"
+msgstr "Import…"
+
+msgid "Configuración de IslaDock (.json)"
+msgstr "IslaDock settings (.json)"
+
+msgid "Exportar la configuración"
+msgstr "Export the settings"
+
+msgid "Configuración guardada"
+msgstr "Settings saved"
+
+msgid "No se pudo guardar: {error}"
+msgstr "Could not save: {error}"
+
+msgid "Importar la configuración"
+msgstr "Import the settings"
+
+msgid "Configuración cargada ({n} opciones; {malas} no válidas se dejaron igual)"
+msgstr "Settings loaded ({n} options; {malas} invalid ones were left as they were)"
+
+msgid "Configuración cargada ({n} opciones)"
+msgstr "Settings loaded ({n} options)"
+
+msgid "Ese archivo no es una configuración de IslaDock: {error}"
+msgstr "That file is not IslaDock settings: {error}"
+
+msgid "Apoya a IslaDock"
+msgstr "Support IslaDock"
+
+msgid "Si IslaDock te es útil, puedes apoyar su desarrollo con una donación voluntaria."
+msgstr "If IslaDock is useful to you, you can support its development with a voluntary donation."
+
+msgid "Donar con PayPal"
+msgstr "Donate with PayPal"
+
+msgid "Carpetas de Archivos"
+msgstr "Files folders"
+
+msgid "Clic en Archivos: tus carpetas, como la pila de descargas. Clic central: abre Archivos. "
+msgstr "Click on Files: your folders, like the downloads stack. Middle click: opens Files. "
+
+msgid "Clic derecho sobre una carpeta añadida: quitarla."
+msgstr "Right click on an added folder: remove it."
+
+msgid "Mostrar las carpetas al hacer clic en Archivos"
+msgstr "Show the folders when clicking Files"
+
+msgid "Siempre está"
+msgstr "Always there"
+
+msgid "Carpeta personal"
+msgstr "Home folder"
+
+msgid "Quitar de la lista"
+msgstr "Remove from the list"
+
+msgid "Añadir otra carpeta"
+msgstr "Add another folder"
+
+msgid "Carpeta para añadir a Archivos"
+msgstr "Folder to add to Files"
+
+msgid "Pila de descargas"
+msgstr "Downloads stack"
+
+msgid "Clic en Descargas: tus últimos archivos. Clic central: la carpeta. Clic derecho: cambiar la vista."
+msgstr "Click on Downloads: your latest files. Middle click: the folder. Right click: change the view."
+
+msgid "Vista"
+msgstr "View"
+
+msgid "Cascada diagonal"
+msgstr "Diagonal cascade"
+
+msgid "Cuadrícula"
+msgstr "Grid"
+
+msgid "Lista"
+msgstr "List"
+
+msgid "Máximo en cascada"
+msgstr "Maximum in cascade"
+
+msgid "Máximo en cuadrícula"
+msgstr "Maximum in grid"
+
+msgid "Máximo en lista"
+msgstr "Maximum in list"
+
+msgid "Avisar cuando termina una descarga"
+msgstr "Notify when a download finishes"
+
+msgid "«Descarga lista» aparece arriba, como las demás notificaciones"
+msgstr "“Download finished” shows at the top, like the other notifications"
+
+msgid "Carpeta"
+msgstr "Folder"
+
+msgid "Descargas del sistema"
+msgstr "System Downloads"
+
+msgid "Elegir…"
+msgstr "Choose…"
+
+msgid "Carpeta de la pila de descargas"
+msgstr "Downloads stack folder"
+
+msgid "Volver a Descargas del sistema"
+msgstr "Back to the system Downloads"
+
+msgid "No se pudo abrir"
+msgstr "Could not open"
+
+msgid "Vista: cascada"
+msgstr "View: cascade"
+
+msgid "Vista: cuadrícula"
+msgstr "View: grid"
+
+msgid "Vista: lista"
+msgstr "View: list"
+
+msgid "Abrir la papelera"
+msgstr "Open the trash"
+
+msgid "Vaciar la papelera…"
+msgstr "Empty the trash…"
+
+msgid "Nueva ventana"
+msgstr "New window"
+
+msgid "Quitar del dock"
+msgstr "Unpin from the dock"
+
+msgid "Fijar en el dock"
+msgstr "Pin to the dock"
+
+msgid "Cerrar todas las ventanas"
+msgstr "Close all windows"
+
+msgid "¿Vaciar la papelera?"
+msgstr "Empty the trash?"
+
+msgid "Todo lo que está en la papelera se borrará para siempre."
+msgstr "Everything in the trash will be deleted forever."
+
+msgid "Cancelar"
+msgstr "Cancel"
+
+msgid "Vaciar"
+msgstr "Empty"
+
+msgid "No se pudo vaciar la papelera"
+msgstr "Could not empty the trash"
+
+msgid "descargando…"
+msgstr "downloading…"
+
+msgid "L M X J V S D"
+msgstr "M T W T F S S"
+
+msgid "{dia} de {mes}"
+msgstr "{mes} {dia}"
+
+msgid "{n}% DEL DÍA"
+msgstr "{n}% OF THE DAY"
+
+msgid "Cerrar"
+msgstr "Close"
+
+msgid "Teclado: {nombre}. Clic para cambiar"
+msgstr "Keyboard: {nombre}. Click to change"
+
+msgid "Pantalla compartida"
+msgstr "Shared screen"
+
+msgid "Cámara"
+msgstr "Camera"
+
+msgid "Micrófono"
+msgstr "Microphone"
+
+msgid "Ubicación"
+msgstr "Location"
+
+msgid "En uso: {lista}"
+msgstr "In use: {lista}"
+
+msgid "Grabando la pantalla"
+msgstr "Recording the screen"
+
+msgid "Detener grabación"
+msgstr "Stop recording"
+
+msgid "Buscar apps, archivos o hacer una cuenta…"
+msgstr "Search apps, files or do a sum…"
+
+msgid "Enter copia el resultado"
+msgstr "Enter copies the result"
+
+msgid "Reloj"
+msgstr "Clock"
+
+msgid "a. m."
+msgstr "AM"
+
+msgid "p. m."
+msgstr "PM"
+
+msgid "Detener"
+msgstr "Stop"
+
+msgid "Temporizador"
+msgstr "Timer"
+
+msgid "{n} minutos"
+msgstr "{n} minutes"
+
+msgid "Personalizado…"
+msgstr "Custom…"
+
+msgid "Pomodoro (25 + 5 min, 4 bloques)"
+msgstr "Pomodoro (25 + 5 min, 4 blocks)"
+
+msgid "Reanudar"
+msgstr "Resume"
+
+msgid "Pausar"
+msgstr "Pause"
+
+msgid "¿Cuántos minutos?"
+msgstr "How many minutes?"
+
+msgid "Empezar"
+msgstr "Start"
+
+msgid "Pomodoro: descanso de 5 minutos"
+msgstr "Pomodoro: 5 minute break"
+
+msgid "Pomodoro: bloque {n} de {total}"
+msgstr "Pomodoro: block {n} of {total}"
+
+msgid "Pomodoro terminado"
+msgstr "Pomodoro finished"
+
+msgid "Se acabó el tiempo"
+msgstr "Time is up"
+
+msgid "Toca la isla para cerrarlo"
+msgstr "Touch the island to close it"
+
+msgid "Trabajo · bloque {n} de {total}"
+msgstr "Work · block {n} of {total}"
+
+msgid "Descanso · bloque {n} de {total}"
+msgstr "Break · block {n} of {total}"
+
+msgid "En pausa"
+msgstr "Paused"
+
+msgid "Temporizador de {tiempo}"
+msgstr "{tiempo} timer"
+
+msgid "Espacio de trabajo {n}"
+msgstr "Workspace {n}"
+
+msgid "Cargada"
+msgstr "Charged"
+
+msgid "Cargando · {tiempo} para llenarse"
+msgstr "Charging · {tiempo} until full"
+
+msgid "Cargando"
+msgstr "Charging"
+
+msgid "Quedan {tiempo}"
+msgstr "{tiempo} left"
+
+msgid "Captura de pantalla"
+msgstr "Screenshot"
+
+msgid "Configuración"
+msgstr "Settings"
+
+msgid "Bloquear"
+msgstr "Lock"
+
+msgid "Cerrar sesión"
+msgstr "Log out"
+
+msgid "Reiniciar"
+msgstr "Restart"
+
+msgid "Apagar"
+msgstr "Power off"
+
+msgid "Silenciar"
+msgstr "Mute"
+
+msgid "Volumen"
+msgstr "Volume"
+
+msgid "Ahorro de energía"
+msgstr "Power saver"
+
+msgid "Equilibrado"
+msgstr "Balanced"
+
+msgid "Rendimiento"
+msgstr "Performance"
+
+msgid "No se pudo abrir Configuración"
+msgstr "Could not open Settings"
+
+msgid "Red cableada"
+msgstr "Wired network"
+
+msgid "Modo de energía: {modo}"
+msgstr "Power mode: {modo}"
+
+msgid "No se pudo cambiar el modo de energía"
+msgstr "Could not change the power mode"
+
+msgid "Cafeína: la pantalla no se apaga"
+msgstr "Caffeine: the screen stays on"
+
+msgid "Luz nocturna"
+msgstr "Night light"
+
+msgid "Estilo oscuro"
+msgstr "Dark style"
+
+msgid "{carpeta} · {n} más"
+msgstr "{carpeta} · {n} more"
+
+msgid "Descarga"
+msgstr "Download"
+
+msgid "¿Mover «{nombre}» a la papelera?"
+msgstr "Move “{nombre}” to the trash?"
+
+msgid "Podrás sacarlo de la papelera si te arrepientes."
+msgstr "You can take it out of the trash if you change your mind."
+
+msgid "Mover a la papelera"
+msgstr "Move to the trash"
+
+msgid "No se pudo mover a la papelera"
+msgstr "Could not move to the trash"
+
+msgid "ahora"
+msgstr "now"
+
+msgid "ayer"
+msgstr "yesterday"
+
+msgid "Carpetas"
+msgstr "Folders"
+
+msgid "Abrir"
+msgstr "Open"
+
+msgid "Copiar ruta"
+msgstr "Copy path"
+
+msgid "Descargando: {avance}"
+msgstr "Downloading: {avance}"
+
+msgid "Descargando {n} archivos"
+msgstr "Downloading {n} files"
+
+msgid "Recientes: {n}"
+msgstr "Recent: {n}"
+
+msgid "Descarga lista"
+msgstr "Download finished"
+
+msgid "Mostrar en la carpeta"
+msgstr "Show in folder"
+
+msgid "Mover a la papelera…"
+msgstr "Move to the trash…"
+
+msgid "Imagen {hora}.png"
+msgstr "Image {hora}.png"
+
+msgid "Todo"
+msgstr "All"
+
+msgid "Texto"
+msgstr "Text"
+
+msgid "Enlaces"
+msgstr "Links"
+
+msgid "Imágenes"
+msgstr "Images"
+
+msgid "Colores"
+msgstr "Colors"
+
+msgid "Clic para copiar"
+msgstr "Click to copy"
+
+msgid "hace {n} min"
+msgstr "{n} min ago"
+
+msgid "hace {n} h"
+msgstr "{n} h ago"
+
+msgid "hace {n} días"
+msgstr "{n} days ago"
+
+msgid "Buscar en el portapapeles"
+msgstr "Search the clipboard"
+
+msgid "Borrar no fijados"
+msgstr "Clear unpinned"
+
+msgid "Sin resultados"
+msgstr "No results"
+
+msgid "Copia algo y aparecerá aquí"
+msgstr "Copy something and it will show here"
+
+msgid "Fijados"
+msgstr "Pinned"
+
+msgid "Recientes"
+msgstr "Recent"
+
+msgid "Desfijar"
+msgstr "Unpin"
+
+msgid "Fijar"
+msgstr "Pin"
+
+msgid "Copiado: {texto}"
+msgstr "Copied: {texto}"
+
+msgid "Salida de sonido"
+msgstr "Sound output"
+
+msgid "Salida: {nombre}"
+msgstr "Output: {nombre}"
+
+msgid "Silenciar el micrófono"
+msgstr "Mute the microphone"
+
+msgid "%A %-d de %B"
+msgstr "%A, %B %-d"
+
+msgid "Con los eventos del día"
+msgstr "With the day's events"
+
+msgid "Hoy"
+msgstr "Today"
+
+msgid "Hoy, {dia}"
+msgstr "Today, {dia}"
+
+msgid "Mes anterior"
+msgstr "Previous month"
+
+msgid "Mes siguiente"
+msgstr "Next month"
+
+msgid "Día"
+msgstr "Day"
+
+msgid "Guardar"
+msgstr "Save"
+
+msgid "Mes"
+msgstr "Month"
+
+msgid "Nuevo recordatorio"
+msgstr "New reminder"
+
+msgid "Quitar recordatorio"
+msgstr "Remove reminder"
+
+msgid "Recordatorio"
+msgstr "Reminder"
+
+msgid "Sin recordatorios"
+msgstr "No reminders"
+
+msgid "{campo} anterior"
+msgstr "Previous {campo}"
+
+msgid "{campo} siguiente"
+msgstr "Next {campo}"
+
+msgid "¿Qué quieres recordar?"
+msgstr "What do you want to remember?"

@@ -9,6 +9,7 @@ import Gio from 'gi://Gio';
 
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 import {loadInterfaceXML} from 'resource:///org/gnome/shell/misc/fileUtils.js';
+import {_, fmt} from '../i18n.js';
 
 const BUS_NAME = 'org.freedesktop.UPower';
 const OBJECT_PATH = '/org/freedesktop/UPower/devices/DisplayDevice';
@@ -107,10 +108,10 @@ export function describe(info) {
     const parts = [`${info.percent} %`];
     const time = duration(info.seconds);
     if (info.charged)
-        parts.push('Cargada');
+        parts.push(_('Cargada'));
     else if (info.charging)
-        parts.push(time ? `Cargando · ${time} para llenarse` : 'Cargando');
+        parts.push(time ? fmt(_('Cargando · {tiempo} para llenarse'), {tiempo: time}) : _('Cargando'));
     else if (time)
-        parts.push(`Quedan ${time}`);
+        parts.push(fmt(_('Quedan {tiempo}'), {tiempo: time}));
     return parts.join(' · ');
 }

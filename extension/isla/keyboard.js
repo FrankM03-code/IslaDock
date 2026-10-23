@@ -7,6 +7,7 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
 import {getInputSourceManager} from 'resource:///org/gnome/shell/ui/status/keyboard.js';
+import {_, fmt} from './i18n.js';
 
 const ORDER = 20;
 
@@ -47,7 +48,7 @@ export class KeyboardStatus {
         const name = current.shortName.toUpperCase();
         this._folded.text = name;
         this._open.label = name;
-        this._open.accessible_name = `Teclado: ${current.displayName}. Clic para cambiar`;
+        this._open.accessible_name = fmt(_('Teclado: {nombre}. Clic para cambiar'), {nombre: current.displayName});
         this._state.setStatus('keyboard', {order: ORDER, folded: this._folded, open: this._open});
     }
 

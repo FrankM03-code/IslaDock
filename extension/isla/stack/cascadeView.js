@@ -12,6 +12,7 @@ import {progressBar} from './bar.js';
 import {setSource} from './color.js';
 import {relativeTime} from './fileActions.js';
 import {ms} from '../timing.js';
+import {_, fmt} from '../i18n.js';
 
 const CELL_W = 260;
 const CELL_H = 44;
@@ -164,9 +165,9 @@ export class CascadeView {
             detail: entry.detail ?? (entry.partial ? entry.transfer ?? 'descargando' : relativeTime(entry.time))}));
         if (more || !shown.length) {
             const rest = total - shown.length;
-            const folder = this._labels?.folder ?? 'Abrir carpeta';
+            const folder = this._labels?.folder ?? _('Abrir carpeta');
             cells.push(new Cell({entry: null, style: this._style, sf: this._sf, newest: false,
-                label: rest > 0 ? `${folder} · ${rest} más` : folder, iconName: 'folder-open-symbolic'}));
+                label: rest > 0 ? fmt(_('{carpeta} · {n} más'), {carpeta: folder, n: rest}) : folder, iconName: 'folder-open-symbolic'}));
         }
         const sf = this._sf;
         const n = cells.length;

@@ -18,6 +18,7 @@ import {ListView} from './listView.js';
 import * as FileActions from './fileActions.js';
 import {Mode} from '../state.js';
 import {dockWorkArea} from '../monitor.js';
+import {_} from '../i18n.js';
 
 const VIEWS = {cascade: CascadeView, grid: GridView, list: ListView};
 
@@ -173,17 +174,17 @@ export class StackPopup {
     }
 
     _fillFileMenu(menu, entry) {
-        menu.addAction('Abrir', () => {
+        menu.addAction(_('Abrir'), () => {
             this.close();
             FileActions.launch(entry.uri);
         });
-        menu.addAction('Mostrar en la carpeta', () => {
+        menu.addAction(_('Mostrar en la carpeta'), () => {
             this.close();
             FileActions.showInFolder(entry);
         });
-        menu.addAction('Copiar ruta', () => FileActions.copyPath(entry));
+        menu.addAction(_('Copiar ruta'), () => FileActions.copyPath(entry));
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction('Mover a la papelera…', () => {
+        menu.addAction(_('Mover a la papelera…'), () => {
             this.close();
             FileActions.confirmTrash(entry);
         });

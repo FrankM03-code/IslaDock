@@ -15,6 +15,7 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Volume from 'resource:///org/gnome/shell/ui/status/volume.js';
+import {_, N_, fmt} from './i18n.js';
 
 const ORDER = 0;
 const RETRY = 1000;         // GNOME's quick settings are made a moment after startup
@@ -24,11 +25,11 @@ const SKIPPED = ['org.gnome.VolumeControl', 'org.PulseAudio.pavucontrol'];
 
 // [id, icon, name, where GNOME keeps its indicator]
 const KINDS = [
-    ['pantalla', 'screen-shared-symbolic', 'Pantalla compartida', qs => [
+    ['pantalla', 'screen-shared-symbolic', N_('Pantalla compartida'), qs => [
         qs?._remoteAccess?._indicator, Main.panel.statusArea.screenSharing]],
-    ['camara', 'camera-web-symbolic', 'Cámara', qs => [qs?._camera?._indicator]],
-    ['microfono', 'audio-input-microphone-symbolic', 'Micrófono', qs => [qs?._volumeInput?._indicator]],
-    ['ubicacion', 'find-location-symbolic', 'Ubicación', qs => [qs?._location?._indicator]],
+    ['camara', 'camera-web-symbolic', N_('Cámara'), qs => [qs?._camera?._indicator]],
+    ['microfono', 'audio-input-microphone-symbolic', N_('Micrófono'), qs => [qs?._volumeInput?._indicator]],
+    ['ubicacion', 'find-location-symbolic', N_('Ubicación'), qs => [qs?._location?._indicator]],
 ];
 
 export class PrivacyStatus {
@@ -73,6 +74,10 @@ export class PrivacyStatus {
                 if (!actor || this._watched.some(([a]) => a === actor))
                     continue;
                 this._watched.push([actor, actor.connect('notify::visible', () => this._sync()), id]);
+                // GNOME destroys its indicators on shutdown, maybe before IslaDock: forget them then.
+                actor.connect('destroy', () => {
+                    this._watched = this._watched.filter(([a]) => a !== actor);
+                });
             }
         }
         this._sync();
@@ -114,11 +119,11 @@ export class PrivacyStatus {
         }
         const words = kinds.map(([id, , name]) => {
             if (id !== 'microfono')
-                return name;
+                return _(name);
             const apps = this._micApps();
-            return apps.length ? `${name}: ${apps.join(', ')}` : name;
+            return apps.length ? `${_(name)}: ${apps.join(', ')}` : _(name);
         });
-        const summary = `En uso: ${words.join(' · ')}`;
+        const summary = fmt(_('En uso: {lista}'), {lista: words.join(' · ')});
         this._text.text = words.join(' · ');
         this._text.visible = this._details;
         this._open.accessible_name = summary;

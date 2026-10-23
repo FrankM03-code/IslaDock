@@ -20,6 +20,7 @@ import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import {DownloadsModel} from './downloadsModel.js';
 import {StackPopup} from './stackPopup.js';
+import {_} from '../i18n.js';
 
 // Browsers that publish LauncherEntry progress for their downloads.
 const DOWNLOADERS = /firefox|chrom|brave|vivaldi|edge|epiphany|librewolf|floorp|zen|transmission|fragments|motrix/i;
@@ -130,11 +131,11 @@ export class Stack {
         if (!this._settings.get_boolean('stack-show-aviso'))
             return;
         if (!this._source) {
-            this._source = new MessageTray.Source({title: 'Descargas', iconName: 'folder-download-symbolic'});
+            this._source = new MessageTray.Source({title: _('Descargas'), iconName: 'folder-download-symbolic'});
             this._source.connect('destroy', () => (this._source = null));
             Main.messageTray.add(this._source);
         }
-        const notification = new MessageTray.Notification({source: this._source, title: 'Descarga lista',
+        const notification = new MessageTray.Notification({source: this._source, title: _('Descarga lista'),
             body: entry.display, gicon: entry.gicon, isTransient: true});
         notification.connect('activated', () => this._state.command('stack-open'));
         this._source.addNotification(notification);

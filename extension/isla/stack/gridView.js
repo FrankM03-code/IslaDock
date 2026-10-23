@@ -9,6 +9,7 @@ import St from 'gi://St';
 import {progressBar} from './bar.js';
 import {setSource} from './color.js';
 import {ms} from '../timing.js';
+import {_, fmt} from '../i18n.js';
 
 const COLUMNS = 4;
 const TILE_W = 76, TILE_H = 92;
@@ -38,7 +39,7 @@ export class GridView {
         const footer = new St.BoxLayout({style: 'spacing: 10px;'});
         this._count = new St.Label({x_expand: true, y_align: Clutter.ActorAlign.CENTER,
             style: `font-size: 12px; color: ${s.textSecondary};`});
-        this._folderButton = new St.Button({label: labels?.folder ?? 'Abrir carpeta', can_focus: true, reactive: true, track_hover: true,
+        this._folderButton = new St.Button({label: labels?.folder ?? _('Abrir carpeta'), can_focus: true, reactive: true, track_hover: true,
             style: this._buttonStyle(false)});
         this._folderButton.connect('notify::hover', () => this._lightButton());
         this._folderButton.connect('key-focus-in', () => this._lightButton());
@@ -157,11 +158,11 @@ export class GridView {
     updateTransfer() {
         const partials = this._tiles.filter(t => t.entry.partial);
         if (partials.length === 1 && partials[0].entry.transfer)
-            this._count.text = `Descargando: ${partials[0].entry.transfer}`;
+            this._count.text = fmt(_('Descargando: {avance}'), {avance: partials[0].entry.transfer});
         else if (partials.length > 1)
-            this._count.text = `Descargando ${partials.length} archivos`;
+            this._count.text = fmt(_('Descargando {n} archivos'), {n: partials.length});
         else
-            this._count.text = this._labels?.count ? this._labels.count(this._total) : `Recientes: ${this._total}`;
+            this._count.text = this._labels?.count ? this._labels.count(this._total) : fmt(_('Recientes: {n}'), {n: this._total});
     }
 
     animateIn() {

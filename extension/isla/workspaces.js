@@ -9,6 +9,7 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 import St from 'gi://St';
+import {_, fmt} from './i18n.js';
 
 const ORDER = 10;
 
@@ -122,7 +123,7 @@ export class WorkspacesStatus {
             else
                 dot.remove_style_class_name('activo');
             if (buttons)
-                child.accessible_name = `Espacio de trabajo ${i + 1}`;
+                child.accessible_name = fmt(_('Espacio de trabajo {n}'), {n: i + 1});
         });
     }
 

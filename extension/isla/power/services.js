@@ -11,11 +11,12 @@ import GLib from 'gi://GLib';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
+import {_, N_, fmt} from '../i18n.js';
 
 const PROFILES = {
-    'power-saver': ['Ahorro de energía', 'power-profile-power-saver-symbolic'],
-    'balanced': ['Equilibrado', 'power-profile-balanced-symbolic'],
-    'performance': ['Rendimiento', 'power-profile-performance-symbolic'],
+    'power-saver': [N_('Ahorro de energía'), 'power-profile-power-saver-symbolic'],
+    'balanced': [N_('Equilibrado'), 'power-profile-balanced-symbolic'],
+    'performance': [N_('Rendimiento'), 'power-profile-performance-symbolic'],
 };
 const ROTATION = ['power-saver', 'balanced', 'performance'];
 // Inhibit idle (8) and suspend (4), like the Caffeine extension.
@@ -29,7 +30,7 @@ export function openSettings(panel) {
     try {
         GLib.spawn_command_line_async(panel ? `gnome-control-center ${panel}` : 'gnome-control-center');
     } catch (e) {
-        Main.notifyError('No se pudo abrir Configuración', e.message);
+        Main.notifyError(_('No se pudo abrir Configuración'), e.message);
     }
 }
 
@@ -110,7 +111,7 @@ class NetworkToggle {
     }
 
     get title() {
-        return this._current.title || 'Red cableada';
+        return this._current.title || _('Red cableada');
     }
 
     click() {
@@ -204,7 +205,7 @@ class PowerModeToggle extends Signals.EventEmitter {
     }
 
     get title() {
-        return `Modo de energía: ${(PROFILES[this._active] ?? PROFILES.balanced)[0]}`;
+        return fmt(_('Modo de energía: {modo}'), {modo: _((PROFILES[this._active] ?? PROFILES.balanced)[0])});
     }
 
     click() {
@@ -218,7 +219,7 @@ class PowerModeToggle extends Signals.EventEmitter {
                 try {
                     p.call_finish(res);
                 } catch (e) {
-                    Main.notifyError('No se pudo cambiar el modo de energía', e.message);
+                    Main.notifyError(_('No se pudo cambiar el modo de energía'), e.message);
                 }
             });
     }
@@ -257,7 +258,7 @@ class CaffeineToggle extends Signals.EventEmitter {
     }
 
     get title() {
-        return this.on ? 'Cafeína: la pantalla no se apaga' : 'Cafeína';
+        return this.on ? _('Cafeína: la pantalla no se apaga') : _('Cafeína');
     }
 
     _call(method, params, done) {
@@ -333,8 +334,8 @@ export function createToggles(dir, settings) {
         new NativeToggle(() => quickSettings()._bluetooth?.quickSettingsItems[0], 'bluetooth-active-symbolic', 'bluetooth'),
         new PowerModeToggle(),
         new SettingToggle('org.gnome.settings-daemon.plugins.color', 'night-light-enabled', 'night-light-symbolic',
-            'Luz nocturna', 'display'),
-        new SettingToggle('org.gnome.desktop.interface', 'color-scheme', 'dark-mode-symbolic', 'Estilo oscuro', 'appearance',
+            _('Luz nocturna'), 'display'),
+        new SettingToggle('org.gnome.desktop.interface', 'color-scheme', 'dark-mode-symbolic', _('Estilo oscuro'), 'appearance',
             {on: v => v === 'prefer-dark', set: on => (on ? 'prefer-dark' : 'default')}),
         new CaffeineToggle(dir, settings),
     ];

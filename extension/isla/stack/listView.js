@@ -11,6 +11,7 @@ import St from 'gi://St';
 import {progressBar} from './bar.js';
 import {relativeTime} from './fileActions.js';
 import {ms} from '../timing.js';
+import {_, fmt} from '../i18n.js';
 
 const WIDTH = 300;
 const ICON = 30;
@@ -34,7 +35,7 @@ export class ListView {
                 ` border: 1px solid ${s.panelBorder}; box-shadow: 0 8px 24px ${s.shadow}; spacing: 2px;`});
 
         const header = new St.BoxLayout({style: 'padding: 0 10px 6px 10px;'});
-        header.add_child(new St.Label({text: labels?.title ?? 'Descargas', x_expand: true, y_align: Clutter.ActorAlign.CENTER,
+        header.add_child(new St.Label({text: labels?.title ?? _('Descargas'), x_expand: true, y_align: Clutter.ActorAlign.CENTER,
             style: `font-size: 13px; font-weight: bold; color: ${s.text};`}));
         this._count = new St.Label({y_align: Clutter.ActorAlign.CENTER, style: `font-size: 11px; color: ${s.textSecondary};`});
         header.add_child(this._count);
@@ -122,8 +123,8 @@ export class ListView {
         this._rows.forEach(row => this._list.add_child(row));
         this._count.text = this._labels?.count ? this._labels.count(total) : `${total}`;
         const rest = total - this._rows.length;
-        const folder = this._labels?.folder ?? 'Abrir carpeta';
-        this._folderLabel.text = rest > 0 ? `${folder} · ${rest} más` : folder;
+        const folder = this._labels?.folder ?? _('Abrir carpeta');
+        this._folderLabel.text = rest > 0 ? fmt(_('{carpeta} · {n} más'), {carpeta: folder, n: rest}) : folder;
         if (focused >= 0)
             this.focus(Math.min(focused, this._rows.length - 1));
     }

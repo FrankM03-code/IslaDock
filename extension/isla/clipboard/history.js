@@ -15,6 +15,7 @@ import Meta from 'gi://Meta';
 import St from 'gi://St';
 
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
+import {_, fmt} from '../i18n.js';
 
 const MAX_UNPINNED = 50;
 const MAX_TEXT = 100000;
@@ -107,7 +108,7 @@ export class ClipboardHistory extends Signals.EventEmitter {
             return;
         }
         const when = GLib.DateTime.new_now_local().format('%H:%M');
-        this._items.unshift({id: GLib.uuid_string_random(), kind: 'image', value: `Imagen ${when}.png`, file: path,
+        this._items.unshift({id: GLib.uuid_string_random(), kind: 'image', value: fmt(_('Imagen {hora}.png'), {hora: when}), file: path,
             checksum, time: Date.now(), pinned: false});
         this._changed(true);
     }

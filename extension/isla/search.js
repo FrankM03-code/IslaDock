@@ -14,6 +14,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {Mode} from './state.js';
+import {_} from './i18n.js';
 
 const MAX_RESULTS = 5;
 const MAX_FILES = 3;
@@ -139,7 +140,7 @@ export class Search {
         const bar = new St.BoxLayout({style_class: 'isla-busqueda-barra'});
         bar.add_child(new St.Icon({icon_name: 'system-search-symbolic', style_class: 'isla-busqueda-lupa',
             y_align: Clutter.ActorAlign.CENTER}));
-        this._entry = new St.Entry({style_class: 'isla-busqueda-campo', hint_text: 'Buscar apps, archivos o hacer una cuenta…',
+        this._entry = new St.Entry({style_class: 'isla-busqueda-campo', hint_text: _('Buscar apps, archivos o hacer una cuenta…'),
             can_focus: true, x_expand: true, y_align: Clutter.ActorAlign.CENTER});
         bar.add_child(this._entry);
         this._actor.add_child(this._list);
@@ -203,7 +204,7 @@ export class Search {
             const value = calculate(query);
             if (value !== null) {
                 const shown = formatNumber(value);
-                results.push({title: `= ${shown}`, subtitle: 'Enter copia el resultado', icon: 'accessories-calculator-symbolic',
+                results.push({title: `= ${shown}`, subtitle: _('Enter copia el resultado'), icon: 'accessories-calculator-symbolic',
                     run: () => St.Clipboard.get_default().set_text(St.ClipboardType.CLIPBOARD, shown)});
             }
             const appSystem = Shell.AppSystem.get_default();
@@ -299,7 +300,7 @@ export class Search {
         try {
             r.run();
         } catch (e) {
-            Main.notifyError('No se pudo abrir', e.message);
+            Main.notifyError(_('No se pudo abrir'), e.message);
         }
     }
 

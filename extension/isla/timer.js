@@ -18,6 +18,7 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {pillSizes, pillStyle, roundButton} from './pill.js';
 import {onButton} from './press.js';
 import {Priority} from './state.js';
+import {_, fmt} from './i18n.js';
 
 const WORK = 25 * 60, REST = 5 * 60, BLOCKS = 4;
 
@@ -104,7 +105,7 @@ export class Timer {
             child: new St.Icon({icon_name: 'media-playback-pause-symbolic', style_class: 'isla-boton-icono'})});
         this._pauseButton.connect('clicked', () => this._togglePause());
         this._stopButton = new St.Button({style_class: 'isla-boton-redondo', can_focus: false, y_align: Clutter.ActorAlign.CENTER,
-            accessible_name: 'Detener', child: new St.Icon({icon_name: 'media-playback-stop-symbolic', style_class: 'isla-boton-icono'})});
+            accessible_name: _('Detener'), child: new St.Icon({icon_name: 'media-playback-stop-symbolic', style_class: 'isla-boton-icono'})});
         this._stopButton.connect('clicked', () => this.stop());
         // Touching the ring of a finished timer acknowledges it.
         this._panelButton = new St.Button({can_focus: false, child: this._ring, y_align: Clutter.ActorAlign.CENTER});
@@ -148,23 +149,23 @@ export class Timer {
     _openMenu() {
         const menu = this._menu;
         menu.removeAll();
-        const timers = new PopupMenu.PopupSubMenuMenuItem('Temporizador');
+        const timers = new PopupMenu.PopupSubMenuMenuItem(_('Temporizador'));
         for (const min of [5, 15, 25])
-            timers.menu.addAction(`${min} minutos`, () => this.start(min * 60));
-        timers.menu.addAction('Personalizado…', () => this._askMinutes());
+            timers.menu.addAction(fmt(_('{n} minutos'), {n: min}), () => this.start(min * 60));
+        timers.menu.addAction(_('Personalizado…'), () => this._askMinutes());
         menu.addMenuItem(timers);
-        menu.addAction('Pomodoro (25 + 5 min, 4 bloques)', () => this.startPomodoro());
+        menu.addAction(_('Pomodoro (25 + 5 min, 4 bloques)'), () => this.startPomodoro());
         if (this._data && !this._data.done) {
             menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            menu.addAction(this._data.paused !== null ? 'Reanudar' : 'Pausar', () => this._togglePause());
-            menu.addAction('Detener', () => this.stop());
+            menu.addAction(this._data.paused !== null ? _('Reanudar') : _('Pausar'), () => this._togglePause());
+            menu.addAction(_('Detener'), () => this.stop());
         }
         menu.open(true);
     }
 
     _askMinutes() {
         const dialog = new ModalDialog.ModalDialog();
-        const content = new Dialog.MessageDialogContent({title: 'Temporizador', description: '¿Cuántos minutos?'});
+        const content = new Dialog.MessageDialogContent({title: _('Temporizador'), description: _('¿Cuántos minutos?')});
         const entry = new St.Entry({style_class: 'isla-entrada-minutos', text: '10', can_focus: true});
         content.add_child(entry);
         dialog.contentLayout.add_child(content);
@@ -175,8 +176,8 @@ export class Timer {
                 this.start(Math.round(minutes * 60));
         };
         entry.clutter_text.connect('activate', accept);
-        dialog.addButton({label: 'Cancelar', action: () => dialog.close(), key: Clutter.KEY_Escape});
-        dialog.addButton({label: 'Empezar', action: accept, default: true});
+        dialog.addButton({label: _('Cancelar'), action: () => dialog.close(), key: Clutter.KEY_Escape});
+        dialog.addButton({label: _('Empezar'), action: accept, default: true});
         dialog.open();
         entry.clutter_text.set_selection(0, -1);
         entry.grab_key_focus();
@@ -270,7 +271,7 @@ export class Timer {
             d.end = this._now() + d.total;
             this._save();
             if (live)
-                this._alarm(rest ? 'Pomodoro: descanso de 5 minutos' : `Pomodoro: bloque ${d.block} de ${BLOCKS}`, false);
+                this._alarm(rest ? _('Pomodoro: descanso de 5 minutos') : fmt(_('Pomodoro: bloque {n} de {total}'), {n: d.block, total: BLOCKS}), false);
             this._refresh();
             return;
         }
@@ -278,7 +279,7 @@ export class Timer {
         d.paused = null;
         this._save();
         if (live)
-            this._alarm(d.kind === 'pomodoro' ? 'Pomodoro terminado' : 'Se acabó el tiempo', true);
+            this._alarm(d.kind === 'pomodoro' ? _('Pomodoro terminado') : _('Se acabó el tiempo'), true);
         this._refresh();
     }
 
@@ -286,7 +287,7 @@ export class Timer {
         try {
             global.display.get_sound_player().play_from_theme('complete', text, null);
         } catch {}
-        Main.notify('Temporizador', text);
+        Main.notify(_('Temporizador'), text);
         this._state.command('pulse', beat ? 3 : 1);
     }
 
@@ -325,11 +326,12 @@ export class Timer {
         this._miniTime.text = text;
         this._time.text = text;
         if (d.done)
-            this._caption = 'Toca la isla para cerrarlo';
+            this._caption = _('Toca la isla para cerrarlo');
         else if (d.kind === 'pomodoro')
-            this._caption = `${d.phase === 'trabajo' ? 'Trabajo' : 'Descanso'} · bloque ${d.block} de ${BLOCKS}`;
+            this._caption = fmt(d.phase === 'trabajo' ? _('Trabajo · bloque {n} de {total}') : _('Descanso · bloque {n} de {total}'),
+                {n: d.block, total: BLOCKS});
         else
-            this._caption = d.paused !== null ? 'En pausa' : `Temporizador de ${clock(d.total)}`;
+            this._caption = d.paused !== null ? _('En pausa') : fmt(_('Temporizador de {tiempo}'), {tiempo: clock(d.total)});
         this._panel.accessible_name = `${text} · ${this._caption}`;
         this._pauseButton.visible = !d.done;
         this._pauseButton.child.icon_name = d.paused !== null ? 'media-playback-start-symbolic' : 'media-playback-pause-symbolic';
