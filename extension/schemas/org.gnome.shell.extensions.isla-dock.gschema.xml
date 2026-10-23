@@ -229,5 +229,9 @@
       <default>'arriba'</default>
       <summary>Reloj de escritorio: posición vertical (arriba, centro o abajo)</summary>
     </key>
+    <key name="bateria-porcentaje" type="b">
+      <default>true</default>
+      <summary>Batería: mostrar el porcentaje con número junto al ícono</summary>
+    </key>
   </schema>
 </schemalist>

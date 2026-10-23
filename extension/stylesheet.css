@@ -511,3 +511,23 @@
 .isla-clip-panel.clara .isla-clip-borrar { color: rgba(30, 30, 30, 0.6); }
 .isla-clip-panel.clara .isla-clip-borrar:hover,
 .isla-clip-panel.clara .isla-clip-borrar:focus { color: #1E1E1E; background-color: rgba(30, 30, 30, 0.08); }
+
+/* ---------- status items (battery, keyboard, workspaces, privacy…) ---------- */
+.isla-estado { spacing: 8px; }
+.isla-estado-abierto { spacing: 10px; }
+.isla-bateria { spacing: 3px; color: #3A3D45; }
+.isla-bateria-icono { icon-size: 14px; }
+.isla-bateria-texto { font-size: 11px; font-weight: 600; font-feature-settings: "tnum"; }
+.isla-bateria-abierta .isla-bateria-icono { icon-size: 18px; }
+.isla-bateria-abierta .isla-bateria-texto { font-size: 12px; }
+.isla-capsule.oscura .isla-bateria,
+.isla-skin-vidrio-oscuro .isla-bateria,
+.isla-skin-aurora .isla-bateria { color: #F4F5FA; }
+.isla-capsule .isla-bateria.baja { color: #E5484D; }
+
+/* Energía: the battery line on top. */
+.isla-pd-bateria { spacing: 8px; padding: 0 4px 10px 8px; color: #dddddd; }
+.isla-pd-bateria-icono { icon-size: 15px; }
+.isla-pd-bateria-texto { font-size: 12px; font-feature-settings: "tnum"; }
+.isla-pd-panel.clara .isla-pd-bateria { color: #2A2A2E; }
+.isla-pd-bateria.baja, .isla-pd-panel.clara .isla-pd-bateria.baja { color: #E5484D; }

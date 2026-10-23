@@ -283,8 +283,11 @@ export class Isla {
         this._miniSep = new St.Widget({style_class: 'isla-vsep', y_align: Clutter.ActorAlign.CENTER});
         this._miniBin = new St.Bin({y_align: Clutter.ActorAlign.CENTER});
         this._more = new St.Widget({style_class: 'isla-more', y_align: Clutter.ActorAlign.CENTER});
+        // Status items (battery, privacy…) at the right end, after their own separator.
+        this._statusSep = new St.Widget({style_class: 'isla-vsep', y_align: Clutter.ActorAlign.CENTER, visible: false});
+        this._statusFolded = new St.BoxLayout({style_class: 'isla-estado', y_align: Clutter.ActorAlign.CENTER, visible: false});
         this._folded = this._page_(new St.BoxLayout({style_class: 'isla-page-colapsada'}));
-        for (const actor of [this._dots.actor, this._miniSep, this._miniBin, this._more])
+        for (const actor of [this._dots.actor, this._miniSep, this._miniBin, this._more, this._statusSep, this._statusFolded])
             this._folded.add_child(actor);
 
         // Do not disturb: a small grey dot.
@@ -297,8 +300,10 @@ export class Isla {
         this._panels = new St.BoxLayout({style_class: 'isla-panels', y_align: Clutter.ActorAlign.CENTER});
         this._openLayout = new RowLayout(0);
         this._open = this._page_(new St.Widget({style_class: 'isla-page-expandida', layout_manager: this._openLayout}));
-        // Energía goes last, to the right of the panels.
-        for (const actor of [this._apps.actor, this._panelSep, this._panels, this._apps.tail])
+        // Status items, then Energía last, to the right of the panels.
+        this._statusOpen = new St.BoxLayout({style_class: 'isla-estado isla-estado-abierto', y_align: Clutter.ActorAlign.CENTER,
+            visible: false});
+        for (const actor of [this._apps.actor, this._panelSep, this._panels, this._statusOpen, this._apps.tail])
             this._open.add_child(actor);
 
         // Notice: whatever the notices module hands over, clickable.
@@ -490,6 +495,7 @@ export class Isla {
 
         this._on(this._state, 'mode-changed', () => this._render(true));
         this._on(this._state, 'activities-changed', () => this._updateActivities());
+        this._on(this._state, 'status-changed', () => this._updateStatus());
         this._on(this._state, 'dnd-changed', () => {
             this._applySettings();
             this._skin?.onStateChanged(this._state.mode);
@@ -754,12 +760,35 @@ export class Isla {
         this._skin?.onActivityChanged(this._state.mainActivity);
     }
 
+    // The status items move into their two boxes in order; their owners keep them.
+    _updateStatus() {
+        const all = this._state.statuses;
+        for (const [box, part] of [[this._statusFolded, 'folded'], [this._statusOpen, 'open']]) {
+            for (const child of box.get_children())
+                box.remove_child(child);
+            for (const item of all) {
+                const actor = item[part];
+                if (!actor)
+                    continue;
+                actor.get_parent()?.remove_child(actor);
+                box.add_child(actor);
+            }
+        }
+        this._updateFoldedParts();
+        if (this._state.mode === Mode.COLLAPSED || this._state.mode === Mode.EXPANDED)
+            this._resize();
+    }
+
     _updateFoldedParts() {
         const hasMini = !!this._miniBin.child;
         this._miniBin.visible = hasMini;
         this._dots.setResting(!hasMini);
         this._miniSep.visible = hasMini && this._dots.count > 0;
         this._more.visible = hasMini && this._state.activities.filter(a => a.mini).length > 1;
+        const hasStatus = this._statusFolded.get_children().some(c => c.visible);
+        this._statusFolded.visible = hasStatus;
+        this._statusSep.visible = hasStatus && (hasMini || this._dots.count > 0);
+        this._statusOpen.visible = this._statusOpen.get_children().some(c => c.visible);
     }
 
     // ---------- modes ----------
@@ -1116,8 +1145,12 @@ export class Isla {
         this._skin?.disable();
         this._skin = null;
         this._blur.configure(false);
-        // Activity actors belong to their modules.
+        // Activity and status actors belong to their modules.
         this._miniBin.set_child(null);
+        for (const box of [this._statusFolded, this._statusOpen]) {
+            for (const child of box.get_children())
+                box.remove_child(child);
+        }
         this._search.set_child(null);
         for (const child of this._panels.get_children())
             this._panels.remove_child(child);

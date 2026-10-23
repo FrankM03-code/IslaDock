@@ -9,6 +9,7 @@
 //   'activities-changed'
 //   'dnd-changed' (on)
 //   'compact-changed' (on)      the open dock would not fit the screen: panels drop their text
+//   'status-changed'            a small status item (battery, keyboard…) came, went or moved
 //   'command' (name, ...args)   e.g. 'media', 'playpause' | 'toggle-dnd' | 'volume-level', 0.4
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
@@ -45,6 +46,7 @@ export class IslaState extends Signals.EventEmitter {
         this.notice = null;
         this.compact = false;
         this._holds = new Set();
+        this._status = new Map();       // id -> {id, order, folded, open}
     }
 
     get mode() {
@@ -86,6 +88,25 @@ export class IslaState extends Signals.EventEmitter {
         return this.activities[0] ?? null;
     }
 
+    // A small, always-there status item (battery, keyboard layout, workspaces…):
+    // `folded` sits at the right end of the folded island, `open` just before
+    // Energía in the open dock (either may be null). Lower order goes first.
+    setStatus(id, {order, folded = null, open = null}) {
+        const old = this._status.get(id);
+        this._status.set(id, {id, order, folded, open});
+        if (!old || old.order !== order || old.folded !== folded || old.open !== open)
+            this.emit('status-changed');
+    }
+
+    removeStatus(id) {
+        if (this._status.delete(id))
+            this.emit('status-changed');
+    }
+
+    get statuses() {
+        return [...this._status.values()].sort((a, b) => a.order - b.order);
+    }
+
     // A module that needs the island open (a menu, a preview card) holds it.
     hold(id) {
         this._holds.add(id);
@@ -120,6 +141,7 @@ export class IslaState extends Signals.EventEmitter {
 
     destroy() {
         this._activities.clear();
+        this._status.clear();
         this.disconnectAll();
     }
 }

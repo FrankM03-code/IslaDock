@@ -323,6 +323,14 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         functions.add(switchRow(settings, 'no-molestar', 'No molestar', 'También con un clic largo sobre la isla'));
         page.add(functions);
 
+        const status = new Adw.PreferencesGroup({
+            title: 'Estado',
+            description: 'Lo que se pierde al quitar la barra superior: en la isla y antes de Energía.',
+        });
+        status.add(switchRow(settings, 'bateria-porcentaje', 'Porcentaje de la batería',
+            'El número junto al ícono. Sin batería no aparece nada'));
+        page.add(status);
+
         const tools = new Adw.PreferencesGroup({
             title: 'Herramientas',
             description: 'Clic derecho sobre la isla: temporizador de 5, 15 o 25 minutos, uno a tu medida o un Pomodoro.',

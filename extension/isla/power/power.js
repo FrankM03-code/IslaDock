@@ -5,6 +5,7 @@
 //   row 1  red · bluetooth · modo de energía · luz nocturna · estilo oscuro · cafeína
 //          volume
 //   row 2  captura · configuración · bloquear · cerrar sesión · reiniciar · apagar
+// With a battery, a line on top says its charge, state and time left.
 // It looks like the island itself: the same background color and see-through
 // amount ('isla-transparencia'), the same edge and, when the island is blurred,
 // the same blurred wallpaper behind; Aurora's halo and Vidrio oscuro's lens
@@ -26,6 +27,7 @@ import {showScreenshotUI} from 'resource:///org/gnome/shell/ui/screenshot.js';
 
 import {dressFrame, islandLook} from '../look.js';
 import {createToggles, openSettings} from './services.js';
+import {acquireBattery, describe, releaseBattery} from './battery.js';
 import {Mode} from '../state.js';
 import {ms} from '../timing.js';
 
@@ -214,10 +216,41 @@ export class Power {
         return row;
     }
 
+    // Icon and "85 % · Cargando · 1 h 20 min para llenarse"; hidden with no battery.
+    _batteryRow() {
+        const row = new St.BoxLayout({style_class: 'isla-pd-bateria'});
+        const icon = new St.Icon({style_class: 'isla-pd-bateria-icono', y_align: Clutter.ActorAlign.CENTER});
+        const label = new St.Label({style_class: 'isla-pd-bateria-texto', y_align: Clutter.ActorAlign.CENTER});
+        row.add_child(icon);
+        row.add_child(label);
+        const battery = acquireBattery();
+        const sync = () => {
+            const info = battery.info;
+            row.visible = !!info;
+            if (!info)
+                return;
+            icon.icon_name = info.iconName;
+            icon.fallback_icon_name = info.fallback;
+            label.text = describe(info);
+            if (info.low)
+                row.add_style_class_name('baja');
+            else
+                row.remove_style_class_name('baja');
+        };
+        const id = battery.connect('changed', sync);
+        sync();
+        this._unwatch.push(() => {
+            battery.disconnect(id);
+            releaseBattery();
+        });
+        return row;
+    }
+
     _build() {
         this._unwatch = [];
         const panel = new St.BoxLayout({style_class: 'isla-pd-panel', orientation: Clutter.Orientation.VERTICAL,
             reactive: true});
+        panel.add_child(this._batteryRow());
         const row1 = new St.BoxLayout({style_class: 'isla-pd-fila'});
         for (const toggle of this._toggles)
             row1.add_child(this._toggleButton(toggle));
