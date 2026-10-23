@@ -272,5 +272,13 @@
       <default>'derecha'</default>
       <summary>Bandeja: antes de Energía (derecha) o al comienzo del dock (izquierda)</summary>
     </key>
+    <key name="atajo-calendario" type="as">
+      <default>['&lt;Super&gt;m']</default>
+      <summary>Atajo del panel de calendario y notificaciones</summary>
+    </key>
+    <key name="calendario-liberado" type="as">
+      <default>[]</default>
+      <summary>Atajos que GNOME prestó al calendario (toggle-message-tray), para devolverlos</summary>
+    </key>
   </schema>
 </schemalist>

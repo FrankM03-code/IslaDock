@@ -627,3 +627,13 @@
 .isla-capsule.oscura .isla-bandeja-boton:hover,
 .isla-skin-vidrio-oscuro .isla-bandeja-boton:hover,
 .isla-skin-aurora .isla-bandeja-boton:hover { background-color: rgba(255, 255, 255, 0.12); }
+
+/* Calendar and notifications panel (GNOME's date menu content, lent) */
+.isla-calendario {
+  background-color: rgba(30, 30, 34, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 26px;
+  padding: 12px;
+  color: #FFFFFF;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.30);
+}
