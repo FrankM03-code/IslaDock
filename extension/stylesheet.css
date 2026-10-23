@@ -545,3 +545,24 @@
 .isla-capsule.oscura .isla-teclado-boton:hover,
 .isla-skin-vidrio-oscuro .isla-teclado-boton:hover,
 .isla-skin-aurora .isla-teclado-boton:hover { background-color: rgba(255, 255, 255, 0.16); }
+
+/* Workspaces: one dot each, the active one longer. */
+.isla-espacios { spacing: 4px; }
+.isla-espacios-abierto { spacing: 0; padding: 0 2px; }
+.isla-espacio { width: 6px; height: 6px; border-radius: 3px; background-color: rgba(30, 32, 40, 0.30); }
+.isla-espacio.activo { width: 16px; background-color: #3A3D45; }
+.isla-espacio-boton { padding: 8px 3px; border-radius: 8px; }
+.isla-espacio-boton:hover .isla-espacio { background-color: rgba(30, 32, 40, 0.55); }
+.isla-espacio-boton:hover .isla-espacio.activo { background-color: #3A3D45; }
+.isla-capsule.oscura .isla-espacio,
+.isla-skin-vidrio-oscuro .isla-espacio,
+.isla-skin-aurora .isla-espacio { background-color: rgba(255, 255, 255, 0.35); }
+.isla-capsule.oscura .isla-espacio.activo,
+.isla-skin-vidrio-oscuro .isla-espacio.activo,
+.isla-skin-aurora .isla-espacio.activo,
+.isla-capsule.oscura .isla-espacio-boton:hover .isla-espacio.activo,
+.isla-skin-vidrio-oscuro .isla-espacio-boton:hover .isla-espacio.activo,
+.isla-skin-aurora .isla-espacio-boton:hover .isla-espacio.activo { background-color: #F4F5FA; }
+.isla-capsule.oscura .isla-espacio-boton:hover .isla-espacio,
+.isla-skin-vidrio-oscuro .isla-espacio-boton:hover .isla-espacio,
+.isla-skin-aurora .isla-espacio-boton:hover .isla-espacio { background-color: rgba(255, 255, 255, 0.65); }

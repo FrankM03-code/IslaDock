@@ -331,6 +331,8 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         });
         status.add(switchRow(settings, 'bateria-porcentaje', 'Porcentaje de la batería',
             'El número junto al ícono. Sin batería no aparece nada'));
+        status.add(switchRow(settings, 'espacios-trabajo', 'Espacios de trabajo',
+            'Un punto por espacio: clic para ir a uno, la rueda pasa al siguiente. Con uno solo no aparece'));
         page.add(status);
 
         const tools = new Adw.PreferencesGroup({

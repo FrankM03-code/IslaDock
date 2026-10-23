@@ -237,5 +237,9 @@
       <default>true</default>
       <summary>Número de mensajes sin leer sobre el ícono de la app</summary>
     </key>
+    <key name="espacios-trabajo" type="b">
+      <default>true</default>
+      <summary>Indicador de espacios de trabajo en la isla</summary>
+    </key>
   </schema>
 </schemalist>
