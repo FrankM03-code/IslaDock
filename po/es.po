@@ -1212,3 +1212,36 @@ msgstr "Recordatorios"
 
 msgid "Alarma"
 msgstr "Alarma"
+
+msgid "Afecta a Hoja y a las familias (Burbuja, Galleta, Bento, Pétalos, Mosaico)"
+msgstr "Afecta a Hoja y a las familias (Burbuja, Galleta, Bento, Pétalos, Mosaico)"
+
+msgid "Bento"
+msgstr "Bento"
+
+msgid "Burbuja"
+msgstr "Burbuja"
+
+msgid "Cuadrado inflado de bordes ondulados"
+msgstr "Cuadrado inflado de bordes ondulados"
+
+msgid "Cuadro tintado con mosaicos del color de acento"
+msgstr "Cuadro tintado con mosaicos del color de acento"
+
+msgid "Cuadro tintado con piezas tipo bento"
+msgstr "Cuadro tintado con piezas tipo bento"
+
+msgid "Círculo de acento con resplandor y pétalos"
+msgstr "Círculo de acento con resplandor y pétalos"
+
+msgid "Galleta cuadrada"
+msgstr "Galleta cuadrada"
+
+msgid "Mosaico"
+msgstr "Mosaico"
+
+msgid "Pétalos"
+msgstr "Pétalos"
+
+msgid "Tres burbujas hermanas del color de acento"
+msgstr "Tres burbujas hermanas del color de acento"

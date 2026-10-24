@@ -1212,3 +1212,36 @@ msgstr "Reminders"
 
 msgid "Alarma"
 msgstr "Alarm"
+
+msgid "Afecta a Hoja y a las familias (Burbuja, Galleta, Bento, Pétalos, Mosaico)"
+msgstr "Affects Leaf and the families (Bubble, Cookie, Bento, Petals, Mosaic)"
+
+msgid "Bento"
+msgstr "Bento"
+
+msgid "Burbuja"
+msgstr "Bubble"
+
+msgid "Cuadrado inflado de bordes ondulados"
+msgstr "A puffed square with wavy edges"
+
+msgid "Cuadro tintado con mosaicos del color de acento"
+msgstr "A tinted square with tiles in the accent color"
+
+msgid "Cuadro tintado con piezas tipo bento"
+msgstr "A tinted square with bento-box pieces"
+
+msgid "Círculo de acento con resplandor y pétalos"
+msgstr "An accent circle with a glow and petals"
+
+msgid "Galleta cuadrada"
+msgstr "Square cookie"
+
+msgid "Mosaico"
+msgstr "Mosaic"
+
+msgid "Pétalos"
+msgstr "Petals"
+
+msgid "Tres burbujas hermanas del color de acento"
+msgstr "Three sister bubbles in the accent color"

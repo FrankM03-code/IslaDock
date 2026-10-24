@@ -3,7 +3,7 @@
 // The three accent buttons of the dock: the app launcher, Portapapeles and
 // Ajustes, as big as the app icons, with a symbol drawn by hand (four dots, a
 // clipboard, two sliders). Their look is chosen in Preferences ('accent-style',
-// see accentStyles.js). They grow on hover like the icons and light up a little;
+// see accentStyles.js; the button families are drawn whole, see families.js). They grow on hover like the icons and light up a little;
 // pressed they sink to 0.92, and while their panel (or the app grid) is open they
 // stay pressed and the symbol makes its gesture: the dots turn into a diamond, the
 // clipboard's short line grows, the slider knobs cross. Portapapeles also carries
@@ -16,6 +16,7 @@ import St from 'gi://St';
 
 import {accentRGB, watchAccent} from './accent.js';
 import {ACCENT_STYLES, DEFAULT_ACCENT, accentLook, rgba} from './accentStyles.js';
+import {FAMILIES, SOLID, drawFamily, mix} from './families.js';
 import {SYMBOLS} from './symbols.js';
 import {ms} from './timing.js';
 
@@ -45,6 +46,10 @@ class IslaDockButton extends St.Widget {
         // (the alignment alone is not honored here).
         this._marker = new St.Widget({x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER, visible: false});
         this._circle.add_child(this._marker);
+        // A button family (families.js): shape and symbol in one drawing.
+        this._art = new St.DrawingArea({x_expand: true, y_expand: true, visible: false});
+        this._art.connect('repaint', area => this._drawArt(area));
+        this._circle.add_child(this._art);
         this.add_child(this._circle);
         // The badge on the top right corner (placed by _placeBadge, it grows with "99+").
         this._badge = new St.Label({x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER, visible: false});
@@ -103,6 +108,10 @@ class IslaDockButton extends St.Widget {
         this._paint();
     }
 
+    _hasArt() {
+        return FAMILIES.includes(this._style);
+    }
+
     // Number in the badge (0 hides it).
     setCount(n) {
         this._count = n;
@@ -128,6 +137,24 @@ class IslaDockButton extends St.Widget {
             const [r, c] = [px(20), px(6)];
             radius = this._kind === 'apps' ? `${r} ${r} ${r} ${c}` : `${r} ${r} ${c} ${r}`;
         }
+        if (this._hasArt()) {
+            this._circle.style = `border-radius: ${px(14)}; background-color: transparent; border: none;${ring}`;
+            this._symbol.visible = this._marker.visible = false;
+            this._art.visible = true;
+            // The badge: white over a solid accent, accent over a tinted one.
+            const ac = accentRGB();
+            const [bg, fg] = SOLID.includes(this._style)
+                ? ['#FFFFFF', `rgb(${mix(ac, [0, 0, 0], 0.80).map(Math.round).join(', ')})`] : [`rgb(${ac.join(', ')})`, '#FFFFFF'];
+            this._badge.visible = this._count > 0;
+            this._badge.style = `min-width: ${px(8)}; height: ${px(14)}; padding: 0 ${px(4)}; border-radius: ${px(8)};` +
+                ` font-weight: bold; font-size: ${px(10)}; text-align: center; background-color: ${bg}; color: ${fg};` +
+                ` box-shadow: 0 ${px(1)} ${px(3)} rgba(0, 0, 0, 0.25);`;
+            this._placeBadge();
+            this._art.queue_repaint();
+            return;
+        }
+        this._art.visible = false;
+        this._symbol.visible = true;
         this._circle.style = `border-radius: ${radius}; background-color: ${look.fill}; border: ${hair} solid ${look.border};` +
             `${look.borderBottom ? ` border-bottom-color: ${look.borderBottom};` : ''}${ring}`;
         this._ink = rgba(look.ink).slice(0, 3);
@@ -141,6 +168,13 @@ class IslaDockButton extends St.Widget {
             ` background-color: ${look.badge[0]}; color: ${look.badge[1]}; border: ${hair} solid ${this._light ? PAPER : GRAPHITE};`;
         this._placeBadge();
         this._symbol.queue_repaint();
+    }
+
+    _repaint() {
+        if (this._art.visible)
+            this._art.queue_repaint();
+        else
+            this._symbol.queue_repaint();
     }
 
     // Hanging off the button's top right corner (about 5 px up and 6 px out), clear of the symbol.
@@ -165,24 +199,32 @@ class IslaDockButton extends St.Widget {
         cr.$dispose();
     }
 
+    _drawArt(area) {
+        const cr = area.get_context();
+        const [w] = area.get_surface_size();
+        cr.scale(w / 46, w / 46);
+        drawFamily(cr, this._style, this._kind, this._hover || this._open || this._pressed ? 1 : 0, this._t, this._dark, accentRGB());
+        cr.$dispose();
+    }
+
     // The symbol's gesture, from where it is now to `to`.
     _gesture(to, animate) {
         this._stop();
         const from = this._t;
         if (!animate || from === to) {
             this._t = to;
-            this._symbol.queue_repaint();
+            this._repaint();
             return;
         }
         const timeline = this._timeline = new Clutter.Timeline({actor: this, duration: ms(GESTURE_TIME)});
         timeline.set_cubic_bezier_progress(...BOUNCE);
         timeline.connect('new-frame', () => {
             this._t = from + (to - from) * timeline.get_progress();
-            this._symbol.queue_repaint();
+            this._repaint();
         });
         timeline.connect('completed', () => {
             this._t = to;
-            this._symbol.queue_repaint();
+            this._repaint();
             this._stop();
         });
         timeline.start();
@@ -204,7 +246,17 @@ class IslaDockButton extends St.Widget {
             return;
         this._open = on;
         this._paint();
-        this._gesture(on ? 1 : 0, !!this.mapped && St.Settings.get().enable_animations);
+        const animate = !!this.mapped && St.Settings.get().enable_animations;
+        this._gesture(on ? 1 : 0, animate);
+        // A family button also hops a little as it opens (the launcher a bit more).
+        if (on && animate && this._hasArt()) {
+            const up = this._kind === 'apps' ? 1.14 : 1.08;
+            this._art.set_pivot_point(0.5, 0.5);
+            this._art.remove_all_transitions();
+            this._art.ease({scale_x: up, scale_y: up, duration: ms(110), mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => this._art.ease({scale_x: 1, scale_y: 1, duration: ms(260),
+                    mode: Clutter.AnimationMode.EASE_OUT_BACK})});
+        }
     }
 
     setFocused(on) {
@@ -217,7 +269,7 @@ class IslaDockButton extends St.Widget {
             return;
         this._pressed = on;
         this._paint();
-        const scale = on ? 0.92 : 1;
+        const scale = on ? this._hasArt() ? 0.94 : 0.92 : 1;
         this._circle.ease({scale_x: scale, scale_y: scale, duration: ms(on ? 80 : 120),
             mode: Clutter.AnimationMode.EASE_OUT_QUAD});
     }

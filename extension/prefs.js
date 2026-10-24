@@ -15,6 +15,7 @@ import {USER_DOCK_ICONS, listIconThemes} from './iconThemes.js';
 import {_, N_, fmt} from './isla/i18n.js';
 import {ACCENT_STYLES, CORAL_RGB, accentLook, rgba} from './isla/accentStyles.js';
 import {SYMBOLS} from './isla/symbols.js';
+import {FAMILIES, drawFamily} from './isla/families.js';
 
 const PAYPAL_DONATION_URL = 'https://paypal.me/frankmolina29';
 
@@ -154,6 +155,11 @@ const ACCENT_CARDS = [
     ['cristal', N_('Cristal tintado'), N_('Círculo de vidrio translúcido del color de acento')],
     ['marcador', N_('Marcador lateral'), N_('Vidrio neutro con una barrita del color de acento al lado')],
     ['hoja', N_('Hoja'), N_('Forma de hoja: tres esquinas redondas y una casi recta')],
+    ['burbuja', N_('Burbuja'), N_('Tres burbujas hermanas del color de acento')],
+    ['galleta-cuadrada', N_('Galleta cuadrada'), N_('Cuadrado inflado de bordes ondulados')],
+    ['bento', N_('Bento'), N_('Cuadro tintado con piezas tipo bento')],
+    ['petalos', N_('Pétalos'), N_('Círculo de acento con resplandor y pétalos')],
+    ['mosaico', N_('Mosaico'), N_('Cuadro tintado con mosaicos del color de acento')],
 ];
 
 // A rectangle with its own radius per corner: [top left, top right, bottom right, bottom left].
@@ -194,11 +200,22 @@ function systemAccent() {
 }
 
 function drawAccentPreview(style, cr, w, h, light, dark) {
+    const kinds = ['apps', 'clipboard', 'power'];
     cr.setSourceRGBA(...(light ? [0.83, 0.87, 0.92, 1] : [0.14, 0.15, 0.20, 1]));
     cr.paint();
-    const look = accentLook(style, 0, light, dark, systemAccent());
     const size = 34, gap = 14;
-    const kinds = ['apps', 'clipboard', 'power'];
+    if (FAMILIES.includes(style)) {
+        const x0 = (w - kinds.length * size - (kinds.length - 1) * gap) / 2;
+        kinds.forEach((kind, i) => {
+            cr.save();
+            cr.translate(x0 + i * (size + gap) - 2, (h - size) / 2 - 2);
+            cr.scale((size + 4) / 46, (size + 4) / 46);
+            drawFamily(cr, style, kind, 0, 0, dark, systemAccent());
+            cr.restore();
+        });
+        return;
+    }
+    const look = accentLook(style, 0, light, dark, systemAccent());
     const x0 = (w - kinds.length * size - (kinds.length - 1) * gap) / 2, y = (h - size) / 2;
     kinds.forEach((kind, i) => {
         const x = x0 + i * (size + gap);
@@ -313,6 +330,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             flow.append(card);
         }
         expander.add_row(new Gtk.ListBoxRow({child: flow, activatable: false, selectable: false}));
+
         // A new accent color in GNOME's Appearance: the drawings follow.
         const styleManager = Adw.StyleManager.get_default();
         const accentId = styleManager.connect('notify::accent-color-rgba', () => areas.forEach(a => a.queue_draw()));
@@ -321,7 +339,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             ['auto', _('Automática')],
             ['claro', _('Clara')],
             ['oscuro', _('Oscura')],
-        ], _('Afecta al estilo Hoja')));
+        ], _('Afecta a Hoja y a las familias (Burbuja, Galleta, Bento, Pétalos, Mosaico)')));
 
         // Folded, the row says which one is chosen.
         const sync = () => {

@@ -9,7 +9,10 @@
 // Hoja comes in a light and a dark palette ('accent-palette': auto follows GNOME's
 // light/dark style); the other two follow the island. The color is GNOME's
 // accent (Settings → Appearance), passed in by whoever draws.
-export const ACCENT_STYLES = ['cristal', 'marcador', 'hoja'];
+// The button families (families.js) are styles too, drawn whole with cairo.
+import {FAMILIES} from './families.js';
+
+export const ACCENT_STYLES = ['cristal', 'marcador', 'hoja', ...FAMILIES];
 export const DEFAULT_ACCENT = 'marcador';
 
 // IslaDock's own coral, for when GNOME's accent is not known.

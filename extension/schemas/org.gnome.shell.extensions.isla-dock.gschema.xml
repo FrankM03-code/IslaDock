@@ -58,6 +58,11 @@
         <choice value="cristal"/>
         <choice value="marcador"/>
         <choice value="hoja"/>
+        <choice value="burbuja"/>
+        <choice value="galleta-cuadrada"/>
+        <choice value="bento"/>
+        <choice value="petalos"/>
+        <choice value="mosaico"/>
       </choices>
       <default>'marcador'</default>
       <summary>Estilo de los botones de acento</summary>
