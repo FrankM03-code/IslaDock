@@ -7,14 +7,15 @@
 // pressed they sink to 0.92, and while their panel (or the app grid) is open they
 // stay pressed and the symbol makes its gesture: the dots turn into a diamond, the
 // clipboard's short line grows, the slider knobs cross. Portapapeles also carries
-// a coral badge with how many items it keeps.
+// a badge in the accent color with how many items it keeps.
 import Cairo from 'cairo';
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import Graphene from 'gi://Graphene';
 import St from 'gi://St';
 
-import {ACCENT_STYLES, CORAL, DEFAULT_ACCENT, accentLook, rgba} from './accentStyles.js';
+import {accentRGB, watchAccent} from './accent.js';
+import {ACCENT_STYLES, DEFAULT_ACCENT, accentLook, rgba} from './accentStyles.js';
 import {SYMBOLS} from './symbols.js';
 import {ms} from './timing.js';
 
@@ -40,7 +41,7 @@ class IslaDockButton extends St.Widget {
         this._symbol = new St.DrawingArea({x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
         this._symbol.connect('repaint', area => this._draw(area));
         this._circle.add_child(this._symbol);
-        // Marcador's coral bar on the outer edge: centered, then moved there in setSize
+        // Marcador's accent bar on the outer edge: centered, then moved there in setSize
         // (the alignment alone is not honored here).
         this._marker = new St.Widget({x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER, visible: false});
         this._circle.add_child(this._marker);
@@ -57,7 +58,12 @@ class IslaDockButton extends St.Widget {
         this._dark = false;
         this._style = DEFAULT_ACCENT;
         this._hover = this._open = this._focused = this._pressed = false;
-        this.connect('destroy', () => this._stop());
+        // GNOME's accent color changed: repaint in the new one.
+        const unwatch = watchAccent(() => this._paint());
+        this.connect('destroy', () => {
+            unwatch();
+            this._stop();
+        });
         this.connect('notify::mapped', () => this.mapped && this._placeBadge());
         this._paint();
     }
@@ -110,7 +116,8 @@ class IslaDockButton extends St.Widget {
         const px = n => `${(n * u).toFixed(2)}px`;
         // Edges exactly one device pixel: a fractional one blurs into a pale rim.
         const hair = `${1 / sf}px`;
-        const look = accentLook(this._style, this._open || this._pressed ? 2 : this._hover ? 1 : 0, this._light, this._dark);
+        const look = accentLook(this._style, this._open || this._pressed ? 2 : this._hover ? 1 : 0, this._light, this._dark,
+            accentRGB());
         const ring = this._focused
             ? ` box-shadow: 0 0 0 ${px(2)} ${this._light ? 'rgba(28, 29, 32, 0.45)' : 'rgba(247, 246, 243, 0.55)'};` : '';
         let radius = px(13);
@@ -126,7 +133,7 @@ class IslaDockButton extends St.Widget {
         this._ink = rgba(look.ink).slice(0, 3);
         this._marker.visible = !!look.marker;
         const r3 = px(3);
-        this._marker.style = `width: ${px(3)}; height: ${px(22)}; background-color: ${CORAL};` +
+        this._marker.style = `width: ${px(3)}; height: ${px(22)}; background-color: ${look.marker || 'transparent'};` +
             ` border-radius: ${this._kind === 'apps' ? `0 ${r3} ${r3} 0` : `${r3} 0 0 ${r3}`};`;
         this._badge.visible = this._count > 0;
         this._badge.style = `min-width: ${px(8)}; height: ${px(14)}; padding: 0 ${px(4)}; border-radius: ${px(8)};` +

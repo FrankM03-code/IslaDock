@@ -1001,8 +1001,8 @@ msgstr "Log out"
 msgid "Sesión agrupada"
 msgstr "Grouped session"
 
-msgid "Sin fondos, solo íconos; un punto naranja bajo lo que está encendido"
-msgstr "No backgrounds, icons only; an orange dot under what is on"
+msgid "Sin fondos, solo íconos; un punto de color bajo lo que está encendido"
+msgstr "No backgrounds, icons only; a dot in the accent color under what is on"
 
 msgid "Solo líneas"
 msgstr "Lines only"
@@ -1022,14 +1022,14 @@ msgstr "Slim tiles"
 msgid "Cristal tintado"
 msgstr "Tinted glass"
 
-msgid "Círculo de vidrio naranja translúcido"
-msgstr "Circle of translucent orange glass"
+msgid "Círculo de vidrio translúcido del color de acento"
+msgstr "Circle of translucent glass in the accent color"
 
 msgid "Estilo de los botones"
 msgstr "Button style"
 
-msgid "Vidrio neutro con una barrita naranja al lado"
-msgstr "Neutral glass with a small orange bar on its side"
+msgid "Vidrio neutro con una barrita del color de acento al lado"
+msgstr "Neutral glass with a small bar in the accent color on its side"
 
 msgid "Automática"
 msgstr "Automatic"
@@ -1198,3 +1198,17 @@ msgstr "Fri"
 
 msgid "viernes"
 msgstr "Friday"
+
+msgid "Hora"
+msgstr "Hour"
+
+msgid "Minutos"
+msgstr "Minutes"
+
+msgid "Recordatorios"
+msgstr "Reminders"
+
+
+
+msgid "Alarma"
+msgstr "Alarm"

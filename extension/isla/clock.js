@@ -5,10 +5,11 @@
 // overview and the lock screen), lets clicks through, and ticks on the wall
 // clock's minute change, so it stays right after a suspend and at midnight.
 // Four looks ('reloj-estilo', isla-dock-reloj-escritorio.md), no boxes, a soft
-// text shadow, bold hours, softer minutes, an orange colon and accent:
+// text shadow, bold hours, softer minutes, a colon and details in
+// GNOME's accent color:
 //   linea-viva      the time and the date in a row, a thin line of the day under them
-//   lateral-acento  the time, an orange bar, the day over the date
-//   semana-fluida   the time, the month and this week (past days faint, today orange)
+//   lateral-acento  the time, an accent bar, the day over the date
+//   semana-fluida   the time, the month and this week (past days faint, today in the accent)
 //   arco-dia        a half circle of the day over the time, 00 and 24 at its ends
 // Sizes are at 1920×1080 and scale with the monitor and 'reloj-tamano'.
 import Cairo from 'cairo';
@@ -18,6 +19,7 @@ import GnomeDesktop from 'gi://GnomeDesktop';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {accentRGB, watchAccent} from './accent.js';
 import {_, fmt} from './i18n.js';
 import {capital, dayName, dayProgress, dayShort, initials, monthName, monthShort, two, week} from './dates.js';
 
@@ -26,7 +28,12 @@ const KEYS = ['reloj-estilo', 'reloj-tamano', 'reloj-monitor', 'reloj-desplazami
 // 'abajo' leaves this much of the height free under the clock, for the dock.
 const BOTTOM_ROOM = 0.12;
 
-const CORAL = '#FF8A4C';
+// GNOME's accent color (Settings → Appearance; orange in the design), straight in
+// the styles: they follow it by themselves. The drawn lines read it when painted.
+const ACCENT = '-st-accent-color';
+const ACCENT_LIGHT = 'st-mix(-st-accent-color, #ffffff, 85%)';
+const ACCENT_PALE = 'st-mix(-st-accent-color, #ffffff, 65%)';
+const ON_ACCENT = '-st-accent-fg-color';
 const WHITE = '#F2F2F5';
 const pt = n => n * 4 / 3;    // the design's points, in px at scale 1
 
@@ -37,6 +44,10 @@ export class DesktopClock {
         this._clockId = this._wallClock.connect('notify::clock', () => this._update());
         this._monitorsId = Main.layoutManager.connect('monitors-changed', () => this._build());
         this._settingIds = KEYS.map(key => this._settings.connect(`changed::${key}`, () => this._build()));
+        this._unwatchAccent = watchAccent(() => {
+            this._parts?.lines?.forEach(line => line.queue_repaint());
+            this._parts?.arc?.queue_repaint();
+        });
         // A new wallpaper is added on top of the old one: keep the clock above it.
         this._group = Main.layoutManager._backgroundGroup;
         this._childId = this._group.connect('child-added', (group, child) => {
@@ -124,16 +135,16 @@ export class DesktopClock {
             style: `spacing: ${this._px(spacing)}px;`, ...props});
     }
 
-    // Bold hours, an orange colon, minutes at 60 %: three labels with no space between.
+    // Bold hours, an accent colon, minutes at 60 %: three labels with no space between.
     _time(size, spacing = 0, props = {}) {
         const box = this._box(false, 0, props);
         box.add_child(this._label('hour', size, {weight: 500, spacing}));
-        box.add_child(this._label(null, size, {color: '#FF9A6B', spacing, extra: ''}, {text: ':'}));
+        box.add_child(this._label(null, size, {color: ACCENT_LIGHT, spacing, extra: ''}, {text: ':'}));
         box.add_child(this._label('min', size, {color: 'rgba(242, 242, 245, 0.60)', spacing}));
         return box;
     }
 
-    // A line of the day, `thick` px: orange up to now, faint after; it takes the width it is given.
+    // A line of the day, `thick` px: accent up to now, faint after; it takes the width it is given.
     _dayLine(thick) {
         const area = new St.DrawingArea({x_expand: true, height: Math.max(1, this._px(thick))});
         area.connect('repaint', a => {
@@ -151,7 +162,7 @@ export class DesktopClock {
                 cr.fill();
             };
             bar(w, [1, 1, 1, 0.15]);
-            bar(w * (this._progress ?? 0), [1, 0x8a / 255, 0x4c / 255, 1]);
+            bar(w * (this._progress ?? 0), [...accentRGB().map(v => v / 255), 1]);
             cr.$dispose();
         });
         this._parts.lines = [...this._parts.lines ?? [], area];
@@ -173,12 +184,12 @@ export class DesktopClock {
         return box;
     }
 
-    // Lateral acento: the time, an orange bar, the day over "23 de octubre".
+    // Lateral acento: the time, an accent bar, the day over "23 de octubre".
     _buildLateral() {
         this._position = [0.07, 'center'];
         const row = this._box(false, 16);
         row.add_child(this._time(44, -2, {y_align: Clutter.ActorAlign.CENTER}));
-        row.add_child(new St.Widget({style: `background-color: ${CORAL}; border-radius: ${this._px(2)}px;`,
+        row.add_child(new St.Widget({style: `background-color: ${ACCENT}; border-radius: ${this._px(2)}px;`,
             width: Math.max(2, this._px(3)), height: this._px(52), y_align: Clutter.ActorAlign.CENTER}));
         const texts = this._box(true, 0, {y_align: Clutter.ActorAlign.CENTER});
         texts.add_child(this._label('day', 14, {weight: 500}));
@@ -187,7 +198,7 @@ export class DesktopClock {
         return row;
     }
 
-    // Semana fluida: the time, the month, and Monday to Sunday (past days faint, today in an orange pill).
+    // Semana fluida: the time, the month, and Monday to Sunday (past days faint, today in an accent pill).
     _buildSemana() {
         this._position = [0.07, 'center'];
         const box = this._box(true, 0);
@@ -226,7 +237,7 @@ export class DesktopClock {
         const ends = this._box(false, 0, {width: w, x_align: Clutter.ActorAlign.CENTER});
         const faint = 'rgba(242, 242, 245, 0.50)';
         ends.add_child(this._label(null, 8, {color: faint}, {text: '00'}));
-        ends.add_child(this._label('short', 8, {spacing: 2, color: '#FFB48F'}, {x_expand: true, x_align: Clutter.ActorAlign.CENTER}));
+        ends.add_child(this._label('short', 8, {spacing: 2, color: ACCENT_PALE}, {x_expand: true, x_align: Clutter.ActorAlign.CENTER}));
         ends.add_child(this._label(null, 8, {color: faint}, {text: '24'}));
         box.add_child(ends);
         return box;
@@ -243,7 +254,7 @@ export class DesktopClock {
         cr.setSourceRGBA(1, 1, 1, 0.15);
         cr.arc(cx, cy, r, Math.PI, 2 * Math.PI);
         cr.stroke();
-        cr.setSourceRGB(1, 0x8a / 255, 0x4c / 255);
+        cr.setSourceRGB(...accentRGB().map(v => v / 255));
         cr.arc(cx, cy, r, Math.PI, Math.max(Math.PI + 0.001, at));
         cr.stroke();
         cr.arc(cx + r * Math.cos(at), cy + r * Math.sin(at), 6 * s, 0, 2 * Math.PI);
@@ -272,13 +283,13 @@ export class DesktopClock {
         p.week?.forEach(({column, initial, number}, i) => {
             const d = days[i];
             number.text = String(d.date.get_day_of_month());
-            // Past days faint, today dark on orange (no shadow), the ones to come clear.
-            const color = d.today ? '#2A1206' : d.past ? 'rgba(242, 242, 245, 0.35)' : 'rgba(242, 242, 245, 0.85)';
+            // Past days faint, today on the accent (no shadow), the ones to come clear.
+            const color = d.today ? ON_ACCENT : d.past ? 'rgba(242, 242, 245, 0.35)' : 'rgba(242, 242, 245, 0.85)';
             for (const label of [initial, number]) {
                 label.style = label.style.replace(/color: [^;]+;/, `color: ${color};`)
                     .replace(/text-shadow: [^;]+;/, d.today ? 'text-shadow: none;' : `text-shadow: 0 ${this._px(1)}px ${this._px(8)}px rgba(0, 0, 0, 0.35);`);
             }
-            column.style = column.style.replace(/ background-color: [^;]+;/, '') + (d.today ? ` background-color: ${CORAL};` : '');
+            column.style = column.style.replace(/ background-color: [^;]+;/, '') + (d.today ? ` background-color: ${ACCENT};` : '');
         });
         p.lines?.forEach(line => line.queue_repaint());
         p.arc?.queue_repaint();
@@ -290,6 +301,7 @@ export class DesktopClock {
         Main.layoutManager.disconnect(this._monitorsId);
         this._settingIds.forEach(id => this._settings.disconnect(id));
         this._group.disconnect(this._childId);
+        this._unwatchAccent();
         this._actor?.destroy();
         this._actor = null;
         this._parts = null;

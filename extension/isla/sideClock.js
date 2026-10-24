@@ -4,14 +4,17 @@
 // for when maximized windows cover the desktop clock. At rest only a thin
 // mark shows on the edge; the pointer on the edge slides the bubble out
 // (300 ms, ease-out) and it goes back 600 ms after the pointer leaves it.
-// Four looks ('clock-style', isla-dock-reloj-estilos.md), 24 h, orange accent:
-//   editorial  no box: hour and minutes huge and stacked, the day in orange, a bar on the edge
-//   semana     a glass tab with the time and this week, today in an orange pill
+// Four looks ('clock-style', isla-dock-reloj-estilos.md), 24 h, in GNOME's accent color
+// (Settings → Appearance; orange in the design):
+//   editorial  no box: hour and minutes huge and stacked, the day in accent, a bar on the edge
+//   semana     a glass tab with the time and this week, today in an accent pill
 //   linea      a tab with a vertical line of the day (00:00 at the top, 24:00 at the bottom)
-//   horizonte  no box: the time on one line, under it a line of the day with an orange dot
+//   horizonte  no box: the time on one line, under it a line of the day with an accent dot
 // It refreshes on the wall clock's minute change (also right after a suspend
-// and at midnight). A click opens the calendar panel ('calendar-toggle') when
+// and at midnight). A press (not the release) opens the calendar panel ('calendar-toggle') when
 // 'reloj-lateral-calendario' is on.
+// Over a light island (Clásica, light) it is light too: a card in the
+// island's own color (also for the looks with no box), dark text, accent details.
 // The sensitive strip is only a few pixels wide: the screen edge stops the
 // pointer, and the scroll bars of maximized windows stay usable.
 import Cairo from 'cairo';
@@ -22,14 +25,15 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import {accentRGB, watchAccent} from './accent.js';
 import {chromeParams} from './chrome.js';
+import {islandLook} from './look.js';
 import {ms} from './timing.js';
 import {_} from './i18n.js';
 import {dayName, dayProgress, dayShort, initials, monthName, monthShort, two, week} from './dates.js';
 
 const KEYS = ['clock-style', 'reloj-lateral-borde'];
 export const CLOCK_STYLES = ['editorial', 'semana', 'linea', 'horizonte'];
-const CORAL = [1, 0x8a / 255, 0x4c / 255];
 
 const ZONE_WIDTH = 4;      // px of edge that wake it
 const ZONE_HEIGHT = 160;
@@ -49,6 +53,8 @@ export class SideClock {
         this._settingIds = KEYS.map(key => settings.connect(`changed::${key}`, () => this._build()));
         this._zone = null;
         this._monitorsId = Main.layoutManager.connect('monitors-changed', () => this._place());
+        // The stylesheet follows GNOME's accent by itself; the drawn line is repainted.
+        this._unwatchAccent = watchAccent(() => this._parts?.line?.queue_repaint());
         this._build();
     }
 
@@ -68,12 +74,17 @@ export class SideClock {
 
         this._bubble = new St.Button({reactive: true, track_hover: true, can_focus: false, accessible_name: _('Reloj')});
         this._bubble.connect('notify::hover', () => this._onHover());
-        this._bubble.connect('clicked', () => {
+        // The calendar opens on the press, not the release: it feels instant.
+        const openCalendar = () => {
             if (!this._settings.get_boolean('reloj-lateral-calendario'))
-                return;
+                return Clutter.EVENT_PROPAGATE;
             this._state.command('calendar-toggle', this._bubble);
             this._hide();
-        });
+            return Clutter.EVENT_STOP;
+        };
+        this._bubble.connect('button-press-event', (_a, event) =>
+            event.get_button() === Clutter.BUTTON_PRIMARY ? openCalendar() : Clutter.EVENT_PROPAGATE);
+        this._bubble.connect('clicked', () => openCalendar());
         Main.layoutManager.addTopChrome(this._zone, chromeParams({affectsInputRegion: true, trackFullscreen: true}));
         // Not trackFullscreen: GNOME would show it by itself. The zone is, so no bubble over a fullscreen app.
         Main.layoutManager.addTopChrome(this._bubble, chromeParams({affectsInputRegion: true}));
@@ -110,7 +121,7 @@ export class SideClock {
         return label;
     }
 
-    // Hours, an orange colon and softer minutes: three labels in a row.
+    // Hours, an accent colon and softer minutes: three labels in a row.
     _time(props = {}) {
         const box = new St.BoxLayout({style_class: 'isla-clock-time', ...props});
         this._parts.hour = this._label('isla-clock-hour', {y_align: Clutter.ActorAlign.END});
@@ -125,7 +136,7 @@ export class SideClock {
         return this._right ? Clutter.ActorAlign.END : Clutter.ActorAlign.START;
     }
 
-    // Hour over minutes, huge; the day in orange; a short bar against the screen edge.
+    // Hour over minutes, huge; the day in accent; a short bar against the screen edge.
     _buildEditorial() {
         const row = new St.BoxLayout({style_class: 'isla-clock-fila'});
         const texts = new St.BoxLayout({style_class: 'isla-clock-bloque', orientation: Clutter.Orientation.VERTICAL,
@@ -150,7 +161,7 @@ export class SideClock {
         return row;
     }
 
-    // The time and the month; under them this week, today in an orange pill.
+    // The time and the month; under them this week, today in an accent pill.
     _buildSemana() {
         const box = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL});
         const head = new St.BoxLayout({style_class: 'isla-clock-head'});
@@ -171,7 +182,7 @@ export class SideClock {
         return box;
     }
 
-    // A vertical line of the day: orange down to now, a dot there; 00:00 above, 24:00 below.
+    // A vertical line of the day: accent down to now, a dot there; 00:00 above, 24:00 below.
     _buildLinea() {
         const row = new St.BoxLayout({style_class: 'isla-clock-fila'});
         const line = new St.DrawingArea({style_class: 'isla-day-line', y_expand: true});
@@ -196,7 +207,7 @@ export class SideClock {
         return row;
     }
 
-    // The time on one line; under it the day as a line with an orange dot; 00, the date and 24 below.
+    // The time on one line; under it the day as a line with an accent dot; 00, the date and 24 below.
     _buildHorizonte() {
         const box = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL});
         box.add_child(this._time({x_align: Clutter.ActorAlign.END}));
@@ -213,30 +224,36 @@ export class SideClock {
         return box;
     }
 
-    // The day's line: a 4 px track, orange up to now and a 12 px orange dot with a dark edge.
+    // The day's line: a 4 px track, accent up to now and a 12 px accent dot with a dark edge.
     _drawLine(area, vertical) {
         const cr = area.get_context();
         const [w, h] = area.get_surface_size();
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         const p = this._progress ?? 0;
+        const accent = accentRGB().map(v => v / 255);
         const r = 6 * sf, t = 4 * sf;
         const [x0, y0, x1, y1] = vertical ? [w / 2, r, w / 2, h - r] : [r, h / 2, w - r, h / 2];
         const [px, py] = [x0 + (x1 - x0) * p, y0 + (y1 - y0) * p];
         cr.setLineCap(Cairo.LineCap.ROUND);
         cr.setLineWidth(t);
-        cr.setSourceRGBA(1, 1, 1, vertical ? 0.12 : 0.15);
+        if (this._light)
+            cr.setSourceRGBA(0, 0, 0, vertical ? 0.10 : 0.12);
+        else
+            cr.setSourceRGBA(1, 1, 1, vertical ? 0.12 : 0.15);
         cr.moveTo(x0, y0);
         cr.lineTo(x1, y1);
         cr.stroke();
-        cr.setSourceRGB(...CORAL);
+        cr.setSourceRGB(...accent);
         cr.moveTo(x0, y0);
         cr.lineTo(px, py);
         cr.stroke();
         cr.arc(px, py, r - sf, 0, 2 * Math.PI);
-        cr.setSourceRGB(...CORAL);
+        cr.setSourceRGB(...accent);
         cr.fillPreserve();
         cr.setLineWidth(2 * sf);
-        if (vertical)
+        if (this._light)
+            cr.setSourceRGB(1, 1, 1);
+        else if (vertical)
             cr.setSourceRGB(0x1a / 255, 0x22 / 255, 0x33 / 255);
         else
             cr.setSourceRGBA(0, 0, 0, 0.35);
@@ -322,11 +339,22 @@ export class SideClock {
         this._shown = true;
         // Over a maximized window drawn straight to the screen (X11).
         global.compositor.disable_unredirect();
+        this._dress();
         this._update();
         this._bubble.show();
         this._place();
         this._bubble.ease({translation_x: 0, opacity: 255, duration: ms(IN_TIME), mode: Clutter.AnimationMode.EASE_OUT_CUBIC});
         this._mark.ease({opacity: 0, duration: ms(IN_TIME)});
+    }
+
+    // Light or dark with the island, read each time it comes out.
+    _dress() {
+        const look = islandLook(this._state);
+        this._light = look.light;
+        this._bubble[look.light ? 'add_style_class_name' : 'remove_style_class_name']('clara');
+        // Light, every look gets a card (dark text could not be read on the wallpaper).
+        this._bubble.style = look.light ? look.style : null;
+        this._parts?.line?.queue_repaint();
     }
 
     _hide() {
@@ -355,5 +383,6 @@ export class SideClock {
         this._wallClock = null;
         this._settingIds.forEach(id => this._settings.disconnect(id));
         Main.layoutManager.disconnect(this._monitorsId);
+        this._unwatchAccent();
     }
 }

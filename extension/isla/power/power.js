@@ -7,7 +7,7 @@
 //   tarjetas  toggles as tiles with their names (3 per row); actions with a caption under each
 //   finas     tiles with name and state; sliders with their percentage in a soft card; a short
 //             bottom row whose Apagar opens Suspender · Reiniciar · Cerrar sesión · Apagar
-//   lineas    no backgrounds: bare icons, a coral dot under what is on
+//   lineas    no backgrounds: bare icons, an accent dot under what is on
 // The toggles: red · bluetooth · modo de energía · luz nocturna · estilo oscuro · cafeína; then
 // volume (and the sound output: speakers, headphones, HDMI…) and the microphone, while there is one.
 // With a battery, a line on top says its charge, state and time left. Icons: Tabler (MIT, icons/).
@@ -559,7 +559,7 @@ export class Power {
         this._step = 3;
     }
 
-    // No backgrounds: bare icons, a coral dot under what is on, thin lines between the parts.
+    // No backgrounds: bare icons, an accent dot under what is on, thin lines between the parts.
     _buildLineas(panel, toggles) {
         panel.add_child(this._spread(toggles));
         panel.add_child(this._separator());

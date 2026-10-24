@@ -1001,8 +1001,8 @@ msgstr "Salir"
 msgid "Sesión agrupada"
 msgstr "Sesión agrupada"
 
-msgid "Sin fondos, solo íconos; un punto naranja bajo lo que está encendido"
-msgstr "Sin fondos, solo íconos; un punto naranja bajo lo que está encendido"
+msgid "Sin fondos, solo íconos; un punto de color bajo lo que está encendido"
+msgstr "Sin fondos, solo íconos; un punto de color bajo lo que está encendido"
 
 msgid "Solo líneas"
 msgstr "Solo líneas"
@@ -1022,14 +1022,14 @@ msgstr "Tarjetas finas"
 msgid "Cristal tintado"
 msgstr "Cristal tintado"
 
-msgid "Círculo de vidrio naranja translúcido"
-msgstr "Círculo de vidrio naranja translúcido"
+msgid "Círculo de vidrio translúcido del color de acento"
+msgstr "Círculo de vidrio translúcido del color de acento"
 
 msgid "Estilo de los botones"
 msgstr "Estilo de los botones"
 
-msgid "Vidrio neutro con una barrita naranja al lado"
-msgstr "Vidrio neutro con una barrita naranja al lado"
+msgid "Vidrio neutro con una barrita del color de acento al lado"
+msgstr "Vidrio neutro con una barrita del color de acento al lado"
 
 msgid "Automática"
 msgstr "Automática"
@@ -1198,3 +1198,17 @@ msgstr "vie"
 
 msgid "viernes"
 msgstr "viernes"
+
+msgid "Hora"
+msgstr "Hora"
+
+msgid "Minutos"
+msgstr "Minutos"
+
+msgid "Recordatorios"
+msgstr "Recordatorios"
+
+
+
+msgid "Alarma"
+msgstr "Alarma"

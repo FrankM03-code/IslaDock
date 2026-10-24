@@ -13,7 +13,7 @@ import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/ex
 
 import {USER_DOCK_ICONS, listIconThemes} from './iconThemes.js';
 import {_, N_, fmt} from './isla/i18n.js';
-import {ACCENT_STYLES, CORAL, accentLook, rgba} from './isla/accentStyles.js';
+import {ACCENT_STYLES, CORAL_RGB, accentLook, rgba} from './isla/accentStyles.js';
 import {SYMBOLS} from './isla/symbols.js';
 
 const PAYPAL_DONATION_URL = 'https://paypal.me/frankmolina29';
@@ -151,8 +151,8 @@ function comboRow(settings, key, title, options, subtitle = '') {
 
 // Accent style cards: [style, name, about].
 const ACCENT_CARDS = [
-    ['cristal', N_('Cristal tintado'), N_('Círculo de vidrio naranja translúcido')],
-    ['marcador', N_('Marcador lateral'), N_('Vidrio neutro con una barrita naranja al lado')],
+    ['cristal', N_('Cristal tintado'), N_('Círculo de vidrio translúcido del color de acento')],
+    ['marcador', N_('Marcador lateral'), N_('Vidrio neutro con una barrita del color de acento al lado')],
     ['hoja', N_('Hoja'), N_('Forma de hoja: tres esquinas redondas y una casi recta')],
 ];
 
@@ -187,10 +187,16 @@ function fillAndEdge(cr, look) {
 }
 
 // The three accent buttons in one style, on a piece of island (light or dark like the user's).
+// GNOME's accent color (Settings → Appearance), as the dock shows it: [r, g, b] 0-255.
+function systemAccent() {
+    const color = Adw.StyleManager.get_default().get_accent_color_rgba?.();
+    return color ? [color.red, color.green, color.blue].map(v => Math.round(v * 255)) : CORAL_RGB;
+}
+
 function drawAccentPreview(style, cr, w, h, light, dark) {
     cr.setSourceRGBA(...(light ? [0.83, 0.87, 0.92, 1] : [0.14, 0.15, 0.20, 1]));
     cr.paint();
-    const look = accentLook(style, 0, light, dark);
+    const look = accentLook(style, 0, light, dark, systemAccent());
     const size = 34, gap = 14;
     const kinds = ['apps', 'clipboard', 'power'];
     const x0 = (w - kinds.length * size - (kinds.length - 1) * gap) / 2, y = (h - size) / 2;
@@ -206,7 +212,7 @@ function drawAccentPreview(style, cr, w, h, light, dark) {
         fillAndEdge(cr, look);
         if (look.marker) {
             cr.rectangle(kind === 'apps' ? x + 1 : x + size - 4, y + size / 2 - 9, 3, 18);
-            cr.setSourceRGBA(...rgba(CORAL));
+            cr.setSourceRGBA(...rgba(look.marker));
             cr.fill();
         }
         // The symbol, in the same proportions as on the dock.
@@ -307,6 +313,10 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             flow.append(card);
         }
         expander.add_row(new Gtk.ListBoxRow({child: flow, activatable: false, selectable: false}));
+        // A new accent color in GNOME's Appearance: the drawings follow.
+        const styleManager = Adw.StyleManager.get_default();
+        const accentId = styleManager.connect('notify::accent-color-rgba', () => areas.forEach(a => a.queue_draw()));
+        flow.connect('destroy', () => styleManager.disconnect(accentId));
         expander.add_row(comboRow(settings, 'accent-palette', _('Paleta de los botones'), [
             ['auto', _('Automática')],
             ['claro', _('Clara')],
@@ -338,7 +348,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             ['agrupada', _('Sesión agrupada'), _('Botones cuadrados; bloquear, salir, suspender y apagar juntos en una cápsula')],
             ['tarjetas', _('Tarjetas con nombre'), _('Cada botón con su nombre; las acciones con el texto debajo')],
             ['finas', _('Tarjetas finas'), _('Nombre y estado en cada botón, porcentaje del volumen y una fila de abajo más corta')],
-            ['lineas', _('Solo líneas'), _('Sin fondos, solo íconos; un punto naranja bajo lo que está encendido')],
+            ['lineas', _('Solo líneas'), _('Sin fondos, solo íconos; un punto de color bajo lo que está encendido')],
         ];
         const row = comboRow(settings, 'panel-style', _('Estilo del panel de ajustes'), styles.map(([v, label]) => [v, label]));
         const sync = () => (row.subtitle = (styles.find(([v]) => v === settings.get_string('panel-style')) ?? styles[0])[2]);
