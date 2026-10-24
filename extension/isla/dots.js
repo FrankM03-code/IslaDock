@@ -3,16 +3,21 @@
 // One colored dot per open app, in the folded island. The color is the main
 // color of the app's icon, computed once per app (16×16, ignoring transparent,
 // white and black pixels). An app with an unread notice gets a ring.
-// With no app open and nothing else to show, three white dots keep the island
-// from being an empty pill.
+// With no app open and nothing else to show, the system's logo in white between
+// two white dots (or three dots, if the system has no logo) keeps the island
+// from being an empty pill; the first app that opens takes its place.
 import Clutter from 'gi://Clutter';
 import GdkPixbuf from 'gi://GdkPixbuf';
 import Gio from 'gi://Gio';
 import St from 'gi://St';
 
+import {forgetOsLogo, osLogo} from './osLogo.js';
+import {ms} from './timing.js';
+
 const DOT = 8, GAP = 8;
 const FALLBACK = [128, 134, 148];
 const RESTING = 3;
+const LOGO = 15;
 
 const _colors = new Map();     // app id -> [r, g, b]
 let _theme = null;
@@ -109,12 +114,33 @@ export class Dots {
         this._update();
     }
 
+    // The system's logo between the resting dots (null: none).
+    _showLogo(on) {
+        const gicon = on ? osLogo() : null;
+        if (!gicon) {
+            this._logo?.destroy();
+            this._logo = null;
+            return false;
+        }
+        const size = Math.round(LOGO * (this._f ?? 1));
+        if (!this._logo) {
+            this._logo = new St.Icon({gicon, y_align: Clutter.ActorAlign.CENTER, opacity: 0});
+            this._logo.set_pivot_point(0.5, 0.5);
+            this._logo.scale_x = this._logo.scale_y = 0.6;
+            this.actor.add_child(this._logo);
+            this._logo.ease({opacity: 255, scale_x: 1, scale_y: 1, duration: ms(320), mode: Clutter.AnimationMode.EASE_OUT_BACK});
+        }
+        this._logo.icon_size = size;
+        return true;
+    }
+
     _update() {
         const f = this._f ?? 1;
         const size = Math.round(DOT * f);
         const resting = this._resting && !this._running.length;
-        const wanted = resting ? RESTING : this._running.length;
-        const dots = this.actor.get_children();
+        const logo = this._showLogo(resting);
+        const wanted = resting ? logo ? 2 : RESTING : this._running.length;
+        const dots = this.actor.get_children().filter(c => c !== this._logo);
         while (dots.length > wanted)
             dots.pop().destroy();
         while (dots.length < wanted) {
@@ -122,6 +148,9 @@ export class Dots {
             this.actor.add_child(dot);
             dots.push(dot);
         }
+        // One dot before the logo, one after.
+        if (logo)
+            this.actor.set_child_at_index(this._logo, 1);
         if (resting) {
             const style = `width: ${size}px; height: ${size}px; border-radius: ${size}px; background-color: rgba(255, 255, 255, 0.9);`;
             dots.forEach(dot => {
@@ -149,5 +178,6 @@ export class Dots {
         // Nothing of IslaDock stays in memory once it is switched off.
         _colors.clear();
         _theme = null;
+        forgetOsLogo();
     }
 }
