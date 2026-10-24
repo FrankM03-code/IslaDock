@@ -205,7 +205,12 @@ class PowerModeToggle extends Signals.EventEmitter {
     }
 
     get title() {
-        return fmt(_('Modo de energía: {modo}'), {modo: _((PROFILES[this._active] ?? PROFILES.balanced)[0])});
+        return fmt(_('Modo de energía: {modo}'), {modo: this.state});
+    }
+
+    // Just the mode's name ("Equilibrado"), for the panel styles that show a state.
+    get state() {
+        return _((PROFILES[this._active] ?? PROFILES.balanced)[0]);
     }
 
     click() {
