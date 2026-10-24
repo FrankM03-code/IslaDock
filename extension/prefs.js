@@ -13,14 +13,15 @@ import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/ex
 
 import {USER_DOCK_ICONS, listIconThemes} from './iconThemes.js';
 import {_, N_, fmt} from './isla/i18n.js';
+import {ACCENT_STYLES, CORAL, accentLook, rgba} from './isla/accentStyles.js';
+import {SYMBOLS} from './isla/symbols.js';
 
 const PAYPAL_DONATION_URL = 'https://paypal.me/frankmolina29';
 
-// Skin cards, two per row: [id, skin key, dark (Clásica only, null = untouched), name, about].
+// Skin cards, all three in one row: [id, skin key, dark (Clásica only, null = untouched), name, about].
 const SKINS = [
     ['clasica', 'clasica', false, N_('Clásica'), N_('Vidrio claro y desenfocado')],
     ['clasica-oscura', 'clasica', true, N_('Clásica oscura'), N_('El mismo vidrio, en tono oscuro')],
-    ['vidrio-oscuro', 'vidrio-oscuro', null, N_('Vidrio oscuro'), N_('Vidrio ahumado que dobla el fondo como una lupa')],
     ['aurora', 'aurora', null, N_('Aurora'), N_('Cápsula oscura con un halo que fluye')],
 ];
 
@@ -60,23 +61,6 @@ function drawPreview(key, cr, w, h) {
         roundRect(cr, x, y, cw, ch, ch / 2);
         cr.setSourceRGBA(0.05, 0.05, 0.10, 0.95);
         cr.fill();
-        dots();
-        return;
-    }
-    if (key === 'vidrio-oscuro') {
-        // Dark glass with a rim lit from the top left.
-        roundRect(cr, x, y + 4, cw, ch, 10);
-        cr.setSourceRGBA(0, 0, 0, 0.35);
-        cr.fill();
-        roundRect(cr, x, y, cw, ch, 10);
-        cr.setSourceRGBA(0.10, 0.11, 0.14, 0.82);
-        cr.fillPreserve();
-        const rim = new Cairo.LinearGradient(x, y, x + cw * 0.4, y + ch);
-        rim.addColorStopRGBA(0, 1, 1, 1, 0.85);
-        rim.addColorStopRGBA(1, 1, 1, 1, 0.15);
-        cr.setSource(rim);
-        cr.setLineWidth(1.5);
-        cr.stroke();
         dots();
         return;
     }
@@ -165,12 +149,78 @@ function comboRow(settings, key, title, options, subtitle = '') {
     return row;
 }
 
+// Accent style cards: [style, name, about].
+const ACCENT_CARDS = [
+    ['cristal', N_('Cristal tintado'), N_('Círculo de vidrio naranja translúcido')],
+    ['marcador', N_('Marcador lateral'), N_('Vidrio neutro con una barrita naranja al lado')],
+    ['hoja', N_('Hoja'), N_('Forma de hoja: tres esquinas redondas y una casi recta')],
+];
+
+// A rectangle with its own radius per corner: [top left, top right, bottom right, bottom left].
+function cornerRect(cr, x, y, w, h, [tl, tr, br, bl]) {
+    cr.newPath();
+    cr.arc(x + w - tr, y + tr, tr, -Math.PI / 2, 0);
+    cr.arc(x + w - br, y + h - br, br, 0, Math.PI / 2);
+    cr.arc(x + bl, y + h - bl, bl, Math.PI / 2, Math.PI);
+    cr.arc(x + tl, y + tl, tl, Math.PI, 1.5 * Math.PI);
+    cr.closePath();
+}
+
+function drawSymbol(cr, kind, x, y, s, ink) {
+    cr.save();
+    cr.translate(x, y);
+    cr.scale(s / 24, s / 24);
+    cr.setSourceRGBA(...rgba(ink));
+    cr.setLineWidth(2);
+    cr.setLineCap(Cairo.LineCap.ROUND);
+    cr.setLineJoin(Cairo.LineJoin.ROUND);
+    SYMBOLS[kind](cr, 0);
+    cr.restore();
+}
+
+function fillAndEdge(cr, look) {
+    cr.setSourceRGBA(...rgba(look.fill));
+    cr.fillPreserve();
+    cr.setLineWidth(1);
+    cr.setSourceRGBA(...rgba(look.border));
+    cr.stroke();
+}
+
+// The three accent buttons in one style, on a piece of island (light or dark like the user's).
+function drawAccentPreview(style, cr, w, h, light, dark) {
+    cr.setSourceRGBA(...(light ? [0.83, 0.87, 0.92, 1] : [0.14, 0.15, 0.20, 1]));
+    cr.paint();
+    const look = accentLook(style, 0, light, dark);
+    const size = 34, gap = 14;
+    const kinds = ['apps', 'clipboard', 'power'];
+    const x0 = (w - kinds.length * size - (kinds.length - 1) * gap) / 2, y = (h - size) / 2;
+    kinds.forEach((kind, i) => {
+        const x = x0 + i * (size + gap);
+        const k = size / 40;
+        if (look.shape === 'circle')
+            cornerRect(cr, x, y, size, size, [size / 2, size / 2, size / 2, size / 2]);
+        else if (look.shape === 'leaf')
+            cornerRect(cr, x, y, size, size, kind === 'apps' ? [20 * k, 20 * k, 20 * k, 6 * k] : [20 * k, 20 * k, 6 * k, 20 * k]);
+        else
+            cornerRect(cr, x, y, size, size, [13 * k, 13 * k, 13 * k, 13 * k]);
+        fillAndEdge(cr, look);
+        if (look.marker) {
+            cr.rectangle(kind === 'apps' ? x + 1 : x + size - 4, y + size / 2 - 9, 3, 18);
+            cr.setSourceRGBA(...rgba(CORAL));
+            cr.fill();
+        }
+        // The symbol, in the same proportions as on the dock.
+        const s = size * {apps: 0.46, clipboard: 0.58, power: 0.52}[kind];
+        drawSymbol(cr, kind, x + (size - s) / 2, y + (size - s) / 2, s, look.ink);
+    });
+}
+
 export default class IslaDockPreferences extends ExtensionPreferences {
     // ---------- skins: a card per skin with its preview ----------
     _skinsGroup(settings) {
         const group = new Adw.PreferencesGroup({title: _('Piel'), description: _('Cómo se ve la isla. Se cambia al instante.')});
         const flow = new Gtk.FlowBox({selection_mode: Gtk.SelectionMode.NONE, homogeneous: true, column_spacing: 10,
-            row_spacing: 10, min_children_per_line: 2, max_children_per_line: 2, margin_top: 4, margin_bottom: 4});
+            row_spacing: 10, min_children_per_line: 3, max_children_per_line: 3, margin_top: 4, margin_bottom: 4});
         let radio = null;
         const buttons = [];
         for (const [id, key, dark, name, about] of SKINS) {
@@ -213,46 +263,88 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         return group;
     }
 
-    // Vidrio oscuro's own settings (they only show with that skin).
-    _glassGroup(settings) {
-        const group = new Adw.PreferencesGroup({title: _('Vidrio oscuro'),
-            description: _('Sin ventanas detrás, el borde dobla el fondo como una lupa; con una ventana detrás, vidrio plano.')});
-        group.add(switchRow(settings, 'glass-refraction', _('Efecto lupa en el borde'), _('Apágalo para usar siempre el vidrio plano')));
-        const slider = (key, title, subtitle, min, max, step, marks) => {
-            const row = new Adw.ActionRow({title, subtitle});
-            const scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, min, max, step);
-            scale.set_size_request(220, -1);
-            scale.valign = Gtk.Align.CENTER;
-            scale.draw_value = false;
-            for (const [value, label] of marks)
-                scale.add_mark(value, Gtk.PositionType.BOTTOM, label);
-            settings.bind(key, scale.adjustment, 'value', Gio.SettingsBindFlags.DEFAULT);
-            row.add_suffix(scale);
-            return row;
+    // The accent buttons' look, folded under an arrow: unfolded, a card per style with a little
+    // picture of the three buttons, and Hoja's palette.
+    _accentGroup(settings) {
+        const group = new Adw.PreferencesGroup();
+        const expander = new Adw.ExpanderRow({title: _('Estilo de los botones')});
+        group.add(expander);
+        const iface = new Gio.Settings({schema_id: 'org.gnome.desktop.interface'});
+        const dark = () => {
+            const palette = settings.get_string('accent-palette');
+            return palette === 'oscuro' || (palette === 'auto' && iface.get_string('color-scheme') === 'prefer-dark');
         };
-        group.add(slider('glass-tint', _('Oscuridad del vidrio'), _('Hacia la derecha, más oscuro'), 0.2, 0.7, 0.01,
-            [[0.2, _('Claro')], [0.46, null], [0.7, _('Oscuro')]]));
-        group.add(slider('glass-strength', _('Fuerza de la lupa'), _('Cuánto se dobla el fondo en el borde'), 0, 40, 1,
-            [[0, _('Nada')], [28, null], [40, _('Mucha')]]));
-        group.add(switchRow(settings, 'glass-music-card', _('Música en una tarjeta aparte'), _('Al lado de la isla, con su propio vidrio')));
-        const sync = () => (group.visible = settings.get_string('isla-piel') === 'vidrio-oscuro');
+        const current = () => ACCENT_STYLES.includes(settings.get_string('accent-style'))
+            ? settings.get_string('accent-style') : 'marcador';
+
+        const flow = new Gtk.FlowBox({selection_mode: Gtk.SelectionMode.NONE, homogeneous: true, column_spacing: 10,
+            row_spacing: 10, min_children_per_line: 2, max_children_per_line: 2, margin_top: 10, margin_bottom: 10,
+            margin_start: 10, margin_end: 10});
+        let radio = null;
+        const checks = [], areas = [];
+        for (const [style, name, about] of ACCENT_CARDS) {
+            const area = new Gtk.DrawingArea({content_width: 220, content_height: 64});
+            area.set_draw_func((_a, cr, w, h) => {
+                drawAccentPreview(style, cr, w, h, !settings.get_boolean('isla-oscura'), dark());
+                cr.$dispose();
+            });
+            areas.push(area);
+            const frame = new Gtk.Frame({child: area});
+            const check = new Gtk.CheckButton({label: _(name), group: radio});
+            radio ??= check;
+            check.connect('toggled', () => {
+                if (check.active && settings.get_string('accent-style') !== style)
+                    settings.set_string('accent-style', style);
+            });
+            checks.push([style, check]);
+            const card = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 6});
+            card.append(frame);
+            card.append(check);
+            card.append(new Gtk.Label({label: _(about), xalign: 0, wrap: true, css_classes: ['dim-label', 'caption']}));
+            const click = new Gtk.GestureClick();
+            click.connect('released', () => (check.active = true));
+            frame.add_controller(click);
+            flow.append(card);
+        }
+        expander.add_row(new Gtk.ListBoxRow({child: flow, activatable: false, selectable: false}));
+        expander.add_row(comboRow(settings, 'accent-palette', _('Paleta de los botones'), [
+            ['auto', _('Automática')],
+            ['claro', _('Clara')],
+            ['oscuro', _('Oscura')],
+        ], _('Afecta al estilo Hoja')));
+
+        // Folded, the row says which one is chosen.
+        const sync = () => {
+            const style = current();
+            checks.find(([s]) => s === style)?.[1].set_active(true);
+            expander.subtitle = _(ACCENT_CARDS.find(([s]) => s === style)[1]);
+        };
         sync();
-        const id = settings.connect('changed::isla-piel', sync);
-        group.connect('destroy', () => settings.disconnect(id));
+        const redraw = () => areas.forEach(a => a.queue_draw());
+        const ids = [settings.connect('changed::accent-style', sync),
+            // The pictures follow the island and the palette.
+            ...['isla-oscura', 'accent-palette'].map(k => settings.connect(`changed::${k}`, redraw))];
+        const ifaceId = iface.connect('changed::color-scheme', redraw);
+        group.connect('destroy', () => {
+            ids.forEach(id => settings.disconnect(id));
+            iface.disconnect(ifaceId);
+        });
         return group;
     }
 
-    // Background transparency: a slider from solid to almost clear.
-    _transparencyRow(settings) {
-        const row = new Adw.ActionRow({title: _('Transparencia de la isla'), subtitle: _('Hacia la derecha se ve más lo que hay detrás')});
-        const scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 0.9, 0.05);
-        scale.set_size_request(220, -1);
-        scale.valign = Gtk.Align.CENTER;
-        scale.draw_value = false;
-        scale.add_mark(0, Gtk.PositionType.BOTTOM, _('Sólida'));
-        scale.add_mark(0.9, Gtk.PositionType.BOTTOM, _('Transparente'));
-        settings.bind('isla-transparencia', scale.adjustment, 'value', Gio.SettingsBindFlags.DEFAULT);
-        row.add_suffix(scale);
+    // The Ajustes panel's look; the subtitle tells what the chosen one is like.
+    _panelStyleRow(settings) {
+        const styles = [
+            ['agrupada', _('Sesión agrupada'), _('Botones cuadrados; bloquear, salir, suspender y apagar juntos en una cápsula')],
+            ['tarjetas', _('Tarjetas con nombre'), _('Cada botón con su nombre; las acciones con el texto debajo')],
+            ['finas', _('Tarjetas finas'), _('Nombre y estado en cada botón, porcentaje del volumen y una fila de abajo más corta')],
+            ['lineas', _('Solo líneas'), _('Sin fondos, solo íconos; un punto naranja bajo lo que está encendido')],
+        ];
+        const row = comboRow(settings, 'panel-style', _('Estilo del panel de ajustes'), styles.map(([v, label]) => [v, label]));
+        const sync = () => (row.subtitle = (styles.find(([v]) => v === settings.get_string('panel-style')) ?? styles[0])[2]);
+        sync();
+        const id = settings.connect('changed::panel-style', sync);
+        row.connect('destroy', () => settings.disconnect(id));
         return row;
     }
 
@@ -329,17 +421,17 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         window.add(page);
 
         page.add(this._skinsGroup(settings));
-        page.add(this._glassGroup(settings));
+        page.add(this._accentGroup(settings));
 
         const look = new Adw.PreferencesGroup({title: _('Aspecto')});
         look.add(this._speedRow(settings));
+        look.add(this._panelStyleRow(settings));
         look.add(comboRow(settings, 'efecto-iconos', _('Cómo aparecen los íconos'), [
             ['uno-a-uno', _('Uno por uno')],
             ['todos', _('Todos a la vez')],
             ['centro', _('Desde el centro hacia los lados')],
         ], _('Al abrir la isla')));
         look.add(switchRow(settings, 'desenfoque', _('Desenfocar lo que hay detrás'), _('Apágalo si quieres la isla aún más liviana')));
-        look.add(this._transparencyRow(settings));
         look.add(switchRow(settings, 'desenfoque-cajon', _('Fondo desenfocado en el cajón de aplicaciones'),
             _('Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades')));
         look.add(switchRow(settings, 'isla-respiracion', _('Respiración'), _('En reposo, el fondo late muy despacio')));
@@ -370,13 +462,13 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         functions.add(switchRow(settings, 'mayus-insignia', _('Símbolo de mayúsculas en la isla'),
             _('Mientras estén activas, un pequeño ⇪ en la esquina de la isla')));
         functions.add(switchRow(settings, 'cafeina-activa', _('Cafeína'),
-            _('La pantalla no se apaga ni el equipo se suspende. También en el panel Energía')));
+            _('La pantalla no se apaga ni el equipo se suspende. También en el panel Ajustes')));
         functions.add(switchRow(settings, 'no-molestar', _('No molestar'), _('También con un clic largo sobre la isla')));
         page.add(functions);
 
         const status = new Adw.PreferencesGroup({
             title: _('Estado'),
-            description: _('Lo que se pierde al quitar la barra superior: en la isla y antes de Energía.'),
+            description: _('Lo que se pierde al quitar la barra superior: en la isla y antes de Ajustes.'),
         });
         status.add(switchRow(settings, 'bateria-porcentaje', _('Porcentaje de la batería'),
             _('El número junto al ícono. Sin batería no aparece nada')));
@@ -432,11 +524,11 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         extras.add(switchRow(settings, 'mostrar-portapapeles', _('Portapapeles'),
             _('Historial de lo copiado (texto, enlaces, colores e imágenes). Super+V lo abre desde cualquier lugar; ') +
             _('mientras esté activo, Super+V deja de abrir las notificaciones (sigue Super+M)')));
-        extras.add(switchRow(settings, 'mostrar-energia', _('Energía'),
+        extras.add(switchRow(settings, 'mostrar-energia', _('Ajustes'),
             _('Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína, volumen, captura, bloquear, apagar… ') +
             _('Clic derecho o mantener pulsado: suspender')));
         extras.add(switchRow(settings, 'ocultar-barra-superior', _('Quitar la barra superior de GNOME'),
-            _('Desaparece del todo; sus controles quedan en el botón Energía. Las esquinas activas siguen funcionando')));
+            _('Desaparece del todo; sus controles quedan en el botón Ajustes. Las esquinas activas siguen funcionando')));
         dock.add(extras);
         dock.add(this._stackGroup(window, settings));
         dock.add(this._foldersGroup(window, settings));
@@ -476,12 +568,10 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         });
         group.add(switchRow(settings, 'reloj-escritorio', _('Mostrar el reloj')));
         group.add(comboRow(settings, 'reloj-estilo', _('Estilo'), [
-            ['fino', _('Fino compacto')],
-            ['lateral', _('Lateral compacto')],
-            ['linea', _('Línea')],
-            ['esquina', _('Esquina')],
-            ['semana', _('Semana')],
-            ['anillo', _('Anillo del día')],
+            ['linea-viva', _('Línea viva')],
+            ['lateral-acento', _('Lateral acento')],
+            ['semana-fluida', _('Semana fluida')],
+            ['arco-dia', _('Arco del día')],
         ]));
         group.add(this._sliderRow(settings, 'reloj-tamano', _('Tamaño'), _('Se ajusta solo a tu pantalla; esto lo agranda o achica'),
             0.5, 2.0, 0.05, [[0.5, _('Pequeño')], [1.0, null], [2.0, _('Grande')]]));
@@ -513,18 +603,18 @@ export default class IslaDockPreferences extends ExtensionPreferences {
                 _('Sirve cuando las ventanas maximizadas tapan el reloj del escritorio.'),
         });
         side.add(switchRow(settings, 'reloj-lateral', _('Mostrar el reloj lateral')));
-        side.add(comboRow(settings, 'reloj-lateral-estilo', _('Estilo'), [
-            ['pildora', _('Píldora')],
-            ['texto', _('Solo texto')],
-            ['pestana', _('Pestaña vertical')],
+        side.add(comboRow(settings, 'clock-style', _('Estilo del reloj'), [
+            ['editorial', _('Editorial')],
+            ['semana', _('Isla con semana')],
+            ['linea', _('Línea del día')],
+            ['horizonte', _('Horizonte')],
         ]));
         side.add(comboRow(settings, 'reloj-lateral-borde', _('Borde'), [
             ['derecho', _('Derecho')],
             ['izquierdo', _('Izquierdo')],
         ]));
-        side.add(switchRow(settings, 'reloj-lateral-segundos', _('Mostrar los segundos')));
         side.add(switchRow(settings, 'reloj-lateral-calendario', _('Un clic abre el calendario'),
-            _('Con los eventos del día')));
+            _('Con tus recordatorios')));
         page.add(side);
 
         const hasInter = PangoCairo.FontMap.get_default().list_families().some(f => f.get_name() === 'Inter');

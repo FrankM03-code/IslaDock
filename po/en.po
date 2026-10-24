@@ -8,8 +8,8 @@ msgstr ""
 msgid "Aplicaciones"
 msgstr "Applications"
 
-msgid "Energía"
-msgstr "Power"
+msgid "Ajustes"
+msgstr "Settings"
 
 msgid "Portapapeles"
 msgstr "Clipboard"
@@ -26,12 +26,6 @@ msgstr "Classic dark"
 msgid "El mismo vidrio, en tono oscuro"
 msgstr "The same glass, in a dark tone"
 
-msgid "Vidrio oscuro"
-msgstr "Dark glass"
-
-msgid "Vidrio ahumado que dobla el fondo como una lupa"
-msgstr "Smoked glass that bends the background like a lens"
-
 msgid "Aurora"
 msgstr "Aurora"
 
@@ -46,57 +40,6 @@ msgstr "Skin"
 
 msgid "Cómo se ve la isla. Se cambia al instante."
 msgstr "How the island looks. It changes at once."
-
-msgid "Sin ventanas detrás, el borde dobla el fondo como una lupa; con una ventana detrás, vidrio plano."
-msgstr "With no windows behind, the edge bends the background like a lens; with a window behind, flat glass."
-
-msgid "Efecto lupa en el borde"
-msgstr "Lens effect on the edge"
-
-msgid "Apágalo para usar siempre el vidrio plano"
-msgstr "Turn it off to always use flat glass"
-
-msgid "Oscuridad del vidrio"
-msgstr "Glass darkness"
-
-msgid "Hacia la derecha, más oscuro"
-msgstr "Darker to the right"
-
-msgid "Claro"
-msgstr "Light"
-
-msgid "Oscuro"
-msgstr "Dark"
-
-msgid "Fuerza de la lupa"
-msgstr "Lens strength"
-
-msgid "Cuánto se dobla el fondo en el borde"
-msgstr "How much the background bends at the edge"
-
-msgid "Nada"
-msgstr "None"
-
-msgid "Mucha"
-msgstr "A lot"
-
-msgid "Música en una tarjeta aparte"
-msgstr "Music on a separate card"
-
-msgid "Al lado de la isla, con su propio vidrio"
-msgstr "Next to the island, with its own glass"
-
-msgid "Transparencia de la isla"
-msgstr "Island transparency"
-
-msgid "Hacia la derecha se ve más lo que hay detrás"
-msgstr "To the right, more of what is behind shows"
-
-msgid "Sólida"
-msgstr "Solid"
-
-msgid "Transparente"
-msgstr "Transparent"
 
 msgid "Velocidad de las animaciones"
 msgstr "Animation speed"
@@ -242,8 +185,8 @@ msgstr "While it is on, a small ⇪ on the island's corner"
 msgid "Cafeína"
 msgstr "Caffeine"
 
-msgid "La pantalla no se apaga ni el equipo se suspende. También en el panel Energía"
-msgstr "The screen does not turn off and the computer does not suspend. Also in the Power panel"
+msgid "La pantalla no se apaga ni el equipo se suspende. También en el panel Ajustes"
+msgstr "The screen does not turn off and the computer does not suspend. Also in the Settings panel"
 
 msgid "No molestar"
 msgstr "Do Not Disturb"
@@ -254,8 +197,8 @@ msgstr "Also with a long click on the island"
 msgid "Estado"
 msgstr "Status"
 
-msgid "Lo que se pierde al quitar la barra superior: en la isla y antes de Energía."
-msgstr "What is lost without the top bar: on the island and before Power."
+msgid "Lo que se pierde al quitar la barra superior: en la isla y antes de Ajustes."
+msgstr "What is lost without the top bar: on the island and before Settings."
 
 msgid "Porcentaje de la batería"
 msgstr "Battery percentage"
@@ -371,8 +314,8 @@ msgstr "Right click or press and hold: suspend"
 msgid "Quitar la barra superior de GNOME"
 msgstr "Remove GNOME's top bar"
 
-msgid "Desaparece del todo; sus controles quedan en el botón Energía. Las esquinas activas siguen funcionando"
-msgstr "It goes away completely; its controls stay in the Power button. Hot corners keep working"
+msgid "Desaparece del todo; sus controles quedan en el botón Ajustes. Las esquinas activas siguen funcionando"
+msgstr "It goes away completely; its controls stay in the Settings button. Hot corners keep working"
 
 msgid "Monitor"
 msgstr "Monitor"
@@ -406,24 +349,6 @@ msgstr "Show the clock"
 
 msgid "Estilo"
 msgstr "Style"
-
-msgid "Fino compacto"
-msgstr "Thin compact"
-
-msgid "Lateral compacto"
-msgstr "Side compact"
-
-msgid "Línea"
-msgstr "Line"
-
-msgid "Esquina"
-msgstr "Corner"
-
-msgid "Semana"
-msgstr "Week"
-
-msgid "Anillo del día"
-msgstr "Day ring"
 
 msgid "Tamaño"
 msgstr "Size"
@@ -467,15 +392,6 @@ msgstr "Useful when maximized windows cover the desktop clock."
 msgid "Mostrar el reloj lateral"
 msgstr "Show the side clock"
 
-msgid "Píldora"
-msgstr "Pill"
-
-msgid "Solo texto"
-msgstr "Text only"
-
-msgid "Pestaña vertical"
-msgstr "Vertical tab"
-
 msgid "Borde"
 msgstr "Edge"
 
@@ -484,9 +400,6 @@ msgstr "Right"
 
 msgid "Izquierdo"
 msgstr "Left"
-
-msgid "Mostrar los segundos"
-msgstr "Show seconds"
 
 msgid "Un clic abre el calendario"
 msgstr "A click opens the calendar"
@@ -704,9 +617,6 @@ msgstr "M T W T F S S"
 msgid "{dia} de {mes}"
 msgstr "{mes} {dia}"
 
-msgid "{n}% DEL DÍA"
-msgstr "{n}% OF THE DAY"
-
 msgid "Cerrar"
 msgstr "Close"
 
@@ -742,12 +652,6 @@ msgstr "Enter copies the result"
 
 msgid "Reloj"
 msgstr "Clock"
-
-msgid "a. m."
-msgstr "AM"
-
-msgid "p. m."
-msgstr "PM"
 
 msgid "Detener"
 msgstr "Stop"
@@ -992,9 +896,6 @@ msgstr "Mute the microphone"
 msgid "%A %-d de %B"
 msgstr "%A, %B %-d"
 
-msgid "Con los eventos del día"
-msgstr "With the day's events"
-
 msgid "Hoy"
 msgstr "Today"
 
@@ -1036,3 +937,264 @@ msgstr "Next {campo}"
 
 msgid "¿Qué quieres recordar?"
 msgstr "What do you want to remember?"
+
+msgid "Marcador lateral"
+msgstr "Side marker"
+
+msgid "Activa"
+msgstr "On"
+
+msgid "Activo"
+msgstr "On"
+
+msgid "Apagada"
+msgstr "Off"
+
+msgid "Apagado"
+msgstr "Off"
+
+msgid "Apagar…"
+msgstr "Power off…"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "Botones cuadrados; bloquear, salir, suspender y apagar juntos en una cápsula"
+msgstr "Square buttons; lock, log out, suspend and power off together in a capsule"
+
+msgid "Cada botón con su nombre; las acciones con el texto debajo"
+msgstr "Each button with its name; the actions with their label below"
+
+msgid "Captura"
+msgstr "Screenshot"
+
+msgid "Conectada"
+msgstr "Connected"
+
+msgid "Desconectada"
+msgstr "Disconnected"
+
+msgid "Encendido"
+msgstr "On"
+
+msgid "Energía"
+msgstr "Power"
+
+msgid "Estilo del panel de ajustes"
+msgstr "Settings panel style"
+
+msgid "Nocturna"
+msgstr "Night light"
+
+msgid "Nombre y estado en cada botón, porcentaje del volumen y una fila de abajo más corta"
+msgstr "Name and state on each button, volume percentage and a shorter bottom row"
+
+msgid "Oscuro"
+msgstr "Dark"
+
+msgid "Red"
+msgstr "Network"
+
+msgid "Salir"
+msgstr "Log out"
+
+msgid "Sesión agrupada"
+msgstr "Grouped session"
+
+msgid "Sin fondos, solo íconos; un punto naranja bajo lo que está encendido"
+msgstr "No backgrounds, icons only; an orange dot under what is on"
+
+msgid "Solo líneas"
+msgstr "Lines only"
+
+msgid "Suspender"
+msgstr "Suspend"
+
+msgid "Suspender, reiniciar, cerrar sesión o apagar"
+msgstr "Suspend, restart, log out or power off"
+
+msgid "Tarjetas con nombre"
+msgstr "Named tiles"
+
+msgid "Tarjetas finas"
+msgstr "Slim tiles"
+
+msgid "Cristal tintado"
+msgstr "Tinted glass"
+
+msgid "Círculo de vidrio naranja translúcido"
+msgstr "Circle of translucent orange glass"
+
+msgid "Estilo de los botones"
+msgstr "Button style"
+
+msgid "Vidrio neutro con una barrita naranja al lado"
+msgstr "Neutral glass with a small orange bar on its side"
+
+msgid "Automática"
+msgstr "Automatic"
+
+msgid "Clara"
+msgstr "Light"
+
+msgid "Forma de hoja: tres esquinas redondas y una casi recta"
+msgstr "Leaf shape: three round corners and one nearly square"
+
+msgid "Hoja"
+msgstr "Leaf"
+
+msgid "Oscura"
+msgstr "Dark"
+
+msgid "Paleta de los botones"
+msgstr "Button palette"
+
+msgid "Afecta al estilo Hoja"
+msgstr "Affects the Leaf style"
+
+msgid "Arco del día"
+msgstr "Arc of the day"
+
+msgid "Con tus recordatorios"
+msgstr "With your reminders"
+
+msgid "Editorial"
+msgstr "Editorial"
+
+msgid "Estilo del reloj"
+msgstr "Clock style"
+
+msgid "Horizonte"
+msgstr "Horizon"
+
+msgid "Isla con semana"
+msgstr "Island with week"
+
+msgid "L M M J V S D"
+msgstr "M T W T F S S"
+
+msgid "Lateral acento"
+msgstr "Side accent"
+
+msgid "Línea del día"
+msgstr "Line of the day"
+
+msgid "Línea viva"
+msgstr "Live line"
+
+msgid "Semana fluida"
+msgstr "Flowing week"
+
+msgid "abr"
+msgstr "Apr"
+
+msgid "abril"
+msgstr "April"
+
+msgid "ago"
+msgstr "Aug"
+
+msgid "agosto"
+msgstr "August"
+
+msgid "dic"
+msgstr "Dec"
+
+msgid "diciembre"
+msgstr "December"
+
+msgid "dom"
+msgstr "Sun"
+
+msgid "domingo"
+msgstr "Sunday"
+
+msgid "ene"
+msgstr "Jan"
+
+msgid "enero"
+msgstr "January"
+
+msgid "feb"
+msgstr "Feb"
+
+msgid "febrero"
+msgstr "February"
+
+msgid "jue"
+msgstr "Thu"
+
+msgid "jueves"
+msgstr "Thursday"
+
+msgid "jul"
+msgstr "Jul"
+
+msgid "julio"
+msgstr "July"
+
+msgid "jun"
+msgstr "Jun"
+
+msgid "junio"
+msgstr "June"
+
+msgid "lun"
+msgstr "Mon"
+
+msgid "lunes"
+msgstr "Monday"
+
+msgid "mar"
+msgstr "Tue"
+
+msgid "mar."
+msgstr "Mar"
+
+msgid "martes"
+msgstr "Tuesday"
+
+msgid "marzo"
+msgstr "March"
+
+msgid "may"
+msgstr "May"
+
+msgid "mayo"
+msgstr "May"
+
+msgid "mié"
+msgstr "Wed"
+
+msgid "miércoles"
+msgstr "Wednesday"
+
+msgid "nov"
+msgstr "Nov"
+
+msgid "noviembre"
+msgstr "November"
+
+msgid "oct"
+msgstr "Oct"
+
+msgid "octubre"
+msgstr "October"
+
+msgid "sep"
+msgstr "Sep"
+
+msgid "septiembre"
+msgstr "September"
+
+msgid "sáb"
+msgstr "Sat"
+
+msgid "sábado"
+msgstr "Saturday"
+
+msgid "vie"
+msgstr "Fri"
+
+msgid "viernes"
+msgstr "Friday"

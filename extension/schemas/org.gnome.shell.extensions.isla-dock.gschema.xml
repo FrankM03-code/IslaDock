@@ -41,11 +41,43 @@
       <default>true</default>
       <summary>Mostrar Papelera</summary>
     </key>
+    <key name="panel-style" type="s">
+      <choices>
+        <choice value="agrupada"/>
+        <choice value="tarjetas"/>
+        <choice value="finas"/>
+        <choice value="lineas"/>
+      </choices>
+      <default>'agrupada'</default>
+      <summary>Estilo del panel de ajustes rápidos</summary>
+      <description>Apariencia y distribución del panel emergente de ajustes del dock.</description>
+    </key>
+    <key name="accent-style" type="s">
+      <!-- 'neutro', 'degradado', 'grafito', 'hundido' and 'etiqueta' were removed: a stored one reads as the default. -->
+      <choices>
+        <choice value="cristal"/>
+        <choice value="marcador"/>
+        <choice value="hoja"/>
+      </choices>
+      <default>'marcador'</default>
+      <summary>Estilo de los botones de acento</summary>
+      <description>Apariencia del botón de Aplicaciones y de los botones de Portapapeles y Ajustes.</description>
+    </key>
+    <key name="accent-palette" type="s">
+      <choices>
+        <choice value="auto"/>
+        <choice value="claro"/>
+        <choice value="oscuro"/>
+      </choices>
+      <default>'auto'</default>
+      <summary>Paleta de los botones de acento</summary>
+      <description>Automática sigue el modo claro/oscuro de GNOME.</description>
+    </key>
     <key name="isla-piel" type="s">
       <choices>
-        <choice value="clasica"/><choice value="vidrio-oscuro"/><choice value="aurora"/>
-        <!-- Replaced by vidrio-oscuro; kept so an old value still reads (it is moved on enable). -->
-        <choice value="vidrio-liquido"/>
+        <choice value="clasica"/><choice value="aurora"/>
+        <!-- Removed skins; kept so an old value still reads (it is moved to Clásica oscura on enable). -->
+        <choice value="vidrio-oscuro"/><choice value="vidrio-liquido"/>
       </choices>
       <default>'clasica'</default>
       <summary>Piel de la isla</summary>
@@ -181,31 +213,14 @@
       <default>true</default>
       <summary>Notificación arriba cuando termina una descarga</summary>
     </key>
-    <key name="glass-refraction" type="b">
-      <default>true</default>
-      <summary>Vidrio oscuro: lente con refracción cuando no hay ventanas detrás</summary>
-    </key>
-    <key name="glass-tint" type="d">
-      <range min="0.2" max="0.7"/>
-      <default>0.46</default>
-      <summary>Vidrio oscuro: oscuridad del vidrio</summary>
-    </key>
-    <key name="glass-strength" type="d">
-      <range min="0" max="40"/>
-      <default>28.0</default>
-      <summary>Vidrio oscuro: fuerza de la refracción del borde (px)</summary>
-    </key>
-    <key name="glass-music-card" type="b">
-      <default>true</default>
-      <summary>Vidrio oscuro: música en una tarjeta aparte</summary>
-    </key>
     <key name="reloj-escritorio" type="b">
       <default>false</default>
       <summary>Reloj de escritorio: hora y fecha sobre el fondo de pantalla</summary>
     </key>
     <key name="reloj-estilo" type="s">
-      <default>'fino'</default>
-      <summary>Estilo del reloj: fino, lateral, linea, esquina, semana o anillo</summary>
+      <!-- Older values (fino, lateral, linea, esquina, semana, anillo) are moved on enable (extension.js). -->
+      <default>'linea-viva'</default>
+      <summary>Estilo del reloj de escritorio: linea-viva, lateral-acento, semana-fluida o arco-dia</summary>
     </key>
     <key name="reloj-tamano" type="d">
       <range min="0.5" max="2.0"/>
@@ -241,23 +256,24 @@
       <default>true</default>
       <summary>Reloj lateral en burbuja, escondido en el borde</summary>
     </key>
-    <key name="reloj-lateral-estilo" type="s">
-      <choices><choice value='texto'/><choice value='pildora'/><choice value='pestana'/></choices>
-      <default>'pildora'</default>
-      <summary>Reloj lateral: solo texto, píldora o pestaña vertical</summary>
+    <key name="clock-style" type="s">
+      <choices>
+        <choice value="editorial"/>
+        <choice value="semana"/>
+        <choice value="linea"/>
+        <choice value="horizonte"/>
+      </choices>
+      <default>'editorial'</default>
+      <summary>Estilo del reloj lateral</summary>
     </key>
     <key name="reloj-lateral-borde" type="s">
       <choices><choice value='derecho'/><choice value='izquierdo'/></choices>
       <default>'derecho'</default>
       <summary>Reloj lateral: borde de la pantalla</summary>
     </key>
-    <key name="reloj-lateral-segundos" type="b">
-      <default>false</default>
-      <summary>Reloj lateral: mostrar los segundos</summary>
-    </key>
     <key name="reloj-lateral-calendario" type="b">
       <default>true</default>
-      <summary>Reloj lateral: un clic abre el calendario y las notificaciones</summary>
+      <summary>Reloj lateral: un clic abre el calendario</summary>
     </key>
     <key name="atajo-calendario" type="as">
       <default>['&lt;Super&gt;m']</default>

@@ -44,7 +44,7 @@ const MODULES = {
     timer: [null, ctx => new Timer(ctx)],
     recording: [null, ctx => new Recording(ctx)],
     search: [null, ctx => new Search(ctx)],
-    previews: ['isla-vistas-previas', ctx => new Previews(ctx)],
+    previews: [null, ctx => new Previews(ctx)],         // on hover only with 'isla-vistas-previas'
     progress: [null, ctx => new Progress(ctx)],
     stack: [null, ctx => new Stack(ctx)],
     folders: [null, ctx => new Folders(ctx)],
@@ -67,9 +67,16 @@ const MODULES = {
 export default class IslaDockExtension extends Extension {
     enable() {
         this._settings = this.getSettings();
-        // Vidrio líquido was replaced by Vidrio oscuro (2026-10-21).
-        if (this._settings.get_string('isla-piel') === 'vidrio-liquido')
-            this._settings.set_string('isla-piel', 'vidrio-oscuro');
+        // Vidrio líquido and later Vidrio oscuro were removed (2026-10-23): their users get Clásica oscura.
+        if (['vidrio-liquido', 'vidrio-oscuro'].includes(this._settings.get_string('isla-piel'))) {
+            this._settings.set_string('isla-piel', 'clasica');
+            this._settings.set_boolean('isla-oscura', true);
+        }
+        // The desktop clock's looks were redone (2026-10-23): an older one becomes its new counterpart.
+        const DESK = {linea: 'linea-viva', lateral: 'lateral-acento', semana: 'semana-fluida', anillo: 'arco-dia'};
+        const desk = this._settings.get_string('reloj-estilo');
+        if (!['linea-viva', 'lateral-acento', 'semana-fluida', 'arco-dia'].includes(desk))
+            this._settings.set_string('reloj-estilo', DESK[desk] ?? 'linea-viva');
         this._resolver = new IconResolver(this.dir, this._settings);
         setDockSettings(this._settings);
         this._modules = new Map();
