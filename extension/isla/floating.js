@@ -4,7 +4,7 @@
 // screen as a small card (icon, title, one or two lines), with no island and
 // no bar around it, and leaves by itself. GNOME's own banners are held back
 // while this runs (the notifications still reach GNOME's list). A click opens
-// what the notification points to; the × or a right click dismisses it.
+// what the notification points to; the × or a right click closes it.
 // Same rules as GNOME's banners: none in do-not-disturb, none for low urgency,
 // critical ones stay until they are dealt with. The cards look like the island
 // (its color, transparency, edge and blur, Aurora's halo, Vidrio oscuro's
@@ -242,10 +242,12 @@ class Card {
         actor.set_child(box);
         this.update();
 
-        this._close.connect('clicked', () => this.dismiss());
+        // The × (or a right click) closes the notification itself, like GNOME's
+        // banners: a reminder's alarm, for one, stops with it.
+        this._close.connect('clicked', () => this._closeNotification());
         actor.connect('clicked', (_b, button) => {
             if (button === 3) {
-                this.dismiss();
+                this._closeNotification();
                 return;
             }
             Main.overview.hide();
@@ -293,6 +295,11 @@ class Card {
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         this.actor.set({opacity: 0, translation_y: -SHIFT * sf});
         this.actor.ease({opacity: 255, translation_y: 0, duration: ms(IN_TIME), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+    }
+
+    _closeNotification() {
+        this.dismiss();
+        this.notification.destroy(MessageTray.NotificationDestroyedReason.DISMISSED);
     }
 
     // Leaves the screen; the notification itself stays in GNOME's list.

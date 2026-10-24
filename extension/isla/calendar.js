@@ -4,18 +4,24 @@
 // This is IslaDock's own small month calendar: the month with ‹ Hoy ›, a grid
 // of day squares (the week starts on Monday; a dot marks days with reminders)
 // and a card with the chosen day's reminders. The + turns the card into a
-// short form: what to remember, its day and month, Guardar. Reminders live in
-// 'recordatorios' (JSON) and are announced with a notification from 8:00 on
-// their day (or as soon as IslaDock runs, if it was off then).
+// short form: what to remember, its day, month, hour and minutes, Guardar.
+// Reminders live in 'recordatorios' (JSON). At their time an alarm rings (the
+// theme's alarm sound, again and again for up to a minute) with a notification
+// that stays; clicking or closing it (or opening the calendar) stops the alarm. One missed while IslaDock
+// was off is only announced. Old reminders without a time count as 8:00.
 // The panel is solid: light over a light island, dark otherwise.
 // It opens from the side clock (click) or with Super+M ('atajo-calendario'),
 // which GNOME uses for the date menu ('toggle-message-tray'): while this runs
 // that binding gives it up and gets it back after ('calendario-liberado').
-// The panel stands by the side clock's edge, centered in height.
+// The panel comes out of the middle of the dock: it grows up from the island
+// (scale and rise, with a small overshoot) and sinks back into it on closing.
+// Its bottom stays above the dock: when it grows (more reminders, the form) it
+// moves up; past a few reminders their list scrolls.
 //
-// Commands it listens to: 'calendar-toggle' (anchor actor or nothing).
+// Commands it listens to: 'calendar-toggle'.
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
+import Graphene from 'gi://Graphene';
 import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 import Pango from 'gi://Pango';
@@ -23,9 +29,11 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import {_, fmt, localName} from './i18n.js';
 import {dressFrame, islandLook} from './look.js';
+import {dockMonitor, dockWorkArea} from './monitor.js';
 import {ms} from './timing.js';
 
 const KEY = 'atajo-calendario';
@@ -33,12 +41,18 @@ const KEPT = 'calendario-liberado';
 const NOTES = 'recordatorios';
 const TRAY_SCHEMA = 'org.gnome.shell.keybindings';
 const TRAY_KEY = 'toggle-message-tray';
-const GAP = 14;            // from the screen edge
-const IN_TIME = 200;
-const OUT_TIME = 140;
-const SHIFT = 14;
-const NOTICE_HOUR = 8;     // reminders are announced from this hour of their day
-const CHECK_EVERY = 60;    // seconds
+const GAP = 10;            // between the island and the panel
+const IN_TIME = 240;
+const OUT_TIME = 120;
+const RISE = 28;           // px it comes up from the dock
+const SMALL = 0.82;        // the scale it grows from
+const CELLS = 42;          // six weeks of day squares, made once and reused
+const NOTICE_HOUR = 8;     // the time of old reminders saved without one
+const CHECK_EVERY = 60;    // seconds, at most, between two looks at the reminders
+const RING_EVERY = 3;      // seconds between two rings of the alarm
+const RING_FOR = 60;       // seconds the alarm rings if nobody stops it
+const LATE = 10 * 60;      // seconds: a reminder missed by more is only announced
+const MINUTE_STEP = 5;
 
 const same = (a, b) => a.toLowerCase() === b.toLowerCase();
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() &&
@@ -49,6 +63,8 @@ const format = (d, f) => GLib.DateTime.new_local(d.getFullYear(), d.getMonth() +
     d.getHours(), d.getMinutes(), 0).format(f);
 const daysIn = (year, month) => new Date(year, month + 1, 0).getDate();
 const noteDate = n => new Date(n.anio, n.mes - 1, n.dia);
+const noteTime = n => new Date(n.anio, n.mes - 1, n.dia, n.hora ?? NOTICE_HOUR, n.minuto ?? 0);
+const two = n => String(n).padStart(2, '0');
 
 export class CalendarPanel {
     constructor({state, settings}) {
@@ -57,7 +73,7 @@ export class CalendarPanel {
         this._panel = null;
         this._commandId = state.connect('command', (_s, name, ...args) => {
             if (name === 'calendar-toggle')
-                this.toggle(args[0] ?? null);
+                this.toggle();
         });
         this._overviewId = Main.overview.connect('showing', () => this.close(false));
         this._freeShortcut();
@@ -66,11 +82,8 @@ export class CalendarPanel {
                 Main.overview.hide();
                 this.toggle(null);
             });
-        // Reminders due: now and every minute.
-        this._checkId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, CHECK_EVERY, () => {
-            this._announce();
-            return GLib.SOURCE_CONTINUE;
-        });
+        this._checkId = 0;
+        this._rings = new Set();
         this._announce();
     }
 
@@ -122,21 +135,78 @@ export class CalendarPanel {
         return this._notes().filter(n => sameDay(noteDate(n), date));
     }
 
+    // Due reminders now; then a wake-up at the next one's minute (or within a
+    // minute anyway: after a suspend the clock may have jumped).
     _announce() {
         const now = new Date();
-        const today = dayStart(now);
         const list = this._notes();
         let changed = false;
+        let next = CHECK_EVERY * 1000;
         for (const note of list) {
-            const day = noteDate(note);
-            if (note.avisado || day > today || (sameDay(day, today) && now.getHours() < NOTICE_HOUR))
+            if (note.avisado)
                 continue;
+            const due = noteTime(note) - now;
+            if (due > 0) {
+                next = Math.min(next, due);
+                continue;
+            }
             note.avisado = true;
             changed = true;
-            Main.notify(_('Recordatorio'), note.texto);
+            this._alarm(note, -due / 1000 <= LATE);
         }
-        if (changed)
+        if (changed) {
             this._saveNotes(list);
+            if (this._panel && !this._form)
+                this._paintCard();
+        }
+        if (this._checkId)
+            GLib.source_remove(this._checkId);
+        this._checkId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, Math.max(250, next + 50), () => {
+            this._checkId = 0;
+            this._announce();
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    // A notification that stays until it is dealt with; with `ring`, the alarm
+    // sounds until then (or RING_FOR seconds).
+    _alarm(note, ring) {
+        if (!this._source) {
+            this._source = new MessageTray.Source({title: _('Recordatorios'), iconName: 'alarm-symbolic'});
+            this._source.connect('destroy', () => (this._source = null));
+            Main.messageTray.add(this._source);
+        }
+        const hour = `${two(note.hora ?? NOTICE_HOUR)}:${two(note.minuto ?? 0)}`;
+        const notification = new MessageTray.Notification({source: this._source, title: _('Recordatorio'),
+            body: `${hour} · ${note.texto}`, urgency: ring ? MessageTray.Urgency.CRITICAL : MessageTray.Urgency.NORMAL});
+        this._source.addNotification(notification);
+        if (!ring)
+            return;
+        const player = global.display.get_sound_player();
+        const ringing = {cancellable: new Gio.Cancellable(), id: 0, left: Math.ceil(RING_FOR / RING_EVERY)};
+        const stop = () => {
+            if (!this._rings.delete(ringing))
+                return;
+            ringing.cancellable.cancel();
+            if (ringing.id)
+                GLib.source_remove(ringing.id);
+            ringing.id = 0;
+        };
+        ringing.stop = stop;
+        this._rings.add(ringing);
+        const once = () => player.play_from_theme('alarm-clock-elapsed', _('Recordatorio'), ringing.cancellable);
+        once();
+        ringing.id = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, RING_EVERY, () => {
+            if (--ringing.left <= 0) {
+                ringing.id = 0;
+                stop();
+                return GLib.SOURCE_REMOVE;
+            }
+            once();
+            return GLib.SOURCE_CONTINUE;
+        });
+        notification.connect('activated', stop);
+        notification.connect('destroy', stop);
     }
 
     // ---------- content ----------
@@ -167,6 +237,23 @@ export class CalendarPanel {
             const label = new St.Label({style_class: 'isla-cal-ini', x_align: Clutter.ActorAlign.CENTER,
                 text: localName(GLib.DateTime.new_local(2024, 1, 1 + i, 0, 0, 0), '%a').toLocaleUpperCase()});
             this._gridLayout.attach(label, i, 0, 1, 1);
+        }
+        // The day squares stay put; a month change only rewrites them.
+        this._cells = [];
+        for (let i = 0; i < CELLS; i++) {
+            const inner = new St.BoxLayout({vertical: true, x_align: Clutter.ActorAlign.CENTER,
+                y_align: Clutter.ActorAlign.CENTER});
+            const number = new St.Label({x_align: Clutter.ActorAlign.CENTER});
+            const mark = new St.Widget({style_class: 'isla-cal-punto', x_align: Clutter.ActorAlign.CENTER});
+            inner.add_child(number);
+            inner.add_child(mark);
+            const day = new St.Button({style_class: 'isla-cal-dia', child: inner, can_focus: true, x_expand: true});
+            day._number = number;
+            day._mark = mark;
+            day._day = null;
+            day.connect('clicked', () => day._day && this._choose(day._day));
+            this._gridLayout.attach(day, i % 7, 1 + Math.floor(i / 7), 1, 1);
+            this._cells.push(day);
         }
 
         // The card: the chosen day's reminders, or the form.
@@ -211,42 +298,36 @@ export class CalendarPanel {
         const now = new Date();
         this._month.text = capital(format(shown, '%B'));
         this._year.text = String(shown.getFullYear());
-        for (const child of this._grid.get_children()) {
-            if (child._day)
-                child.destroy();
-        }
         const marked = new Set(this._notes().map(n => noteDate(n).getTime()));
         const offset = (shown.getDay() + 6) % 7;      // Monday first
         const total = daysIn(shown.getFullYear(), shown.getMonth());
-        for (let n = 1; n <= total; n++) {
+        this._cells.forEach((day, i) => {
+            const n = i - offset + 1;
+            if (n < 1 || n > total) {
+                day._day = null;
+                day.hide();
+                return;
+            }
             const date = new Date(shown.getFullYear(), shown.getMonth(), n);
-            const inner = new St.BoxLayout({vertical: true, x_align: Clutter.ActorAlign.CENTER,
-                y_align: Clutter.ActorAlign.CENTER});
-            inner.add_child(new St.Label({text: String(n), x_align: Clutter.ActorAlign.CENTER}));
-            inner.add_child(new St.Widget({style_class: 'isla-cal-punto', x_align: Clutter.ActorAlign.CENTER,
-                opacity: marked.has(date.getTime()) ? 255 : 0}));
-            const day = new St.Button({style_class: 'isla-cal-dia', child: inner, can_focus: true, x_expand: true,
-                accessible_name: format(date, '%A %-d %B')});
             day._day = date;
-            if (date.getDay() === 0 || date.getDay() === 6)
-                day.add_style_class_name('finde');
-            if (sameDay(date, now))
-                day.add_style_class_name('hoy');
-            if (sameDay(date, this._chosen))
-                day.add_style_class_name('elegido');
-            day.connect('clicked', () => this._choose(date));
-            const cell = offset + n - 1;
-            this._gridLayout.attach(day, cell % 7, 1 + Math.floor(cell / 7), 1, 1);
-        }
+            day._number.text = String(n);
+            day._mark.opacity = marked.has(date.getTime()) ? 255 : 0;
+            day.accessible_name = format(date, '%A %-d %B');
+            const weekend = date.getDay() === 0 || date.getDay() === 6;
+            day[weekend ? 'add_style_class_name' : 'remove_style_class_name']('finde');
+            day[sameDay(date, now) ? 'add_style_class_name' : 'remove_style_class_name']('hoy');
+            day[sameDay(date, this._chosen) ? 'add_style_class_name' : 'remove_style_class_name']('elegido');
+            day.show();
+        });
         this._paintCard();
     }
 
     // Only the marks move: the pressed button stays.
     _choose(date) {
         this._chosen = date;
-        for (const child of this._grid.get_children()) {
-            if (child._day)
-                child[sameDay(child._day, date) ? 'add_style_class_name' : 'remove_style_class_name']('elegido');
+        for (const day of this._cells) {
+            if (day._day)
+                day[sameDay(day._day, date) ? 'add_style_class_name' : 'remove_style_class_name']('elegido');
         }
         if (this._form) {
             this._form.dia = date.getDate();
@@ -278,8 +359,14 @@ export class CalendarPanel {
             this._card.add_child(new St.Label({style_class: 'isla-cal-vacio', text: _('Sin recordatorios')}));
             return;
         }
+        // A few fit; past that the list scrolls (the panel would cover the screen).
+        const list = new St.BoxLayout({style_class: 'isla-cal-notas-caja', vertical: true});
+        const scroll = new St.ScrollView({style_class: 'isla-cal-notas', hscrollbar_policy: St.PolicyType.NEVER,
+            vscrollbar_policy: St.PolicyType.AUTOMATIC, overlay_scrollbars: true, child: list});
         for (const note of notes) {
             const row = new St.BoxLayout({style_class: 'isla-cal-nota'});
+            row.add_child(new St.Label({style_class: 'isla-cal-nota-hora', y_align: Clutter.ActorAlign.CENTER,
+                text: `${two(note.hora ?? NOTICE_HOUR)}:${two(note.minuto ?? 0)}`}));
             const text = new St.Label({style_class: 'isla-cal-nota-texto', text: note.texto, x_expand: true,
                 y_align: Clutter.ActorAlign.CENTER});
             text.clutter_text.ellipsize = Pango.EllipsizeMode.END;
@@ -288,17 +375,22 @@ export class CalendarPanel {
             remove.connect('clicked', () => {
                 this._saveNotes(this._notes().filter(n => n.id !== note.id));
                 this._paint();
+                this._announce();
             });
             row.add_child(text);
             row.add_child(remove);
-            this._card.add_child(row);
+            list.add_child(row);
         }
+        this._card.add_child(scroll);
     }
 
     // ---------- the form ----------
     _openForm() {
         const c = this._chosen;
-        this._form = {dia: c.getDate(), mes: c.getMonth(), anio: c.getFullYear()};
+        // Today: the next round hour; another day: 8:00.
+        const now = new Date();
+        const hora = sameDay(c, now) ? Math.min(now.getHours() + 1, 23) : NOTICE_HOUR;
+        this._form = {dia: c.getDate(), mes: c.getMonth(), anio: c.getFullYear(), hora, minuto: 0};
         this._card.destroy_all_children();
         this._entry = new St.Entry({style_class: 'isla-cal-campo', hint_text: _('¿Qué quieres recordar?'),
             can_focus: true, x_expand: true});
@@ -337,6 +429,48 @@ export class CalendarPanel {
         });
         this._card.add_child(dates);
 
+        // The alarm's time: its own row, unlike the date's ‹ ›: an alarm icon and
+        // big hour and minutes, each with ˄ ˅ (the wheel over a number works too).
+        const alarm = new St.BoxLayout({style_class: 'isla-cal-alarma'});
+        alarm.add_child(new St.Icon({icon_name: 'alarm-symbolic', style_class: 'isla-cal-alarma-icono',
+            y_align: Clutter.ActorAlign.CENTER}));
+        alarm.add_child(new St.Label({style_class: 'isla-cal-alarma-texto', text: _('Alarma'), x_expand: true,
+            y_align: Clutter.ActorAlign.CENTER}));
+        const spinner = (name, step) => {
+            const box = new St.BoxLayout({style_class: 'isla-cal-giro', reactive: true, y_align: Clutter.ActorAlign.CENTER});
+            const label = new St.Label({style_class: 'isla-cal-giro-valor', y_align: Clutter.ActorAlign.CENTER});
+            const arrows = new St.BoxLayout({vertical: true, y_align: Clutter.ActorAlign.CENTER});
+            for (const [icon, d, what] of [['pan-up-symbolic', 1, _('{campo} siguiente')], ['pan-down-symbolic', -1, _('{campo} anterior')]]) {
+                const b = new St.Button({style_class: 'isla-cal-giro-flecha', can_focus: true,
+                    accessible_name: fmt(what, {campo: name}), child: new St.Icon({icon_name: icon, style_class: 'isla-cal-giro-icono'})});
+                b.connect('clicked', () => step(d));
+                arrows.add_child(b);
+            }
+            box.connect('scroll-event', (_a, event) => {
+                const dir = event.get_scroll_direction();
+                if (dir === Clutter.ScrollDirection.UP || dir === Clutter.ScrollDirection.DOWN)
+                    step(dir === Clutter.ScrollDirection.UP ? 1 : -1);
+                return Clutter.EVENT_STOP;
+            });
+            box.add_child(label);
+            box.add_child(arrows);
+            return [box, label];
+        };
+        const [hourBox, hourLabel] = spinner(_('Hora'), d => {
+            this._form.hora = (this._form.hora + d + 24) % 24;
+            this._paintFormDate();
+        });
+        const [minuteBox, minuteLabel] = spinner(_('Minutos'), d => {
+            this._form.minuto = (this._form.minuto + d * MINUTE_STEP + 60) % 60;
+            this._paintFormDate();
+        });
+        this._hourLabel = hourLabel;
+        this._minuteLabel = minuteLabel;
+        alarm.add_child(hourBox);
+        alarm.add_child(new St.Label({style_class: 'isla-cal-giro-dos', text: ':', y_align: Clutter.ActorAlign.CENTER}));
+        alarm.add_child(minuteBox);
+        this._card.add_child(alarm);
+
         const buttons = new St.BoxLayout({style_class: 'isla-cal-botones'});
         const cancel = new St.Button({style_class: 'isla-cal-boton', label: _('Cancelar'), can_focus: true, x_expand: true});
         cancel.connect('clicked', () => this._closeForm());
@@ -354,6 +488,8 @@ export class CalendarPanel {
         this._dayLabel.text = String(f.dia);
         const month = capital(format(new Date(f.anio, f.mes, 1), '%B'));
         this._monthLabel.text = f.anio === new Date().getFullYear() ? month : `${month} ${f.anio}`;
+        this._hourLabel.text = two(f.hora);
+        this._minuteLabel.text = two(f.minuto);
     }
 
     _saveForm() {
@@ -364,8 +500,9 @@ export class CalendarPanel {
         }
         const f = this._form;
         const list = this._notes();
-        list.push({id: `${Date.now()}`, texto: text, dia: f.dia, mes: f.mes + 1, anio: f.anio, avisado: false});
-        list.sort((a, b) => noteDate(a) - noteDate(b));
+        list.push({id: `${Date.now()}`, texto: text, dia: f.dia, mes: f.mes + 1, anio: f.anio,
+            hora: f.hora, minuto: f.minuto, avisado: false});
+        list.sort((a, b) => noteTime(a) - noteTime(b));
         this._saveNotes(list);
         // Show the day it was saved on.
         this._chosen = new Date(f.anio, f.mes, f.dia);
@@ -376,21 +513,23 @@ export class CalendarPanel {
 
     _closeForm() {
         this._form = null;
-        this._entry = this._dayLabel = this._monthLabel = null;
+        this._entry = this._dayLabel = this._monthLabel = this._hourLabel = this._minuteLabel = null;
         this._paint();
     }
 
     // ---------- open / close ----------
-    toggle(anchor) {
+    toggle() {
         if (this._panel)
             this.close();
         else
-            this.open(anchor);
+            this.open();
     }
 
-    open(anchor) {
+    open() {
         if (this._panel)
             return;
+        // A ringing alarm stops: whoever opens the calendar has heard it.
+        [...this._rings].forEach(r => r.stop());
         // Still leaving: done now.
         this._finishClosing?.();
         const look = islandLook(this._state);
@@ -402,7 +541,9 @@ export class CalendarPanel {
             content.style = look.style;
         dressFrame(look, panel, content, 20);
         Main.layoutManager.addTopChrome(panel);
-        this._place(anchor);
+        this._place();
+        // Grown or shrunk (a reminder, the form): the bottom stays over the dock.
+        content.connect('notify::height', () => this._panel === panel && this._place());
         panel.connect('captured-event', (_a, event) => this._onEvent(event));
         panel.connect('key-press-event', (_a, event) => {
             const key = event.get_key_symbol();
@@ -421,27 +562,34 @@ export class CalendarPanel {
         this._grab = Main.pushModal(panel, {actionMode: Shell.ActionMode.POPUP});
         // Over a maximized window drawn straight to the screen (X11).
         global.compositor.disable_unredirect();
-        panel.set({opacity: 0, translation_x: this._fromRight ? SHIFT : -SHIFT});
-        panel.ease({opacity: 255, translation_x: 0, duration: ms(IN_TIME), mode: Clutter.AnimationMode.EASE_OUT_CUBIC});
+        panel.set({pivot_point: new Graphene.Point({x: 0.5, y: 1}), opacity: 0, scale_x: SMALL, scale_y: SMALL,
+            translation_y: RISE});
+        panel.ease({opacity: 255, duration: ms(IN_TIME * 0.6), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+        panel.ease({scale_x: 1, scale_y: 1, translation_y: 0, duration: ms(IN_TIME),
+            mode: Clutter.AnimationMode.EASE_OUT_BACK});
     }
 
-    // Next to the side clock's edge, centered in height, inside the work area.
-    _place(anchor) {
+    // Centered on the dock, just above the island, inside the work area.
+    _place() {
         const panel = this._panel;
-        const mon = Main.layoutManager.primaryMonitor;
-        const area = Main.layoutManager.getWorkAreaForMonitor(Main.layoutManager.primaryIndex);
+        const area = dockWorkArea();
+        const mon = dockMonitor();
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         const [, w] = panel.get_preferred_width(-1);
         const [, h] = panel.get_preferred_height(w);
-        this._fromRight = this._settings.get_string('reloj-lateral-borde') !== 'izquierdo';
-        let x = this._fromRight ? mon.x + mon.width - w - GAP * sf : mon.x + GAP * sf;
-        if (anchor?.get_stage()) {
-            const [ax] = anchor.get_transformed_position();
-            const [aw] = anchor.get_transformed_size();
-            x = this._fromRight ? ax - w - GAP * sf : ax + aw + GAP * sf;
+        let center = mon.x + mon.width / 2;
+        let top = area.y + area.height;
+        const island = this._state.skin?.isla?._bg;
+        if (island?.get_stage() && island.visible) {
+            const [ix, iy] = island.get_transformed_position();
+            const [iw] = island.get_transformed_size();
+            center = ix + iw / 2;
+            // A hidden island sits below the screen: then from the bottom edge.
+            top = Math.min(iy, mon.y + mon.height);
         }
-        x = Math.min(Math.max(x, area.x), area.x + area.width - w);
-        const y = Math.min(Math.max(mon.y + (mon.height - h) / 2, area.y), area.y + area.height - h);
+        let x = center - w / 2;
+        x = Math.min(Math.max(x, area.x + 4 * sf), area.x + area.width - w - 4 * sf);
+        const y = Math.max(top - GAP * sf - h, area.y + 4 * sf);
         panel.set_position(Math.round(x), Math.round(y));
     }
 
@@ -471,8 +619,8 @@ export class CalendarPanel {
         global.compositor.enable_unredirect();
         panel.reactive = false;
         this._form = null;
-        this._card = this._grid = this._gridLayout = this._month = this._year = null;
-        this._entry = this._dayLabel = this._monthLabel = null;
+        this._card = this._grid = this._gridLayout = this._cells = this._month = this._year = null;
+        this._entry = this._dayLabel = this._monthLabel = this._hourLabel = this._minuteLabel = null;
         const done = () => {
             if (this._finishClosing !== done)
                 return;
@@ -483,7 +631,7 @@ export class CalendarPanel {
         };
         this._finishClosing = done;
         if (animate) {
-            panel.ease({opacity: 0, translation_x: this._fromRight ? SHIFT : -SHIFT, duration: ms(OUT_TIME),
+            panel.ease({opacity: 0, scale_x: SMALL, scale_y: SMALL, translation_y: RISE, duration: ms(OUT_TIME),
                 mode: Clutter.AnimationMode.EASE_IN_QUAD, onStopped: done});
         } else {
             done();
@@ -492,7 +640,11 @@ export class CalendarPanel {
 
     destroy() {
         this.close(false);
-        GLib.source_remove(this._checkId);
+        if (this._checkId)
+            GLib.source_remove(this._checkId);
+        this._checkId = 0;
+        [...this._rings].forEach(r => r.stop());
+        this._source?.destroy();
         this._state.disconnect(this._commandId);
         Main.overview.disconnect(this._overviewId);
         Main.wm.removeKeybinding(KEY);
