@@ -3,36 +3,32 @@
 // Reloj de escritorio: the time and date drawn on the wallpaper, Conky style.
 // It lives in the background group (under every window, hidden with the
 // overview and the lock screen), lets clicks through, and ticks on the wall
-// clock's minute change, so it stays right after a suspend.
+// clock's minute change, so it stays right after a suspend and at midnight.
+// Four looks ('reloj-estilo', isla-dock-reloj-escritorio.md), no boxes, a soft
+// text shadow, bold hours, softer minutes, an orange colon and accent:
+//   linea-viva      the time and the date in a row, a thin line of the day under them
+//   lateral-acento  the time, an orange bar, the day over the date
+//   semana-fluida   the time, the month and this week (past days faint, today orange)
+//   arco-dia        a half circle of the day over the time, 00 and 24 at its ends
+// Sizes are at 1920×1080 and scale with the monitor and 'reloj-tamano'.
+import Cairo from 'cairo';
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import GnomeDesktop from 'gi://GnomeDesktop';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import {_, N_, fmt, localName} from './i18n.js';
-
-// Monday to Sunday, one letter each (in Spanish, X is miércoles).
-const LETTERS = N_('L M X J V S D');
+import {_, fmt} from './i18n.js';
+import {capital, dayName, dayProgress, dayShort, initials, monthName, monthShort, two, week} from './dates.js';
 
 const KEYS = ['reloj-estilo', 'reloj-tamano', 'reloj-monitor', 'reloj-desplazamiento', 'reloj-posicion'];
 
 // 'abajo' leaves this much of the height free under the clock, for the dock.
 const BOTTOM_ROOM = 0.12;
 
-const capital = s => s[0].toUpperCase() + s.slice(1);
-
-function texts(now) {
-    const day = localName(now, '%A');
-    const date = fmt(_('{dia} de {mes}'), {dia: now.get_day_of_month(), mes: localName(now, '%B')});
-    return {
-        time: now.format('%H:%M'),
-        day: capital(day),
-        date,
-        full: `${capital(day)}, ${date}`,
-        upper: `${day}, ${date}`.toUpperCase(),
-    };
-}
+const CORAL = '#FF8A4C';
+const WHITE = '#F2F2F5';
+const pt = n => n * 4 / 3;    // the design's points, in px at scale 1
 
 export class DesktopClock {
     constructor(ctx) {
@@ -65,16 +61,15 @@ export class DesktopClock {
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         this._scale = monitor.height / sf / 1080 * this._settings.get_double('reloj-tamano');
         const style = this._settings.get_string('reloj-estilo');
-        const build = {
-            'fino': () => this._buildThin(),
-            'lateral': () => this._buildSide(),
-            'linea': () => this._buildLine(),
-            'esquina': () => this._buildCorner(),
-            'semana': () => this._buildWeek(),
-            'anillo': () => this._buildRing(),
-        }[style] ?? (() => this._buildThin());
+        this._style = ['linea-viva', 'lateral-acento', 'semana-fluida', 'arco-dia'].includes(style) ? style : 'linea-viva';
         this._parts = {};
-        const content = build();
+        const content = {
+            'linea-viva': () => this._buildLineaViva(),
+            'lateral-acento': () => this._buildLateral(),
+            'semana-fluida': () => this._buildSemana(),
+            'arco-dia': () => this._buildArco(),
+        }[this._style]();
+        content.add_style_class_name(`isla-desk-clock desk-${this._style}`);
         // A monitor-sized holder; the content keeps its natural size and is
         // centered with a constraint, so nothing moves it during a relayout.
         const [top, left] = this._position;
@@ -105,182 +100,156 @@ export class DesktopClock {
         this._update();
     }
 
-    // Font px at 1920×1080, scaled to the monitor and the user's multiplier.
+    // px at 1920×1080, scaled to the monitor and the user's multiplier.
     _px(n) {
         return Math.round(n * this._scale);
     }
 
-    _label(name, size, weight, extra = '') {
+    // A text with the design's size (points), weight, color and spacing; always with the soft shadow.
+    _label(name, size, {weight = 400, color = WHITE, spacing = 0, extra = ''} = {}, props = {}) {
         const label = new St.Label({
-            style_class: 'isla-reloj-texto',
-            style: `font-size: ${this._px(size)}px; font-weight: ${weight}; ${extra}`,
+            style_class: 'isla-desk-texto',
+            style: `font-size: ${this._px(pt(size))}px; font-weight: ${weight}; color: ${color};` +
+                ` letter-spacing: ${this._px(spacing)}px; text-shadow: 0 ${this._px(1)}px ${this._px(8)}px rgba(0, 0, 0, 0.35); ${extra}`,
+            ...props,
         });
         label.clutter_text.ellipsize = 0; // never cut the text
-        this._parts[name] = label;
+        if (name)
+            this._parts[name] = label;
         return label;
     }
 
-    _box(vertical, align, spacing, style = '') {
-        return new St.BoxLayout({
-            vertical,
-            x_align: align,
-            style: `spacing: ${this._px(spacing)}px; ${style}`,
+    _box(vertical, spacing = 0, props = {}) {
+        return new St.BoxLayout({orientation: vertical ? Clutter.Orientation.VERTICAL : Clutter.Orientation.HORIZONTAL,
+            style: `spacing: ${this._px(spacing)}px;`, ...props});
+    }
+
+    // Bold hours, an orange colon, minutes at 60 %: three labels with no space between.
+    _time(size, spacing = 0, props = {}) {
+        const box = this._box(false, 0, props);
+        box.add_child(this._label('hour', size, {weight: 500, spacing}));
+        box.add_child(this._label(null, size, {color: '#FF9A6B', spacing, extra: ''}, {text: ':'}));
+        box.add_child(this._label('min', size, {color: 'rgba(242, 242, 245, 0.60)', spacing}));
+        return box;
+    }
+
+    // A line of the day, `thick` px: orange up to now, faint after; it takes the width it is given.
+    _dayLine(thick) {
+        const area = new St.DrawingArea({x_expand: true, height: Math.max(1, this._px(thick))});
+        area.connect('repaint', a => {
+            const cr = a.get_context();
+            const [w, h] = a.get_surface_size();
+            const r = h / 2;
+            const bar = (to, [red, green, blue, alpha]) => {
+                if (to <= 0)
+                    return;
+                cr.setSourceRGBA(red, green, blue, alpha);
+                cr.newPath();
+                cr.arc(r, r, r, Math.PI / 2, 1.5 * Math.PI);
+                cr.arc(Math.max(r, to - r), r, r, 1.5 * Math.PI, Math.PI / 2);
+                cr.closePath();
+                cr.fill();
+            };
+            bar(w, [1, 1, 1, 0.15]);
+            bar(w * (this._progress ?? 0), [1, 0x8a / 255, 0x4c / 255, 1]);
+            cr.$dispose();
         });
+        this._parts.lines = [...this._parts.lines ?? [], area];
+        return area;
     }
 
     // Each style sets this._position: [fraction from the top, 'center' or a fraction of the width from the left].
-    _buildThin() {
-        this._position = [0.07, 'center'];
-        const box = this._box(true, Clutter.ActorAlign.CENTER, 14);
-        box.add_child(this._label('time', 110, 200, 'letter-spacing: -2px;'));
-        const date = this._label('upper', 25, 300, `letter-spacing: ${this._px(7)}px;`);
-        date.opacity = 217;
-        date.x_align = Clutter.ActorAlign.CENTER;
-        this._parts.time.x_align = Clutter.ActorAlign.CENTER;
-        box.add_child(date);
-        return box;
-    }
-
-    _buildSide() {
-        this._position = [0.07, 'center'];
-        const box = this._box(false, Clutter.ActorAlign.CENTER, 30);
-        const time = this._label('time', 90, 200);
-        time.y_align = Clutter.ActorAlign.CENTER;
-        box.add_child(time);
-        box.add_child(new St.Widget({
-            style_class: 'isla-reloj-linea',
-            width: Math.max(1, this._px(1)),
-            height: this._px(80),
-            opacity: 153,
-            y_align: Clutter.ActorAlign.CENTER,
-        }));
-        const date = this._box(true, Clutter.ActorAlign.START, 0);
-        date.y_align = Clutter.ActorAlign.CENTER;
-        date.add_child(this._label('day', 30, 400));
-        const rest = this._label('date', 27, 300);
-        rest.opacity = 230;
-        date.add_child(rest);
-        box.add_child(date);
-        return box;
-    }
-
-    _buildLine() {
+    // Línea viva: the time and VIERNES 23 OCT in a row; under them, as wide as the row, the day's line.
+    _buildLineaViva() {
         this._position = [0.05, 'center'];
-        const box = this._box(false, Clutter.ActorAlign.CENTER, 0);
-        const time = this._label('time', 32, 400, `letter-spacing: ${this._px(2)}px;`);
-        time.y_align = Clutter.ActorAlign.CENTER;
-        box.add_child(time);
-        const dot = this._px(7);
-        box.add_child(new St.Widget({
-            style_class: 'isla-reloj-punto',
-            style: `border-radius: ${dot / 2}px; margin: 0 ${this._px(25)}px;`,
-            width: dot,
-            height: dot,
-            opacity: 179,
-            y_align: Clutter.ActorAlign.CENTER,
-        }));
-        const date = this._label('upper', 32, 300, `letter-spacing: ${this._px(5)}px;`);
-        date.y_align = Clutter.ActorAlign.CENTER;
-        box.add_child(date);
+        const box = this._box(true, 12);
+        const row = this._box(false, 12);
+        const time = this._time(24, 0, {y_align: Clutter.ActorAlign.END});
+        row.add_child(time);
+        row.add_child(this._label('upper', 10, {spacing: 3, color: 'rgba(242, 242, 245, 0.75)',
+            extra: `padding-bottom: ${this._px(5)}px;`}, {y_align: Clutter.ActorAlign.END}));
+        box.add_child(row);
+        box.add_child(this._dayLine(2));
         return box;
     }
 
-    _buildCorner() {
-        this._position = [0.06, 0.04];
-        const box = this._box(true, Clutter.ActorAlign.START, 0);
-        box.add_child(this._label('time', 100, 200));
-        const date = this._label('full', 27, 300, `letter-spacing: ${this._px(2)}px; margin-top: ${this._px(12)}px;`);
-        date.opacity = 217;
-        box.add_child(date);
-        box.add_child(new St.Widget({
-            style_class: 'isla-reloj-barra',
-            style: `border-radius: ${this._px(2)}px; margin-top: ${this._px(20)}px;`,
-            width: this._px(70),
-            height: Math.max(2, this._px(4)),
-            opacity: 179,
-            x_align: Clutter.ActorAlign.START,
-        }));
-        return box;
-    }
-
-    _buildWeek() {
+    // Lateral acento: the time, an orange bar, the day over "23 de octubre".
+    _buildLateral() {
         this._position = [0.07, 'center'];
-        const box = this._box(true, Clutter.ActorAlign.CENTER, 0);
-        const time = this._label('time', 115, 200);
-        time.x_align = Clutter.ActorAlign.CENTER;
-        box.add_child(time);
-        const date = this._label('full', 27, 300, `letter-spacing: ${this._px(2)}px; margin-top: ${this._px(15)}px;`);
-        date.opacity = 217;
-        date.x_align = Clutter.ActorAlign.CENTER;
-        box.add_child(date);
-        const strip = this._box(false, Clutter.ActorAlign.CENTER, 15, `margin-top: ${this._px(30)}px;`);
-        this._parts.week = [];
-        for (const letter of _(LETTERS).split(' ')) {
-            const column = new St.BoxLayout({
-                vertical: true,
-                style_class: 'isla-reloj-dia',
-                style: `width: ${this._px(70)}px; border-radius: ${this._px(22)}px; ` +
-                    `padding: ${this._px(12)}px 0; spacing: ${this._px(5)}px;`,
-            });
-            const name = new St.Label({text: letter, style_class: 'isla-reloj-texto',
-                style: `font-size: ${this._px(25)}px; font-weight: 300;`, x_align: Clutter.ActorAlign.CENTER});
-            const number = new St.Label({style_class: 'isla-reloj-texto',
-                style: `font-size: ${this._px(32)}px; font-weight: 400;`, x_align: Clutter.ActorAlign.CENTER});
-            column.add_child(name);
+        const row = this._box(false, 16);
+        row.add_child(this._time(44, -2, {y_align: Clutter.ActorAlign.CENTER}));
+        row.add_child(new St.Widget({style: `background-color: ${CORAL}; border-radius: ${this._px(2)}px;`,
+            width: Math.max(2, this._px(3)), height: this._px(52), y_align: Clutter.ActorAlign.CENTER}));
+        const texts = this._box(true, 0, {y_align: Clutter.ActorAlign.CENTER});
+        texts.add_child(this._label('day', 14, {weight: 500}));
+        texts.add_child(this._label('date', 11, {color: 'rgba(242, 242, 245, 0.60)'}));
+        row.add_child(texts);
+        return row;
+    }
+
+    // Semana fluida: the time, the month, and Monday to Sunday (past days faint, today in an orange pill).
+    _buildSemana() {
+        this._position = [0.07, 'center'];
+        const box = this._box(true, 0);
+        box.add_child(this._time(38, -1.5, {x_align: Clutter.ActorAlign.CENTER}));
+        box.add_child(this._label('month', 9, {spacing: 2, color: 'rgba(242, 242, 245, 0.70)',
+            extra: `margin-top: ${this._px(6)}px;`}, {x_align: Clutter.ActorAlign.CENTER}));
+        const strip = this._box(false, 6, {x_align: Clutter.ActorAlign.CENTER, style: `spacing: ${this._px(6)}px;` +
+            ` margin-top: ${this._px(14)}px;`});
+        this._parts.week = initials(true).map(letter => {
+            const column = this._box(true, 0, {style: `width: ${this._px(26)}px; padding: ${this._px(3)}px 0;` +
+                ` border-radius: ${this._px(9)}px;`});
+            const initial = this._label(null, 8, {}, {text: letter, x_align: Clutter.ActorAlign.CENTER});
+            const number = this._label(null, 11, {weight: 500}, {x_align: Clutter.ActorAlign.CENTER});
+            column.add_child(initial);
             column.add_child(number);
             strip.add_child(column);
-            this._parts.week.push({column, number});
-        }
+            return {column, initial, number};
+        });
         box.add_child(strip);
         return box;
     }
 
-    _buildRing() {
+    // Arco del día: a half circle from 00 (left) to 24 (right) over the time; the date between its ends.
+    _buildArco() {
         this._position = [0.06, 'center'];
-        const box = this._box(true, Clutter.ActorAlign.CENTER, 0);
-        const size = this._px(300);
-        const ring = new St.Widget({layout_manager: new Clutter.BinLayout(), width: size, height: size,
+        const box = this._box(true, 0);
+        const [w, h] = [this._px(172), this._px(96)];
+        const holder = new St.Widget({layout_manager: new Clutter.BinLayout(), width: w, height: h,
             x_align: Clutter.ActorAlign.CENTER});
-        const area = new St.DrawingArea({width: size, height: size});
-        area.connect('repaint', a => this._drawRing(a));
-        ring.add_child(area);
-        const inner = this._box(true, Clutter.ActorAlign.CENTER, 0);
-        inner.y_align = Clutter.ActorAlign.CENTER;
-        const time = this._label('time', 75, 200);
-        time.x_align = Clutter.ActorAlign.CENTER;
-        inner.add_child(time);
-        const percent = this._label('percent', 22, 300, `letter-spacing: ${this._px(2)}px; margin-top: ${this._px(10)}px;`);
-        percent.opacity = 204;
-        percent.x_align = Clutter.ActorAlign.CENTER;
-        inner.add_child(percent);
-        ring.add_child(inner);
-        box.add_child(ring);
-        const date = this._label('full', 27, 300, `letter-spacing: ${this._px(2)}px; margin-top: ${this._px(20)}px;`);
-        date.opacity = 230;
-        date.x_align = Clutter.ActorAlign.CENTER;
-        box.add_child(date);
-        this._parts.ring = area;
+        const arc = new St.DrawingArea({width: w, height: h});
+        arc.connect('repaint', a => this._drawArc(a));
+        this._parts.arc = arc;
+        holder.add_child(arc);
+        holder.add_child(this._time(32, -1, {x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.END}));
+        box.add_child(holder);
+        const ends = this._box(false, 0, {width: w, x_align: Clutter.ActorAlign.CENTER});
+        const faint = 'rgba(242, 242, 245, 0.50)';
+        ends.add_child(this._label(null, 8, {color: faint}, {text: '00'}));
+        ends.add_child(this._label('short', 8, {spacing: 2, color: '#FFB48F'}, {x_expand: true, x_align: Clutter.ActorAlign.CENTER}));
+        ends.add_child(this._label(null, 8, {color: faint}, {text: '24'}));
+        box.add_child(ends);
         return box;
     }
 
-    _drawRing(area) {
+    _drawArc(area) {
         const cr = area.get_context();
         const [w, h] = area.get_surface_size();
-        const s = w / 300;
-        const cx = w / 2, cy = h / 2, r = 130 * s;
-        const start = -Math.PI / 2;
-        const end = start + 2 * Math.PI * Math.max(0.001, this._progress ?? 0);
-        cr.setLineWidth(10 * s);
-        cr.setLineCap(1); // round
-        // Soft shadow: a dark, see-through copy a little lower.
-        cr.setSourceRGBA(0, 0, 0, 0.15);
-        cr.arc(cx, cy + 2 * s, r, 0, 2 * Math.PI);
+        const s = w / 172;
+        const r = 80 * s, cx = w / 2, cy = h - 8 * s;
+        const at = Math.PI + Math.PI * (this._progress ?? 0);
+        cr.setLineCap(Cairo.LineCap.ROUND);
+        cr.setLineWidth(3 * s);
+        cr.setSourceRGBA(1, 1, 1, 0.15);
+        cr.arc(cx, cy, r, Math.PI, 2 * Math.PI);
         cr.stroke();
-        cr.setSourceRGBA(1, 1, 1, 0.25);
-        cr.arc(cx, cy, r, 0, 2 * Math.PI);
+        cr.setSourceRGB(1, 0x8a / 255, 0x4c / 255);
+        cr.arc(cx, cy, r, Math.PI, Math.max(Math.PI + 0.001, at));
         cr.stroke();
-        cr.setSourceRGBA(1, 1, 1, 1);
-        cr.arc(cx, cy, r, start, end);
+        cr.arc(cx + r * Math.cos(at), cy + r * Math.sin(at), 6 * s, 0, 2 * Math.PI);
+        cr.fillPreserve();
+        cr.setLineWidth(2 * s);
+        cr.setSourceRGBA(0, 0, 0, 0.35);
         cr.stroke();
         cr.$dispose();
     }
@@ -289,26 +258,30 @@ export class DesktopClock {
         if (!this._parts)
             return;
         const now = GLib.DateTime.new_now_local();
-        const t = texts(now);
-        for (const key of ['time', 'day', 'date', 'full', 'upper'])
-            this._parts[key]?.set_text(t[key]);
-        if (this._parts.week) {
-            const today = now.get_day_of_week() - 1;
-            const monday = now.add_days(-today);
-            this._parts.week.forEach(({column, number}, i) => {
-                number.text = String(monday.add_days(i).get_day_of_month());
-                column.remove_style_class_name('hoy');
-                if (i === today)
-                    column.add_style_class_name('hoy');
-                column.opacity = i === today ? 255 : 204;
-            });
-        }
-        if (this._parts.ring) {
-            const seconds = now.get_hour() * 3600 + now.get_minute() * 60 + now.get_second();
-            this._progress = seconds / 86400;
-            this._parts.percent.text = fmt(_('{n}% DEL DÍA'), {n: Math.floor(this._progress * 100)});
-            this._parts.ring.queue_repaint();
-        }
+        const p = this._parts;
+        p.hour?.set_text(two(now.get_hour()));
+        p.min?.set_text(two(now.get_minute()));
+        const day = now.get_day_of_month();
+        p.upper?.set_text(`${dayName(now)} ${day} ${monthShort(now)}`.toUpperCase());
+        p.day?.set_text(capital(dayName(now)));
+        p.date?.set_text(fmt(_('{dia} de {mes}'), {dia: day, mes: monthName(now)}));
+        p.month?.set_text(monthName(now).toUpperCase());
+        p.short?.set_text(`${dayShort(now)} ${day} ${monthShort(now)}`.toUpperCase());
+        this._progress = dayProgress(now);
+        const days = week(now);
+        p.week?.forEach(({column, initial, number}, i) => {
+            const d = days[i];
+            number.text = String(d.date.get_day_of_month());
+            // Past days faint, today dark on orange (no shadow), the ones to come clear.
+            const color = d.today ? '#2A1206' : d.past ? 'rgba(242, 242, 245, 0.35)' : 'rgba(242, 242, 245, 0.85)';
+            for (const label of [initial, number]) {
+                label.style = label.style.replace(/color: [^;]+;/, `color: ${color};`)
+                    .replace(/text-shadow: [^;]+;/, d.today ? 'text-shadow: none;' : `text-shadow: 0 ${this._px(1)}px ${this._px(8)}px rgba(0, 0, 0, 0.35);`);
+            }
+            column.style = column.style.replace(/ background-color: [^;]+;/, '') + (d.today ? ` background-color: ${CORAL};` : '');
+        });
+        p.lines?.forEach(line => line.queue_repaint());
+        p.arc?.queue_repaint();
     }
 
     destroy() {
