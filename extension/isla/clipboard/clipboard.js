@@ -9,7 +9,8 @@
 // after a crash). The button bounces each time something is copied.
 //
 // Commands it listens to: 'clipboard-toggle' (anchor actor).
-// Commands it sends: 'clipboard-open' (from the shortcut), 'clipboard-bounce'.
+// Commands it sends: 'clipboard-open' (from the shortcut), 'clipboard-bounce', 'clipboard-count'
+// (state.clipboardCount), 'panel-open' ('clipboard', open).
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -48,6 +49,7 @@ export class Clipboard {
         this.history = new ClipboardHistory(GLib.build_filenamev([GLib.get_user_cache_dir(), uuid ?? 'isla-dock@frankm', 'clipboard']));
         this._ids = [
             [this.history, this.history.connect('captured', () => state.command('clipboard-bounce'))],
+            [this.history, this.history.connect('changed', () => this._count())],
             [state, state.connect('command', (_s, name, ...args) => {
                 if (name === 'clipboard-toggle')
                     this.toggle(args[0]);
@@ -56,9 +58,16 @@ export class Clipboard {
             [state, state.connect('mode-changed', (_s, mode) => mode !== Mode.EXPANDED && this.close())],
             [Main.overview, Main.overview.connect('showing', () => this.close(false))],
         ];
+        this._count();
         this._freeShortcut();
         Main.wm.addKeybinding(KEY, settings, Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW, () => this._fromShortcut());
+    }
+
+    // The badge on the dock button.
+    _count() {
+        this._state.clipboardCount = this.history.items.length;
+        this._state.command('clipboard-count');
     }
 
     // ---------- Super+V ----------
@@ -127,6 +136,7 @@ export class Clipboard {
         });
         this._content = content;
         const frame = this._panel = new St.Widget({layout_manager: new Clutter.BinLayout(), reactive: true});
+        this._state.command('panel-open', 'clipboard', true);
         const look = islandLook(this._state);
         if (look.light) {
             content.actor.add_style_class_name('clara');
@@ -255,6 +265,7 @@ export class Clipboard {
         } else {
             done();
         }
+        this._state.command('panel-open', 'clipboard', false);
         this._state.release('clipboard');
     }
 

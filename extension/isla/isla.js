@@ -471,7 +471,6 @@ export class Isla {
                 this._resize();
             });
         this._on(this._settings, 'changed::isla-respiracion', () => this._updateBreathing());
-        this._on(this._settings, 'changed::isla-transparencia', () => this._updateBreathing(true));
         this._on(this._settings, 'changed::ocultar', () => this._updateAutohide());
         // The blurred wallpaper copy must not slide with the island.
         this._on(this._capsule, 'notify::translation-y', () => (this._blur.slide = this._capsule.translation_y));
@@ -543,6 +542,10 @@ export class Isla {
                 this._openOver('clipboard', () => this._apps.clipboardItem, 'clipboard-toggle');
             else if (name === 'clipboard-bounce')
                 this._apps.bounceClipboard();
+            else if (name === 'clipboard-count')
+                this._apps.updateClipboardCount();
+            else if (name === 'panel-open')
+                this._apps.setPanelOpen(args[0], args[1]);
 
         });
 
@@ -978,10 +981,10 @@ export class Isla {
     }
 
     // ---------- breathing (A2) ----------
-    // The background's own opacity: 'isla-transparencia' (0 = solid) lets more of
-    // what is behind show through, for every skin.
+    // The background's own opacity: a fixed touch of transparency (the 20 % the user liked;
+    // 'isla-transparencia' is no longer offered).
     get _bgOpacity() {
-        return Math.round(255 * (1 - this._settings.get_double('isla-transparencia')));
+        return Math.round(255 * 0.8);
     }
 
     _updateBreathing(force = false) {

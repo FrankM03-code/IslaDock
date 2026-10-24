@@ -48,6 +48,7 @@ export class IslaState extends Signals.EventEmitter {
         this._holds = new Set();
         this._status = new Map();       // id -> {id, order, folded, open}
         this.calm = null;               // calm.js: reduced animations, power saving
+        this.clipboardCount = 0;        // items Portapapeles keeps (its badge)
     }
 
     get mode() {

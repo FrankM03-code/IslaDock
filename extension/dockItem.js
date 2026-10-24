@@ -11,7 +11,7 @@ import St from 'gi://St';
 
 import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
 
-import {AppsButton} from './isla/appsButton.js';
+import {DockButton} from './isla/dockButtons.js';
 import {ms} from './isla/timing.js';
 import {_} from './isla/i18n.js';
 
@@ -30,8 +30,6 @@ const BOUNCE_TIME = 500;      // one jump (up + down)
 const REST_DESATURATION = 0.6;
 const REST_OPACITY = 245;
 const LONG_PRESS = 600;
-const POWER_CIRCLE = 38 / 48;      // the Energía circle, of the tile
-const POWER_ICON = 22 / 38;        // its symbol, of the circle
 
 // Holds the tile at its full (magnified) size and keeps it centered and
 // standing on the bottom edge while its own width is animated.
@@ -90,31 +88,16 @@ export const DockItem = GObject.registerClass({
         this._tile.set_pivot_point(0.5, 1);
         this._tile.add_child(this._icon);
         this._holder = new IconHolder(this._tile);
-        // The applications button is the wide "Apps" button instead of an icon.
-        this._wide = 1;          // tile width / tile height
-        if (kind === 'apps') {
-            this.appsButton = new AppsButton();
-            this._tile.add_child(this.appsButton);
+        // The launcher, Portapapeles and Ajustes: round buttons with their own symbol.
+        if (kind === 'apps' || kind === 'clipboard' || kind === 'power') {
+            this.dockButton = new DockButton(kind);
+            this._tile.add_child(this.dockButton);
             this._icon.hide();
             this.can_focus = true;
-            this.accessible_name = _('Aplicaciones');
-            this.connect('key-focus-in', () => this.appsButton.setFocused(true));
-            this.connect('key-focus-out', () => this.appsButton.setFocused(false));
-            this.connect('notify::pressed', () => this.appsButton.setPressed(this.pressed));
-            // Its width is only known once it has its style (on the stage).
-            this.appsButton.connect('style-changed', () => this._fitApps());
-        }
-        // Energía and Portapapeles: a grey circle with a symbol (sized in configure()).
-        if (kind === 'power' || kind === 'clipboard') {
-            this._power = new St.Widget({style_class: 'isla-energia-boton', layout_manager: new Clutter.BinLayout(),
-                x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
-            this._powerIcon = new St.Icon({icon_name: kind === 'power' ? 'system-shutdown-symbolic' : 'edit-paste-symbolic',
-                x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
-            this._power.add_child(this._powerIcon);
-            this._tile.add_child(this._power);
-            this._icon.hide();
-            this.can_focus = true;
-            this.accessible_name = kind === 'power' ? _('Energía') : _('Portapapeles');
+            this.accessible_name = {apps: _('Aplicaciones'), clipboard: _('Portapapeles'), power: _('Ajustes')}[kind];
+            this.connect('key-focus-in', () => this.dockButton.setFocused(true));
+            this.connect('key-focus-out', () => this.dockButton.setFocused(false));
+            this.connect('notify::pressed', () => this.dockButton.setPressed(this.pressed));
             if (kind === 'power')
                 this._watchLongPress();
         }
@@ -130,7 +113,7 @@ export const DockItem = GObject.registerClass({
 
         this._desaturate = null;
         this.connect('notify::hover', () => {
-            this.appsButton?.setHover(this.hover);
+            this.dockButton?.setHover(this.hover);
             this._updateCalm(true);
             this.emit('hover-changed', this.hover);
         });
@@ -275,14 +258,7 @@ export const DockItem = GObject.registerClass({
         const tilePx = p.max * sf;
         this._tile.set_size(tilePx, tilePx);
         this._icon.icon_size = p.max;
-        this.appsButton?.setSize(p.max);
-        this._fitApps(false);
-        if (this._power) {
-            const d = Math.round(tilePx * POWER_CIRCLE);
-            this._power.set_size(d, d);
-            this._power.style = `border-radius: ${d / 2}px;`;
-            this._powerIcon.icon_size = Math.round(p.max * POWER_CIRCLE * POWER_ICON);
-        }
+        this.dockButton?.setSize(p.max);
         this._holder.set_height(p.base * sf);
 
         this._indicator.margin_top = INDICATOR_GAP * sf;
@@ -299,21 +275,6 @@ export const DockItem = GObject.registerClass({
         this.setSize(p.base, false);
     }
 
-    // The tile as wide as the Apps button, and the holder with it.
-    _fitApps(apply = true) {
-        if (!this.appsButton || !this._p || !this.appsButton.get_stage())
-            return;
-        const tilePx = this._p.max * this._p.scale;
-        const [, w] = this.appsButton.get_preferred_width(-1);
-        if (!w)
-            return;
-        const changed = Math.abs(w / tilePx - this._wide) >= 0.001;
-        this._wide = w / tilePx;
-        this._tile.set_size(Math.ceil(w), tilePx);
-        if (apply && changed && this.zoom)
-            this.setSize(this.zoom, false, true);
-    }
-
     // Animates the icon to `size` logical px (the dock reflows around it).
     setSize(size, animate = true, force = false) {
         if (!this._p || size === this.zoom && animate && !force)
@@ -322,7 +283,7 @@ export const DockItem = GObject.registerClass({
         const sf = this._p.scale;
         const scale = size / this._p.max;
         const duration = animate ? ms(ZOOM_TIME) : 0;
-        this._holder.ease({width: size * sf * this._wide, duration, mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+        this._holder.ease({width: size * sf, duration, mode: Clutter.AnimationMode.EASE_OUT_QUAD});
         this._tile.ease({scale_x: scale, scale_y: scale, duration, mode: Clutter.AnimationMode.EASE_OUT_QUAD});
     }
 

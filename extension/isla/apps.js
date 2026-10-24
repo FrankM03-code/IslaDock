@@ -61,6 +61,8 @@ export class AppsRow extends Signals.EventEmitter {
         Main.layoutManager.uiGroup.add_child(this._tooltip);
         this._menuManager = new PopupMenu.PopupMenuManager(this.actor);
 
+        // 'auto' palette of the accent buttons: GNOME's own light or dark style.
+        this._interface = new Gio.Settings({schema_id: 'org.gnome.desktop.interface'});
         this.configure();
         this._rebuild();
         this._on(AppFavorites.getAppFavorites(), 'changed', () => this._rebuild());
@@ -78,6 +80,9 @@ export class AppsRow extends Signals.EventEmitter {
         if (this._state.calm)
             this._on(this._state.calm, 'changed', () => this.configure());
         this._on(this._settings, 'changed::isla-oscura', () => this._updatePortal());
+        for (const key of ['accent-style', 'accent-palette'])
+            this._on(this._settings, `changed::${key}`, () => this._updatePortal());
+        this._on(this._interface, 'changed::color-scheme', () => this._updatePortal());
         // The Apps button stays open while the app grid is open.
         this._on(Main.overview, 'shown', () => this._updatePortal());
         this._on(Main.overview, 'hidden', () => this._updatePortal());
@@ -136,14 +141,32 @@ export class AppsRow extends Signals.EventEmitter {
         this._updatePortal();
     }
 
-    // Contrast with the skin, and open while the app grid is open.
+    // Contrast with the skin; the launcher is open while the app grid is,
+    // Portapapeles and Ajustes while their panel is.
     _updatePortal() {
-        const button = this._items?.get('apps')?.appsButton;
-        if (!button)
-            return;
-        button.setLight(this._skin?.portalGraphite ?? false);
         const showApps = Main.overview.dash?.showAppsButton;
-        button.setOpen(Main.overview.visible && !!showApps?.checked);
+        const open = {apps: Main.overview.visible && !!showApps?.checked, ...this._panelsOpen};
+        const palette = this._settings.get_string('accent-palette');
+        const dark = palette === 'oscuro' || (palette === 'auto' && this._interface.get_string('color-scheme') === 'prefer-dark');
+        for (const kind of ['apps', 'clipboard', 'power']) {
+            const button = this._items?.get(kind)?.dockButton;
+            button?.setLight(this._skin?.portalGraphite ?? false);
+            button?.setPalette(dark);
+            button?.setStyle(this._settings.get_string('accent-style'));
+            button?.setOpen(!!open[kind]);
+        }
+        this._items?.get('clipboard')?.dockButton.setCount(this._state.clipboardCount ?? 0);
+    }
+
+    // From the panels: 'clipboard' or 'power' opened or closed.
+    setPanelOpen(kind, open) {
+        this._panelsOpen = {...this._panelsOpen, [kind]: open};
+        this._updatePortal();
+    }
+
+    // How many items Portapapeles keeps (state.clipboardCount): its badge.
+    updateClipboardCount() {
+        this._items?.get('clipboard')?.dockButton.setCount(this._state.clipboardCount ?? 0);
     }
 
     configure() {
@@ -224,12 +247,13 @@ export class AppsRow extends Signals.EventEmitter {
             extras.push({kind: 'downloads', key: 'downloads'});
         if (this._settings.get_boolean('mostrar-papelera'))
             extras.push({kind: 'trash', key: 'trash'});
-        if (this._settings.get_boolean('mostrar-aplicaciones'))
-            extras.push({kind: 'apps', key: 'apps'});
         if (entries.length && extras.length)
             entries.push({kind: 'separator', key: 'sep-2'});
         entries.push(...extras);
-        // Portapapeles and Energía: last, after their own thin line.
+        // The app launcher goes first, on the left, with its own thin line.
+        if (this._settings.get_boolean('mostrar-aplicaciones'))
+            entries.unshift({kind: 'apps', key: 'apps'}, ...entries.length ? [{kind: 'separator', key: 'sep-0'}] : []);
+        // Portapapeles and Ajustes: last, after their own thin line.
         const tail = [];
         if (this._settings.get_boolean('mostrar-portapapeles'))
             tail.push({kind: 'clipboard', key: 'clipboard'});
@@ -245,7 +269,7 @@ export class AppsRow extends Signals.EventEmitter {
         if (entry.kind === 'separator')
             return new DockSeparator();
         const label = {app: entry.app?.get_name(), downloads: _('Descargas'), trash: _('Papelera'), apps: _('Aplicaciones'),
-            clipboard: _('Portapapeles'), power: _('Energía')}[entry.kind];
+            clipboard: _('Portapapeles'), power: _('Ajustes')}[entry.kind];
         const item = new DockItem({kind: entry.kind, key: entry.key, app: entry.app ?? null, label});
         item.connect('activate', (_i, button) => this._onActivate(item, button));
         item.connect('hover-changed', (_i, hover) => this._onItemHover(item, hover));
@@ -375,10 +399,16 @@ export class AppsRow extends Signals.EventEmitter {
             this._state.command('clipboard-toggle', item);
             return;
         }
-        // Energía: the panel with a click, suspend with a right click or a long press.
+        // Ajustes: the panel with a click, suspend with a right click or a long press.
         if (item.kind === 'power') {
             this._hideTooltip();
             this._state.command(button === 3 ? 'power-suspend' : 'power-toggle', item);
+            return;
+        }
+        // Archivos with windows open: a right click shows them as thumbnails (always, even with previews off).
+        if (button === 3 && this._isFolderApp(item) && item.app.get_windows().some(w => !w.skip_taskbar)) {
+            this._hideTooltip();
+            this._state.command('previews-show', item);
             return;
         }
         if (button === 3) {
@@ -573,11 +603,13 @@ export class AppsRow extends Signals.EventEmitter {
         if (!(source instanceof DockItem) || source.kind !== 'app' || !this._items || !this._appItems.includes(source))
             return DND.DragMotionResult.CONTINUE;
         const children = this.actor.get_children();
-        const end = children.findIndex(a => a.kind === 'downloads' || a.kind === 'trash' || a.kind === 'apps' || a.kind === 'power' || a.kind === 'clipboard' ||
+        const end = children.findIndex(a => a.kind === 'downloads' || a.kind === 'trash' || a.kind === 'power' || a.kind === 'clipboard' ||
             a.key === 'sep-2' || a.key === 'sep-3');
         const limit = end < 0 ? children.length : end;
-        let index = 0;
-        for (let i = 0; i < limit; i++) {
+        // The launcher and its line stay first.
+        const start = children.findIndex(a => a.key === 'sep-0') + 1;
+        let index = start;
+        for (let i = start; i < limit; i++) {
             const child = children[i];
             if (child !== source && x > child.x + child.width / 2)
                 index++;
@@ -641,8 +673,7 @@ export class AppsRow extends Signals.EventEmitter {
         const {base} = this._p;
         this._appItems.forEach((item, i) => {
             const d = this._hovered < 0 ? Infinity : Math.abs(i - this._hovered);
-            // The Apps button keeps its size so it stays centered in the island.
-            const zoom = item.kind === 'apps' || item.kind === 'power' || item.kind === 'clipboard' ? 1 : d < ZOOM.length ? ZOOM[d] : 1;
+            const zoom = d < ZOOM.length ? ZOOM[d] : 1;
             item.setSize(Math.round(base * zoom));
         });
         if (this._tooltipItem)
