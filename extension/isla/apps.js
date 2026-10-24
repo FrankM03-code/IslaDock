@@ -751,7 +751,7 @@ export class AppsRow extends Signals.EventEmitter {
         this._trash = Gio.File.new_for_uri('trash:///');
         try {
             this._trashMonitor = this._trash.monitor_directory(Gio.FileMonitorFlags.NONE, null);
-            this._trashMonitor.connect('changed', () => this._later('trash', 300, () => this._checkTrash()));
+            this._trashMonitorId = this._trashMonitor.connect('changed', () => this._later('trash', 300, () => this._checkTrash()));
         } catch {
             this._trashMonitor = null;
         }
@@ -784,7 +784,10 @@ export class AppsRow extends Signals.EventEmitter {
 
     destroy() {
         this._dropSources();
-        this._trashMonitor?.cancel();
+        if (this._trashMonitor) {
+            this._trashMonitor.disconnect(this._trashMonitorId);
+            this._trashMonitor.cancel();
+        }
         this._tooltip.destroy();
         this.actor.destroy();
         this.tail.destroy();

@@ -73,11 +73,13 @@ export class PrivacyStatus {
             for (const actor of where(qs)) {
                 if (!actor || this._watched.some(([a]) => a === actor))
                     continue;
-                this._watched.push([actor, actor.connect('notify::visible', () => this._sync()), id]);
                 // GNOME destroys its indicators on shutdown, maybe before IslaDock: forget them then.
-                actor.connect('destroy', () => {
+                // Both handlers go away in destroy(): GNOME's indicators outlive IslaDock, and a handler
+                // left on them would keep this whole module alive after every off/on (lock screen).
+                const gone = actor.connect('destroy', () => {
                     this._watched = this._watched.filter(([a]) => a !== actor);
                 });
+                this._watched.push([actor, actor.connect('notify::visible', () => this._sync()), id, gone]);
             }
         }
         this._sync();
@@ -138,7 +140,10 @@ export class PrivacyStatus {
         this._retry = 0;
         this._state.removeStatus('privacy');
         this._state.disconnect(this._modeId);
-        this._watched.forEach(([actor, id]) => actor.disconnect(id));
+        this._watched.forEach(([actor, id, , gone]) => {
+            actor.disconnect(id);
+            actor.disconnect(gone);
+        });
         this._watched = [];
         this._mixerIds.forEach(id => this._mixer.disconnect(id));
         this._folded.destroy();

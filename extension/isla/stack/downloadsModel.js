@@ -65,16 +65,23 @@ export class DownloadsModel extends Signals.EventEmitter {
     }
 
     _watch() {
-        this._monitor?.cancel();
-        this._monitor = null;
+        this._dropMonitor();
         this._folder = downloadsDir(this._settings);
         this._partials.clear();
         this._first = true;
         try {
             this._monitor = Gio.File.new_for_path(this._folder).monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
-            this._monitor.connect('changed', () => this._queue());
+            this._monitorId = this._monitor.connect('changed', () => this._queue());
         } catch {}
         this.refresh();
+    }
+
+    _dropMonitor() {
+        if (this._monitor) {
+            this._monitor.disconnect(this._monitorId);
+            this._monitor.cancel();
+        }
+        this._monitor = null;
     }
 
     _queue() {
@@ -196,8 +203,7 @@ export class DownloadsModel extends Signals.EventEmitter {
             GLib.source_remove(this._timer);
         this._timer = 0;
         this._cancellable?.cancel();
-        this._monitor?.cancel();
-        this._monitor = null;
+        this._dropMonitor();
         this.disconnectAll();
     }
 }
