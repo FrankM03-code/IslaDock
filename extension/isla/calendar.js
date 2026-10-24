@@ -25,7 +25,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {_, fmt, localName} from './i18n.js';
-import {islandLook} from './look.js';
+import {dressFrame, islandLook} from './look.js';
 import {ms} from './timing.js';
 
 const KEY = 'atajo-calendario';
@@ -393,10 +393,14 @@ export class CalendarPanel {
             return;
         // Still leaving: done now.
         this._finishClosing?.();
-        const content = this._build(islandLook(this._state));
+        const look = islandLook(this._state);
+        const content = this._build(look);
         this._goToday();
         const panel = this._panel = new St.Widget({layout_manager: new Clutter.BinLayout(), reactive: true});
-        panel.add_child(content);
+        // The island's color and transparency, like every other panel (and Aurora's halo).
+        if (look.style)
+            content.style = look.style;
+        dressFrame(look, panel, content, 20);
         Main.layoutManager.addTopChrome(panel);
         this._place(anchor);
         panel.connect('captured-event', (_a, event) => this._onEvent(event));

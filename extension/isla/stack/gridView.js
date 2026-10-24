@@ -67,10 +67,14 @@ export class GridView {
         this.actor.add_child(this._arrow);
     }
 
+    // At rest it already wears the accent (tinted, accent text and edge) so it reads on a light panel too;
+    // hovered or focused it fills in.
     _buttonStyle(on) {
         const s = this._style;
-        return `height: 30px; border-radius: 8px; padding: 0 14px; font-size: 13px; color: ${on ? '#FFFFFF' : s.text};` +
-            ` background-color: ${on ? s.accent : s.tileHover}; border: 1px solid ${on ? s.accent : s.panelBorder};`;
+        const [r, g, b] = [1, 3, 5].map(i => parseInt(s.accent.slice(i, i + 2), 16));
+        return `height: 30px; border-radius: 8px; padding: 0 14px; font-size: 13px; font-weight: bold;` +
+            ` color: ${on ? '#FFFFFF' : s.accent}; background-color: ${on ? s.accent : `rgba(${r}, ${g}, ${b}, 0.14)`};` +
+            ` border: 1px solid ${s.accent};`;
     }
 
     _lightButton() {

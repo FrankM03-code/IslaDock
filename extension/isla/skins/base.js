@@ -67,14 +67,14 @@ export class SkinBase {
             return {
                 cellFill: 'rgba(28, 30, 44, 0.86)', cellBorder: 'rgba(255, 255, 255, 0.14)', cellHover: 'rgba(40, 43, 62, 0.96)',
                 accent: '#5B9BF0', text: '#F4F5FA', textSecondary: 'rgba(244, 245, 250, 0.62)',
-                panelFill: 'rgba(24, 26, 40, 0.92)', panelBorder: 'rgba(255, 255, 255, 0.12)', shadow: 'rgba(0, 0, 0, 0.35)',
+                panelFill: 'rgba(18, 20, 34, 0.86)', panelBorder: 'rgba(255, 255, 255, 0.12)', shadow: 'rgba(0, 0, 0, 0.35)',
                 tileHover: 'rgba(91, 155, 240, 0.18)',
             };
         }
         return {
             cellFill: 'rgba(255, 255, 255, 0.78)', cellBorder: 'rgba(255, 255, 255, 0.95)', cellHover: 'rgba(255, 255, 255, 0.95)',
             accent: '#2F7DE1', text: '#1E1E1E', textSecondary: 'rgba(30, 30, 30, 0.60)',
-            panelFill: 'rgba(255, 255, 255, 0.82)', panelBorder: 'rgba(255, 255, 255, 0.95)', shadow: 'rgba(0, 0, 0, 0.18)',
+            panelFill: 'rgba(255, 255, 255, 0.86)', panelBorder: 'rgba(255, 255, 255, 0.95)', shadow: 'rgba(0, 0, 0, 0.18)',
             tileHover: 'rgba(47, 125, 225, 0.12)',
         };
     }

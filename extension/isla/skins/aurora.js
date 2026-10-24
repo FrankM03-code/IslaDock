@@ -17,6 +17,7 @@ import {ms} from '../timing.js';
 const COLORS = ['#3EE6C4', '#7B5CFF', '#FF6FAE', '#FFC15E'].map(h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255));
 const SPREAD = 22;           // room around the stroke for the blur
 const STROKE = 8;
+const PANEL_STROKE = 4;      // thinner around the floating panels (Ajustes, miniaturas…)
 const RADIUS = 22;
 const FRAME_MS = 33;         // at most 30 repaints per second
 
@@ -40,9 +41,9 @@ export class AuroraSkin extends SkinBase {
     // Dark cells, light text and the halo's teal as the accent.
     getStackStyle() {
         return {
-            cellFill: 'rgba(20, 20, 28, 0.85)', cellBorder: 'rgba(255, 255, 255, 0.10)', cellHover: 'rgba(32, 32, 44, 0.95)',
+            cellFill: 'rgba(46, 51, 74, 0.85)', cellBorder: 'rgba(255, 255, 255, 0.10)', cellHover: 'rgba(58, 63, 88, 0.95)',
             accent: '#3EE6C4', text: '#F2F3F8', textSecondary: 'rgba(242, 243, 248, 0.60)',
-            panelFill: 'rgba(20, 20, 28, 0.90)', panelBorder: 'rgba(123, 92, 255, 0.45)', shadow: 'rgba(0, 0, 0, 0.40)',
+            panelFill: 'rgba(44, 50, 74, 0.86)', panelBorder: 'rgba(123, 92, 255, 0.45)', shadow: 'rgba(0, 0, 0, 0.40)',
             tileHover: 'rgba(62, 230, 196, 0.16)',
         };
     }
@@ -54,8 +55,8 @@ export class AuroraSkin extends SkinBase {
                 const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
                 const halo = new St.DrawingArea({style_class: 'isla-aurora-halo', reactive: false});
                 halo._around = SPREAD * sf;
-                halo.connect('repaint', area => this._paint(area, radius, 4));
-                halo.add_effect(haloBlur(sf));
+                halo.connect('repaint', area => this._paint(area, radius, 2, PANEL_STROKE));
+                halo.add_effect(haloBlur(sf, 6));
                 this._halo.bind_property('opacity', halo, 'opacity', GObject.BindingFlags.SYNC_CREATE);
                 this._extra.add(halo);
                 halo.connect('destroy', () => this._extra?.delete(halo));
@@ -117,7 +118,7 @@ export class AuroraSkin extends SkinBase {
         }
     }
 
-    _paint(area, radius, grow) {
+    _paint(area, radius, grow, stroke = STROKE) {
         const cr = area.get_context();
         const [w, h] = area.get_surface_size();
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
@@ -141,7 +142,7 @@ export class AuroraSkin extends SkinBase {
             gradient.addColorStopRGBA(Math.max(0, Math.min(1, pos)), cr_, cg, cb, 1);
         }
         cr.setSource(gradient);
-        cr.setLineWidth(STROKE * sf);
+        cr.setLineWidth(stroke * sf);
         cr.stroke();
         cr.$dispose();
     }
@@ -196,11 +197,11 @@ export class AuroraSkin extends SkinBase {
     }
 }
 
-function haloBlur(sf) {
+function haloBlur(sf, radius = 10) {
     const blur = new Shell.BlurEffect({mode: Shell.BlurMode.ACTOR, brightness: 1});
     if (GObject.Object.find_property.call(Shell.BlurEffect, 'radius'))
-        blur.radius = 10 * sf;
+        blur.radius = radius * sf;
     else
-        blur.sigma = 5 * sf;
+        blur.sigma = radius / 2 * sf;
     return blur;
 }

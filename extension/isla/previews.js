@@ -3,7 +3,9 @@
 // Window previews (B3). With the island open, resting the pointer 400 ms on an
 // open app shows a glass card above it with a live thumbnail per window, its
 // title and a close button. Click a thumbnail to go to that window. The card
-// waits 300 ms after the pointer leaves, so it can be reached.
+// waits 300 ms after the pointer leaves, so it can be reached. With
+// 'isla-vistas-previas' off the card only comes on demand ('previews-show':
+// a right click on Archivos, or a click on the app in front).
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import Pango from 'gi://Pango';
@@ -13,17 +15,21 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {Mode} from './state.js';
 import {chromeParams} from './chrome.js';
+import {islandLook} from './look.js';
 import {dockMonitor} from './monitor.js';
 
 const SHOW_DELAY = 400;
 const HIDE_DELAY = 300;
 const THUMB_W = 200, THUMB_H = 124;
 const GAP = 12;
+const RADIUS = 18;           // the card's corners (.isla-vista)
 
 export class Previews {
-    constructor({state}) {
+    constructor({state, settings}) {
         this._state = state;
+        this._settings = settings;
         this._timers = {};
+        this._layers = [];           // the skin's pieces around the card (Aurora's halo)
         this._card = new St.BoxLayout({style_class: 'isla-vista', reactive: true, track_hover: true, visible: false});
         Main.layoutManager.addChrome(this._card, chromeParams({affectsInputRegion: true}));
         this._card.connect('notify::hover', () => {
@@ -73,6 +79,11 @@ export class Previews {
             return;
         }
         this._cancel('hide');
+        if (!this._settings.get_boolean('isla-vistas-previas')) {
+            if (this._card.visible && item !== this._item)
+                this.hide();
+            return;
+        }
         if (item.kind !== 'app' || !item.app || !this._windows(item.app).length || this._state.mode !== Mode.EXPANDED) {
             this.hide();
             return;
@@ -98,12 +109,38 @@ export class Previews {
             this.hide();
             return;
         }
+        // Dressed like the island: its solid color, and light text on a dark skin.
+        const look = islandLook(this._state);
+        this._card.style = look.style ?? '';
+        if (look.light)
+            this._card.remove_style_class_name('oscura');
+        else
+            this._card.add_style_class_name('oscura');
         this._state.hold('preview');
         this._state.command('hide-tooltip');
         this._card.show();
         this._card.opacity = 0;
         this._place(item);
         this._card.ease({opacity: 255, duration: 150, mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+        this._dress(look);
+    }
+
+    // The skin's own pieces (Aurora's halo) under the card, following it like in the other panels.
+    _dress(look) {
+        this._undress();
+        const parent = this._card.get_parent();
+        for (const layer of look.layers?.(RADIUS) ?? []) {
+            const m = layer._around ?? 0;
+            layer.add_constraint(new Clutter.BindConstraint({source: this._card, coordinate: Clutter.BindCoordinate.POSITION, offset: -m}));
+            layer.add_constraint(new Clutter.BindConstraint({source: this._card, coordinate: Clutter.BindCoordinate.SIZE, offset: 2 * m}));
+            parent.insert_child_below(layer, this._card);
+            this._layers.push(layer);
+        }
+    }
+
+    _undress() {
+        this._layers.forEach(layer => layer.destroy());
+        this._layers = [];
     }
 
     _thumb(win, actor, sf) {
@@ -162,6 +199,7 @@ export class Previews {
             return;
         this._card.remove_all_transitions();
         this._card.hide();
+        this._undress();
         this._card.destroy_all_children();
         this._item = null;
         this._state.release('preview');
