@@ -13,8 +13,9 @@
 // It refreshes on the wall clock's minute change (also right after a suspend
 // and at midnight). A press (not the release) opens the calendar panel ('calendar-toggle') when
 // 'reloj-lateral-calendario' is on.
-// Over a light island (Clásica, light) it is light too: a card in the
-// island's own color (also for the looks with no box), dark text, accent details.
+// Every look is a card in the island's own color, like the other panels: light
+// over a light island (dark text, accent details), dark over a dark one, and
+// with Aurora's halo around it on Aurora.
 // The sensitive strip is only a few pixels wide: the screen edge stops the
 // pointer, and the scroll bars of maximized windows stay usable.
 import Cairo from 'cairo';
@@ -27,7 +28,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {accentRGB, watchAccent} from './accent.js';
 import {chromeParams} from './chrome.js';
-import {islandLook} from './look.js';
+import {dressFrame, islandLook} from './look.js';
 import {ms} from './timing.js';
 import {_} from './i18n.js';
 import {dayName, dayProgress, dayShort, initials, monthName, monthShort, two, week} from './dates.js';
@@ -73,6 +74,9 @@ export class SideClock {
         this._zone.connect('notify::hover', () => this._onHover());
 
         this._bubble = new St.Button({reactive: true, track_hover: true, can_focus: false, accessible_name: _('Reloj')});
+        // The look's card, with the skin's layers (Aurora's halo) behind it (_dress).
+        this._frame = new St.Widget({layout_manager: new Clutter.BinLayout()});
+        this._bubble.set_child(this._frame);
         this._bubble.connect('notify::hover', () => this._onHover());
         // The calendar opens on the press, not the release: it feels instant.
         const openCalendar = () => {
@@ -103,16 +107,24 @@ export class SideClock {
         this._mark.remove_all_transitions();
         this._mark.opacity = 255;
         const tab = this._style === 'semana' || this._style === 'linea' ? ' isla-clock-tab' : '';
-        this._bubble.style_class = `isla-clock clock-${this._style}${tab} ${this._right ? 'derecha' : 'izquierda'}`;
         this._parts = {};
-        this._bubble.set_child({editorial: () => this._buildEditorial(), semana: () => this._buildSemana(),
-            linea: () => this._buildLinea(), horizonte: () => this._buildHorizonte()}[this._style]());
+        // No showing half built (hiding it wakes the hover handler while the pointer is on the edge).
+        this._building = true;
+        this._bubble.remove_all_transitions();
+        this._bubble.hide();
+        this._card?.destroy();
+        // The card (the look's box) inside a frame that also carries the skin's layers (_dress).
+        this._card = new St.Bin({style_class: `isla-clock clock-${this._style}${tab} ${this._right ? 'derecha' : 'izquierda'}`,
+            child: {editorial: () => this._buildEditorial(), semana: () => this._buildSemana(),
+                linea: () => this._buildLinea(), horizonte: () => this._buildHorizonte()}[this._style]()});
+        this._dress();
         this._update();
         this._place();
         // Out of sight until the pointer comes (adding it to the stage showed it).
         this._bubble.remove_all_transitions();
         this._bubble.set({translation_x: this._outside, opacity: 0});
         this._bubble.hide();
+        this._building = false;
     }
 
     _label(cls, props = {}) {
@@ -315,6 +327,8 @@ export class SideClock {
 
     // ---------- show / hide ----------
     _onHover() {
+        if (this._building)
+            return;
         if (this._zone.hover || this._bubble.hover) {
             this._cancelLeave();
             this._show();
@@ -347,14 +361,21 @@ export class SideClock {
         this._mark.ease({opacity: 0, duration: ms(IN_TIME)});
     }
 
-    // Light or dark with the island, read each time it comes out.
+    // The island's color (and Aurora's halo), read each time it comes out.
     _dress() {
         const look = islandLook(this._state);
         this._light = look.light;
-        this._bubble[look.light ? 'add_style_class_name' : 'remove_style_class_name']('clara');
-        // Light, every look gets a card (dark text could not be read on the wallpaper).
-        this._bubble.style = look.light ? look.style : null;
+        this._card[look.light ? 'add_style_class_name' : 'remove_style_class_name']('clara');
+        this._card.style = look.style || null;
         this._parts?.line?.queue_repaint();
+        // A new frame when the skin changes: its layers (Aurora's halo) belong to that skin.
+        const skin = this._state.skin;
+        if (this._card.get_parent() && this._framedFor === skin)
+            return;
+        this._framedFor = skin;
+        this._frame.get_children().filter(c => c !== this._card).forEach(c => c.destroy());
+        this._card.get_parent()?.remove_child(this._card);
+        dressFrame(look, this._frame, this._card, 20);
     }
 
     _hide() {
@@ -377,7 +398,7 @@ export class SideClock {
             Main.layoutManager.removeChrome(actor);
             actor.destroy();
         }
-        this._zone = this._bubble = this._mark = null;
+        this._zone = this._bubble = this._mark = this._card = this._frame = null;
         this._parts = null;
         this._wallClock.disconnect(this._clockId);
         this._wallClock = null;

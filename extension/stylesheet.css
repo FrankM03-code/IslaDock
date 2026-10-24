@@ -462,17 +462,13 @@
 /* Four looks ('clock-style', isla-dock-reloj-estilos.md). .derecha / .izquierda: the edge it lives on. */
 .isla-clock { color: #F2F2F5; font-feature-settings: "tnum"; }
 /* A glass tab against the edge (semana, linea) */
-.isla-clock-tab { background-color: rgba(18, 26, 40, 0.62); border: 1px solid rgba(255, 255, 255, 0.08); }
+.isla-clock-tab, .clock-editorial, .clock-horizonte { background-color: rgba(18, 26, 40, 0.92); border: 1px solid rgba(255, 255, 255, 0.08); }
 .isla-clock-tab.derecha { border-right-width: 0; }
 .isla-clock-tab.izquierda { border-left-width: 0; }
 /* Bold hour, softer minutes, a colon in the accent color */
 .isla-clock-hour { font-weight: 500; color: #F2F2F5; }
 .isla-clock-min { font-weight: 400; color: #C9CDD8; }
 .isla-clock-colon { color: st-mix(-st-accent-color, #ffffff, 85%); font-weight: 400; }
-/* No box: a soft shadow so they read on any wallpaper */
-.clock-editorial .isla-clock-hour, .clock-editorial .isla-clock-min, .clock-editorial .isla-clock-date,
-.clock-horizonte .isla-clock-hour, .clock-horizonte .isla-clock-min, .clock-horizonte .isla-clock-colon,
-.clock-horizonte .isla-clock-date, .clock-horizonte .isla-clock-edge-label { text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35); }
 
 /* Editorial */
 .clock-editorial .isla-clock-fila { spacing: 30px; }
@@ -511,8 +507,6 @@
 
 /* Horizonte */
 .clock-horizonte { width: 170px; }
-.clock-horizonte.derecha { margin-right: 22px; }
-.clock-horizonte.izquierda { margin-left: 22px; }
 .clock-horizonte .isla-clock-hour, .clock-horizonte .isla-clock-min,
 .clock-horizonte .isla-clock-colon { font-size: 40pt; letter-spacing: -1.5px; }
 .clock-horizonte .isla-clock-min { color: rgba(242, 242, 245, 0.55); }
@@ -534,16 +528,13 @@
 .clock-semana.clara .isla-week-day.today .isla-week-initial,
 .clock-semana.clara .isla-week-day.today .isla-week-num { color: -st-accent-fg-color; }
 .clock-semana.clara .isla-week-day.today { background-color: -st-accent-color; }
-/* The looks with no box get a card too (color inline, from the island) */
-.clock-editorial.clara, .clock-horizonte.clara { background-color: rgba(250, 250, 252, 0.92); border: 1px solid rgba(0, 0, 0, 0.08); }
-.clock-editorial.clara { padding: 16px 0 16px 22px; }
-.clock-editorial.clara.izquierda { padding: 16px 22px 16px 0; }
-.clock-horizonte.clara { padding: 14px 18px; width: 170px; }
-.clock-editorial.clara.derecha, .clock-horizonte.clara.derecha { border-radius: 22px 0 0 22px; border-right-width: 0; margin-right: 0; }
-.clock-editorial.clara.izquierda, .clock-horizonte.clara.izquierda { border-radius: 0 22px 22px 0; border-left-width: 0; margin-left: 0; }
-.clock-editorial.clara .isla-clock-hour, .clock-editorial.clara .isla-clock-min, .clock-editorial.clara .isla-clock-date,
-.clock-horizonte.clara .isla-clock-hour, .clock-horizonte.clara .isla-clock-min, .clock-horizonte.clara .isla-clock-colon,
-.clock-horizonte.clara .isla-clock-date, .clock-horizonte.clara .isla-clock-edge-label { text-shadow: none; }
+/* Editorial and Horizonte: a card against the edge too, in every skin (color inline, from the island) */
+.clock-editorial.clara, .clock-horizonte.clara { background-color: rgba(250, 250, 252, 0.92); border-color: rgba(0, 0, 0, 0.08); }
+.clock-editorial { padding: 16px 0 16px 22px; }
+.clock-editorial.izquierda { padding: 16px 22px 16px 0; }
+.clock-horizonte { padding: 14px 18px; width: 170px; }
+.clock-editorial.derecha, .clock-horizonte.derecha { border-radius: 22px 0 0 22px; border-right-width: 0; }
+.clock-editorial.izquierda, .clock-horizonte.izquierda { border-radius: 0 22px 22px 0; border-left-width: 0; }
 .clock-editorial.clara .isla-clock-min, .clock-horizonte.clara .isla-clock-min { color: rgba(21, 24, 30, 0.55); }
 .clock-editorial.clara .isla-clock-date, .clock-horizonte.clara .isla-clock-date { color: st-darken(-st-accent-color, 6%); }
 .clock-horizonte.clara .isla-clock-edge-label { color: rgba(21, 24, 30, 0.6); }
