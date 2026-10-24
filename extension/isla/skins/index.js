@@ -3,11 +3,9 @@
 // Registry of the island's skins: isla-piel key -> class.
 import {AuroraSkin} from './aurora.js';
 import {ClasicaSkin} from './clasica.js';
-import {VidrioOscuroSkin} from './vidrioOscuro.js';
 
 export const SKINS = {
     clasica: ClasicaSkin,
-    'vidrio-oscuro': VidrioOscuroSkin,
     aurora: AuroraSkin,
 };
 
