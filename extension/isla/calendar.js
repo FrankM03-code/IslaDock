@@ -31,6 +31,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
+import {addPanelChrome, dropChrome} from './chrome.js';
 import {_, fmt, localName} from './i18n.js';
 import {dressFrame, islandLook} from './look.js';
 import {dockMonitor, dockWorkArea} from './monitor.js';
@@ -211,7 +212,7 @@ export class CalendarPanel {
 
     // ---------- content ----------
     _build(look) {
-        const box = new St.BoxLayout({style_class: 'isla-cal', vertical: true, reactive: true});
+        const box = new St.BoxLayout({style_class: 'isla-cal', orientation: Clutter.Orientation.VERTICAL, reactive: true});
         if (look.light)
             box.add_style_class_name('clara');
 
@@ -241,7 +242,7 @@ export class CalendarPanel {
         // The day squares stay put; a month change only rewrites them.
         this._cells = [];
         for (let i = 0; i < CELLS; i++) {
-            const inner = new St.BoxLayout({vertical: true, x_align: Clutter.ActorAlign.CENTER,
+            const inner = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, x_align: Clutter.ActorAlign.CENTER,
                 y_align: Clutter.ActorAlign.CENTER});
             const number = new St.Label({x_align: Clutter.ActorAlign.CENTER});
             const mark = new St.Widget({style_class: 'isla-cal-punto', x_align: Clutter.ActorAlign.CENTER});
@@ -257,7 +258,7 @@ export class CalendarPanel {
         }
 
         // The card: the chosen day's reminders, or the form.
-        this._card = new St.BoxLayout({style_class: 'isla-cal-tarjeta', vertical: true});
+        this._card = new St.BoxLayout({style_class: 'isla-cal-tarjeta', orientation: Clutter.Orientation.VERTICAL});
 
         box.add_child(head);
         box.add_child(this._grid);
@@ -360,7 +361,7 @@ export class CalendarPanel {
             return;
         }
         // A few fit; past that the list scrolls (the panel would cover the screen).
-        const list = new St.BoxLayout({style_class: 'isla-cal-notas-caja', vertical: true});
+        const list = new St.BoxLayout({style_class: 'isla-cal-notas-caja', orientation: Clutter.Orientation.VERTICAL});
         const scroll = new St.ScrollView({style_class: 'isla-cal-notas', hscrollbar_policy: St.PolicyType.NEVER,
             vscrollbar_policy: St.PolicyType.AUTOMATIC, overlay_scrollbars: true, child: list});
         for (const note of notes) {
@@ -439,7 +440,7 @@ export class CalendarPanel {
         const spinner = (name, step) => {
             const box = new St.BoxLayout({style_class: 'isla-cal-giro', reactive: true, y_align: Clutter.ActorAlign.CENTER});
             const label = new St.Label({style_class: 'isla-cal-giro-valor', y_align: Clutter.ActorAlign.CENTER});
-            const arrows = new St.BoxLayout({vertical: true, y_align: Clutter.ActorAlign.CENTER});
+            const arrows = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, y_align: Clutter.ActorAlign.CENTER});
             for (const [icon, d, what] of [['pan-up-symbolic', 1, _('{campo} siguiente')], ['pan-down-symbolic', -1, _('{campo} anterior')]]) {
                 const b = new St.Button({style_class: 'isla-cal-giro-flecha', can_focus: true,
                     accessible_name: fmt(what, {campo: name}), child: new St.Icon({icon_name: icon, style_class: 'isla-cal-giro-icono'})});
@@ -540,7 +541,7 @@ export class CalendarPanel {
         if (look.style)
             content.style = look.style;
         dressFrame(look, panel, content, 20);
-        Main.layoutManager.addTopChrome(panel);
+        addPanelChrome(panel);
         this._place();
         // Grown or shrunk (a reminder, the form): the bottom stays over the dock.
         content.connect('notify::height', () => this._panel === panel && this._place());
@@ -625,9 +626,9 @@ export class CalendarPanel {
             if (this._finishClosing !== done)
                 return;
             this._finishClosing = null;
-            panel.remove_all_transitions();
-            Main.layoutManager.removeChrome(panel);
-            panel.destroy();
+            if (!panel._islaGone)
+                panel.remove_all_transitions();
+            dropChrome(panel);
         };
         this._finishClosing = done;
         if (animate) {

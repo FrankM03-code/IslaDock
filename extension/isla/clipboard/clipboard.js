@@ -22,8 +22,9 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {ClipboardHistory} from './history.js';
 import {ClipboardPanel, shortcutLabel} from './panel.js';
+import {addPanelChrome, dropChrome} from '../chrome.js';
 import {dressFrame, islandLook} from '../look.js';
-import {dockWorkArea} from '../monitor.js';
+import {dockWorkArea, insideDock} from '../monitor.js';
 import {Mode} from '../state.js';
 import {ms} from '../timing.js';
 
@@ -54,6 +55,8 @@ export class Clipboard {
                 if (name === 'clipboard-toggle')
                     this.toggle(args[0]);
             })],
+            // The dock narrows when the hover zoom ends: the open panel keeps within its edges.
+            [capsule, capsule.connect('notify::width', () => this._panel && this._place())],
             [state, state.connect('skin-changed', () => this.close(false))],
             [state, state.connect('mode-changed', (_s, mode) => mode !== Mode.EXPANDED && this.close())],
             [Main.overview, Main.overview.connect('showing', () => this.close(false))],
@@ -146,11 +149,13 @@ export class Clipboard {
             content.actor.style = look.style;
         dressFrame(look, frame, content.actor, RADIUS);
         this._anchor = anchor;
-        Main.layoutManager.addTopChrome(frame);
+        addPanelChrome(frame);
         Main.layoutManager.addTopChrome(this._tooltip);
         this._place();
         // The list grows and shrinks with the search and the filter: stay above the button.
+        // Its final size comes a moment later: placed again so it stays within the dock.
         frame.connect('notify::height', () => this._place());
+        frame.connect('notify::width', () => this._place());
         frame.connect('captured-event', (_a, event) => this._onEvent(event));
         frame.connect('key-press-event', (_a, event) => this._onKey(event));
         this._grab = Main.pushModal(frame, {actionMode: Shell.ActionMode.POPUP});
@@ -161,7 +166,7 @@ export class Clipboard {
         this._state.command('hide-tooltip');
     }
 
-    // Centered over the button, 9 px above the island, inside the work area.
+    // Centered over the button but within the dock's edges, 9 px above the island, inside the work area.
     _place() {
         const frame = this._panel;
         if (!frame)
@@ -174,7 +179,7 @@ export class Clipboard {
         const [, h] = frame.get_preferred_height(w);
         const area = dockWorkArea();
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        let x = ax + aw / 2 - w / 2;
+        let x = insideDock(ax + aw / 2 - w / 2, w, this._capsule);
         x = Math.min(Math.max(x, area.x + 4 * sf), area.x + area.width - w - 4 * sf);
         const y = Math.max(cy - GAP * sf - h, area.y + 4 * sf);
         frame.set_position(Math.round(x), Math.round(y));
@@ -255,10 +260,7 @@ export class Clipboard {
         Main.layoutManager.removeChrome(tooltip);
         tooltip.destroy();
         frame.reactive = false;
-        const done = () => {
-            Main.layoutManager.removeChrome(frame);
-            frame.destroy();
-        };
+        const done = () => dropChrome(frame);
         if (animate) {
             frame.ease({opacity: 0, translation_y: SHIFT, duration: ms(OUT_TIME), mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                 onStopped: done});

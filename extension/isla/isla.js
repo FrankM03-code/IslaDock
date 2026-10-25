@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // The island: a small capsule on the bottom edge that grows into the whole dock
 // when the pointer comes near. It draws whatever the current mode needs (folded
-// dots and the main activity, the open dock, a notice...) and animates its size
+// dots and the main activity, the open dock, the search...) and animates its size
 // between them. Modules talk to it only through the IslaState.
 import Clutter from 'gi://Clutter';
-import Meta from 'gi://Meta';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
@@ -13,10 +12,13 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {AppsRow} from './apps.js';
+import {INDICATOR_GAP} from '../dockItem.js';
 import {RowLayout} from './row.js';
 import {dockMonitor, dockMonitorIndex} from './monitor.js';
 import {BlurLayer} from './blur.js';
 import {Dots} from './dots.js';
+import {RestBar, TYPES, desktopShown} from './restBar.js';
+import {WindowBar} from './windowBar.js';
 import {Mode, Priority} from './state.js';
 import {createSkin} from './skins/index.js';
 import {ms, setSpeed} from './timing.js';
@@ -29,11 +31,10 @@ const OPEN_TIME = 380;
 const CLOSE_TIME = 250;
 const FADE_TIME = 120;
 const LEAVE_DELAY = 400;
+const RELEASE_DELAY = 3000;   // after a click outside closes a panel, before folding
 const EDGE_GRACE = 1500;      // open after touching the edge without reaching the island
-const NOTICE_TIME = 3500;
-const NOTICE_LEAVE = 1200;    // a notice that was pointed at closes this long after leaving
-const LEVEL_TIME = 1000;
 const ICON_STAGGER = 25;
+const MIN_ICON = 16;           // px: the smallest the icons get when there are too many
 const ROOM = 520;             // height of the invisible strip that holds the island
 const HIDE_TIME = 250;
 const NUDGE_TIME = 2500;      // a hidden island stays out this long after a notification
@@ -45,6 +46,7 @@ const PANEL_ORDER = ['recording', 'timer', 'music'];
 const CARD_GAP = 12;          // between the island and the glass card of some skins
 const CARD_FADE = 200;
 const CARD_FADE_OUT = 140;    // gone before the island finishes folding (CLOSE_TIME)
+const BG_OPACITY = Math.round(255 * 0.8);   // the background's fixed touch of transparency (the 20 % the user liked)
 
 // The monitor strip: the island at its natural size, centered, standing BOTTOM px above the edge.
 // With a glass card (some skins put the activity panels there) both are centered as a group.
@@ -63,7 +65,7 @@ class IslaStripLayout extends Clutter.LayoutManager {
         return [0, 0];
     }
 
-    // The capsule (and the card) first; skin layers that go around them (a halo, a lens) follow them.
+    // The capsule (and the card) first; skin layers that go around them (Aurora's halo) follow them.
     vfunc_allocate(container, box) {
         const capsule = this._isla._capsule;
         const card = this._isla._card;
@@ -131,7 +133,7 @@ class IslaContentLayout extends Clutter.LayoutManager {
 
 // The capsule: as big as its current page. Backgrounds fill it, pages sit in
 // the middle at their own size (the old one fades out while the size animates),
-// the volume line runs along the bottom.
+// the task progress line runs along the bottom.
 const CapsuleLayout = GObject.registerClass(
 class IslaCapsuleLayout extends Clutter.LayoutManager {
     _init(isla) {
@@ -143,6 +145,11 @@ class IslaCapsuleLayout extends Clutter.LayoutManager {
         const page = this._isla._page;
         if (!page)
             return [0, 0];
+        // Measure the content box too: Clutter stops passing a page's size change up at a box
+        // still marked unmeasured, so the capsule kept a stale width (window bar overflowing
+        // the island when the extension turns on with the microphone in use, 2026-10-24).
+        this._isla._content.get_preferred_width(-1);
+        this._isla._content.get_preferred_height(-1);
         const [, w] = page.get_preferred_width(-1);
         const [, h] = page.get_preferred_height(w);
         return [w, h];
@@ -164,10 +171,8 @@ class IslaCapsuleLayout extends Clutter.LayoutManager {
                 continue;
             if (child._allocateIn) {
                 child._allocateIn(box);
-            } else if (child === this._isla._level) {
-                this._isla._allocateLine(box, this._isla._level, this._isla._levelFill, this._isla._levelValue);
             } else if (child === this._isla._progress) {
-                this._isla._allocateLine(box, this._isla._progress, this._isla._progressFill, this._isla._progressValue ?? 0);
+                this._isla._allocateProgress(box);
             } else {
                 child.allocate(box);
             }
@@ -183,7 +188,6 @@ export class Isla {
         this._signals = [];
         this._timeouts = new Map();
         this._windowSignals = new Map();
-        this._levelValue = 0;
 
         setSpeed(settings.get_double('velocidad'));
         this._buildActors(resolver);
@@ -296,6 +300,18 @@ export class Isla {
 
         // Open: apps | activity panels
         this._apps = new AppsRow({settings: this._settings, resolver, state: this._state});
+
+        // Desktop bar ('barra-escritorio'): the folded island while no window is in sight.
+        this._restBar = new RestBar({state: this._state, settings: this._settings, apps: this._apps,
+            onChange: () => this._page === this._rest && this._resize()});
+        this._rest = this._page_(this._restBar.actor);
+        // Window bar ('barra-ventanas'): the folded island while windows are in sight.
+        this._winBar = new WindowBar({state: this._state, settings: this._settings, onChange: () => {
+            if (this._page === this._win)
+                this._resize();
+            this._syncRest();
+        }});
+        this._win = this._page_(this._winBar.actor);
         this._panelSep = new St.Widget({style_class: 'isla-vsep isla-vsep-alta', y_align: Clutter.ActorAlign.CENTER});
         // Side by side, never stacked: the open dock keeps the height of one row of icons.
         this._panels = new St.BoxLayout({style_class: 'isla-panels', y_align: Clutter.ActorAlign.CENTER});
@@ -310,24 +326,15 @@ export class Isla {
         for (const actor of [this._statusStart, this._apps.actor, this._panelSep, this._panels, this._statusOpen, this._apps.tail])
             this._open.add_child(actor);
 
-        // Notice: whatever the notices module hands over, clickable.
-        this._noticeButton = new St.Button({style_class: 'isla-page-aviso', can_focus: false, x_expand: true});
-        this._noticeButton.connect('clicked', () => this._activateNotice());
-        this._notice = this._page_(this._noticeButton);
-
         // Search page: a module puts its content here.
         this._search = this._page_(new St.Bin({style_class: 'isla-page-busqueda'}));
 
-        // Task progress (folded) and volume level: thin lines along the bottom.
+        // Task progress (folded): a thin line along the bottom.
         this._progressValue = null;
         this._progress = new St.Widget({style_class: 'isla-level isla-progress', visible: false});
         this._progressFill = new St.Widget({style_class: 'isla-level-fill isla-progress-fill'});
         this._progress.add_child(this._progressFill);
         this._capsule.add_child(this._progress);
-        this._level = new St.Widget({style_class: 'isla-level', opacity: 0, visible: false});
-        this._levelFill = new St.Widget({style_class: 'isla-level-fill'});
-        this._level.add_child(this._levelFill);
-        this._capsule.add_child(this._level);
 
         // Glass card next to the island (skins with panelCard): the panels move there.
         this._card = new St.BoxLayout({style_class: 'isla-tarjeta', reactive: true, track_hover: true,
@@ -343,7 +350,8 @@ export class Isla {
 
         this._edge = new St.Widget({reactive: true});
         this._edge.connect('enter-event', () => {
-            if (this._state.mode === Mode.COLLAPSED) {
+            // The desktop bar is used as it is: only the wheel opens the dock over it.
+            if (this._state.mode === Mode.COLLAPSED && !(this._usedAsBar && !this._hidden)) {
                 this._state.setMode(Mode.EXPANDED);
                 this._later('edge', EDGE_GRACE, () => this._maybeFold());
             }
@@ -427,10 +435,13 @@ export class Isla {
         const f = this._f;
         const [pv, ph] = skin.openPadding;
         this._apps.setDark(skin.darkTooltip, skin.styleClass);
+        this._restBar.setDark(skin.darkTooltip, skin.styleClass);
         this._apps.setSkin(skin);
         this._dots.setScale(1);
         const pb = skin.openPadding[2] ?? pv;
-        this._open.style = `padding: ${Math.round(pv * f)}px ${Math.round(ph * f)}px ${Math.round(pb * f)}px;`;
+        // The wider gap over the marks (INDICATOR_GAP) comes out of the bottom padding: the dock keeps its height.
+        const bottom = Math.max(0, Math.round(pb * f - (INDICATOR_GAP - 1) * this._sf));
+        this._open.style = `padding: ${Math.round(pv * f)}px ${Math.round(ph * f)}px ${bottom}px;`;
         this._openLayout.spacing = Math.round(10 * this._sf);
         this._openLayout.layout_changed();
         const blur = this._settings.get_boolean('desenfoque') && !this._state.calm?.blurOff ? skin.blur : null;
@@ -488,6 +499,12 @@ export class Isla {
         });
 
         this._on(this._capsule, 'notify::hover', () => this._onHover());
+        // Before the wheel's volume (gestures.js, connected later).
+        this._on(this._capsule, 'scroll-event', (_a, event) => this._onRestScroll(event));
+        this._on(this._apps, 'mirror-activate', (_a, kind, button) => this._fromMirror(kind, button));
+        this._on(this._settings, 'changed::barra-escritorio', () => this._syncRest());
+        this._on(this._settings, 'changed::barra-ventanas', () => this._syncRest());
+        this._on(this._state, 'status-changed', () => this._syncRest());
         this._on(this._card, 'notify::hover', () => this._onHover());
         this._on(this._card, 'notify::opacity', () => this._strip.queue_relayout());
         this._on(this._capsule, 'notify::translation-y', () => (this._card.translation_y = this._capsule.translation_y));
@@ -507,25 +524,24 @@ export class Isla {
         this._on(this._state, 'activities-changed', () => this._updateActivities());
         this._on(this._state, 'status-changed', () => this._updateStatus());
         this._on(this._state, 'dnd-changed', () => {
+            this._apps.updateNotifications();
             this._applySettings();
             this._skin?.onStateChanged(this._state.mode);
             this._render(true);
         });
         this._on(this._state, 'command', (_s, name, ...args) => {
-            if (name === 'volume-level')
-                this._showLevel(args[0]);
-            else if (name === 'notice')
-                this._showNotice(args[0]);
-            else if (name === 'pulse')
+            if (name === 'pulse')
                 this._pulse(args[0] ?? 3);
             else if (name === 'nudge')
                 this._nudge();
             else if (name === 'fold')
                 this._maybeFold(true);
             else if (name === 'maybe-fold' && !this.hovered)
-                this._later('leave', ms(LEAVE_DELAY), () => this._maybeFold());
+                this._later('leave', RELEASE_DELAY, () => this._maybeFold());
             else if (name === 'search-content')
                 this._search.set_child(args[0]);
+            else if (name === 'search-wide')
+                this._capsule[args[0] ? 'add_style_class_name' : 'remove_style_class_name']('busqueda-resultados');
             else if (name === 'resize')
                 this._resize();
             else if (name === 'hide-tooltip')
@@ -544,6 +560,10 @@ export class Isla {
                 this._apps.bounceClipboard();
             else if (name === 'clipboard-count')
                 this._apps.updateClipboardCount();
+            else if (name === 'notifications-count')
+                this._apps.updateNotifications(!!args[0]);
+            else if (name === 'notifications-open')
+                this._openOver('notifications', () => this._apps.notificationsItem, 'notifications-toggle');
             else if (name === 'panel-open')
                 this._apps.setPanelOpen(args[0], args[1]);
 
@@ -615,6 +635,7 @@ export class Isla {
     }
 
     _checkHide() {
+        this._syncRest();
         this._updateBlurBehind();
         const hide = this._shouldHide();
         if (hide === !!this._hidden)
@@ -640,11 +661,10 @@ export class Isla {
         const bottom = top + ch + BOTTOM * this._sf;
         const ws = global.workspace_manager.get_active_workspace();
         const monitor = dockMonitorIndex();
-        const types = [Meta.WindowType.NORMAL, Meta.WindowType.DIALOG, Meta.WindowType.MODAL_DIALOG, Meta.WindowType.UTILITY];
         return global.get_window_actors().some(actor => {
             const w = actor.meta_window;
             if (!w || w.minimized || !w.showing_on_its_workspace() || w.get_monitor() !== monitor ||
-                !w.located_on_workspace(ws) || !types.includes(w.get_window_type()))
+                !w.located_on_workspace(ws) || !TYPES.includes(w.get_window_type()))
                 return false;
             const f = w.get_frame_rect();
             return f.x < cx + cw && f.x + f.width > cx && f.y < bottom && f.y + f.height > top;
@@ -662,6 +682,7 @@ export class Isla {
         const ids = [
             w.connect('position-changed', () => this._queueOverlapCheck()),
             w.connect('size-changed', () => this._queueOverlapCheck()),
+            w.connect('notify::minimized', () => this._queueOverlapCheck()),
             w.connect('unmanaged', () => {
                 ids.forEach(id => w.disconnect(id));
                 this._windowSignals.delete(w);
@@ -701,18 +722,16 @@ export class Isla {
         if (this.hovered) {
             this._cancel('leave');
             this._cancel('edge');
-            if (mode === Mode.NOTICE)
-                this._cancel('notice');
-            else if (mode === Mode.COLLAPSED)
+            if (mode === Mode.COLLAPSED && !this._usedAsBar)
                 this._state.setMode(Mode.EXPANDED);
+            this._lift(true);
             return;
         }
+        this._lift(false);
         this._apps.resetZoom();
         this._apps.hideTooltip();
         this._later('hide-check', ms(LEAVE_DELAY), () => this._checkHide());
-        if (mode === Mode.NOTICE)
-            this._later('notice', NOTICE_LEAVE, () => this._endNotice());
-        else if (mode === Mode.EXPANDED)
+        if (mode === Mode.EXPANDED)
             this._later('leave', ms(LEAVE_DELAY), () => this._maybeFold());
     }
 
@@ -814,13 +833,95 @@ export class Isla {
         switch (mode) {
         case Mode.EXPANDED:
             return this._open;
-        case Mode.NOTICE:
-            return this._notice;
         case Mode.SEARCH:
             return this._search;
         default:
-            return this._state.dnd ? this._quiet : this._folded;
+            if (this._state.dnd)
+                return this._quiet;
+            if (this._restWanted)
+                return this._rest;
+            return this._winWanted ? this._win : this._folded;
         }
+    }
+
+    // The desktop bar and the window bar are used as they are: hovering doesn't open the dock.
+    get _usedAsBar() {
+        return this._page === this._rest || this._page === this._win;
+    }
+
+    // The window bar: windows in sight, nothing going on but music (the microphone and camera show in it).
+    get _winWanted() {
+        return this._settings.get_boolean('barra-ventanas') && this._winBar.ready && !this._inAppGrid() &&
+            this._state.activities.every(a => a.id === 'music') &&
+            !desktopShown();
+    }
+
+    // Under the mouse the window bar rises 2 px (only while the island is not hidden away).
+    _lift(up) {
+        const lifted = !!this._lifted;
+        if (up && (this._page !== this._win || this._capsule.translation_y > 0))
+            up = false;
+        if (up === lifted)
+            return;
+        this._lifted = up;
+        this._capsule.ease({translation_y: up ? -2 * this._sf : 0, duration: ms(150), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+    }
+
+    // The desktop bar: no window in sight, and nothing but music going on.
+    get _restWanted() {
+        return this._settings.get_boolean('barra-escritorio') && !this._inAppGrid() &&
+            this._state.activities.every(a => a.id === 'music') && desktopShown();
+    }
+
+    // A window came or went (or was minimized), an activity started or ended: the bar or the pill.
+    _syncRest() {
+        if (!this._page || this._state.mode !== Mode.COLLAPSED)
+            return;
+        const page = this._pageFor(Mode.COLLAPSED);
+        if (page !== this._page)
+            this._showPage(page, true);
+    }
+
+    // The bar wears the design's pink on light skins (class on the capsule) and doesn't breathe.
+    // The window bar likewise (class 'barra-ventanas').
+    _updateRestLook() {
+        const rest = this._page === this._rest;
+        const win = this._page === this._win;
+        if (rest === !!this._restShown && win === !!this._winShown)
+            return;
+        this._restShown = rest;
+        this._winShown = win;
+        this._capsule[rest ? 'add_style_class_name' : 'remove_style_class_name']('barra-escritorio');
+        this._capsule[win ? 'add_style_class_name' : 'remove_style_class_name']('barra-ventanas');
+        if (!win)
+            this._lift(false);
+        this._updateBreathing(true);
+    }
+
+    // Over the desktop bar the wheel opens the whole dock (and the rest of that turn is not volume).
+    _onRestScroll(event) {
+        const now = GLib.get_monotonic_time();
+        if (now < (this._scrollQuietUntil ?? 0))
+            return Clutter.EVENT_STOP;
+        if (this._state.mode !== Mode.COLLAPSED || !this._usedAsBar)
+            return Clutter.EVENT_PROPAGATE;
+        const dir = event.get_scroll_direction();
+        if (dir === Clutter.ScrollDirection.LEFT || dir === Clutter.ScrollDirection.RIGHT)
+            return Clutter.EVENT_PROPAGATE;
+        this._scrollQuietUntil = now + 700 * 1000;
+        this._state.setMode(Mode.EXPANDED);
+        return Clutter.EVENT_STOP;
+    }
+
+    // A button of the desktop bar: the real one opens over the open dock.
+    _fromMirror(kind, button) {
+        if (kind === 'power' && button === 3) {
+            this._state.command('power-suspend');
+            return;
+        }
+        const command = {trash: 'trash-toggle', notifications: 'notifications-toggle', clipboard: 'clipboard-toggle',
+            power: 'power-toggle'}[kind];
+        this._openOver(kind, () => this._apps._items?.get(kind), command);
     }
 
     _render(animate) {
@@ -890,6 +991,7 @@ export class Isla {
         }
         const [w0, h0] = this._capsule.get_size();
         this._page = page;
+        this._updateRestLook();
         page.remove_all_transitions();
         page.show();
         if (old) {
@@ -941,8 +1043,9 @@ export class Isla {
 
     // Compact mode: when the open dock (and its card) would be wider than the
     // monitor, the panels keep only their essentials (state 'compact-changed').
+    // Still too wide (many apps): the icons shrink until it fits, MIN_ICON at least.
     _fitPanels() {
-        if (this._state.mode !== Mode.EXPANDED || !this._panels.get_n_children())
+        if (this._state.mode !== Mode.EXPANDED)
             return;
         // The content box in between is never measured, so a panel that hides its
         // text does not reach the capsule's cached width by itself: ask again each time.
@@ -955,8 +1058,18 @@ export class Isla {
             const [, k] = this._card.get_preferred_width(-1);
             return w + k + CARD_GAP * this._sf;
         };
-        this._state.setCompact(false);
-        this._state.setCompact(width() > this._monitor.width - 16 * this._sf);
+        const limit = this._monitor.width - 16 * this._sf;
+        if (this._panels.get_n_children()) {
+            this._state.setCompact(false);
+            this._state.setCompact(width() > limit);
+        }
+        // The largest icon size (up to the chosen one) that lets the whole dock fit.
+        const fixed = width() - this._apps.iconsWidth();
+        const chosen = this._settings.get_int('tamano-base');
+        let size = chosen;
+        while (size > MIN_ICON && fixed + this._apps.iconsWidth(size) > limit)
+            size--;
+        this._apps.setFit(size === chosen ? null : size);
         this._capsule.queue_relayout();
         this._card.queue_relayout();
     }
@@ -981,23 +1094,17 @@ export class Isla {
     }
 
     // ---------- breathing (A2) ----------
-    // The background's own opacity: a fixed touch of transparency (the 20 % the user liked;
-    // 'isla-transparencia' is no longer offered).
-    get _bgOpacity() {
-        return Math.round(255 * 0.8);
-    }
-
     _updateBreathing(force = false) {
         const on = this._settings.get_boolean('isla-respiracion') && !this._state.calm?.motionOff &&
-            this._state.mode === Mode.COLLAPSED && !this._state.dnd && this._state.activities.length === 0;
+            this._state.mode === Mode.COLLAPSED && !this._state.dnd && this._state.activities.length === 0 &&
+            !this._restShown && !this._winShown;
         if (on === !!this._breathing && !force)
             return;
         this._breathing = on;
         this._bg.remove_transition('opacity');
-        const base = this._bgOpacity;
-        this._bg.opacity = base;
+        this._bg.opacity = BG_OPACITY;
         if (on) {
-            this._bg.ease({opacity: Math.round(base * 0.85), duration: 2000, mode: Clutter.AnimationMode.EASE_IN_OUT_SINE,
+            this._bg.ease({opacity: Math.round(BG_OPACITY * 0.85), duration: 2000, mode: Clutter.AnimationMode.EASE_IN_OUT_SINE,
                 autoReverse: true, repeatCount: -1});
         }
     }
@@ -1047,32 +1154,21 @@ export class Isla {
         this._checkHide();
     }
 
-    // ---------- volume level ----------
-    _showLevel(value) {
-        this._levelValue = Math.max(0, Math.min(1, value));
-        this._level.remove_all_transitions();
-        this._level.show();
-        this._level.opacity = 255;
-        this._capsule.queue_relayout();
-        this._later('level', LEVEL_TIME, () => this._level.ease({opacity: 0, duration: 200,
-            onComplete: () => this._level.hide()}));
-    }
-
-    _allocateLine(box, line, fill, value) {
+    // ---------- task progress (C1) ----------
+    _allocateProgress(box) {
         const sf = this._sf;
         const h = Math.max(1, Math.round(2 * sf));
         const r = Math.min(RADIUS * sf, box.get_height() / 2);
         const b = new Clutter.ActorBox();
         b.set_origin(box.x1 + r, box.y2 - h - Math.round(3 * sf));
         b.set_size(Math.max(0, box.get_width() - 2 * r), h);
-        line.allocate(b);
+        this._progress.allocate(b);
         const f = new Clutter.ActorBox();
         f.set_origin(0, 0);
-        f.set_size(Math.round(b.get_width() * value), h);
-        fill.allocate(f);
+        f.set_size(Math.round(b.get_width() * (this._progressValue ?? 0)), h);
+        this._progressFill.allocate(f);
     }
 
-    // ---------- task progress (C1) ----------
     _setProgress(value) {
         this._progressValue = value;
         this._updateProgressLine();
@@ -1109,43 +1205,6 @@ export class Isla {
         });
     }
 
-    // ---------- notices (A6) ----------
-    // notice: {actor, activate()}; the island owns the actor from now on.
-    _showNotice(notice) {
-        const mode = this._state.mode;
-        if (mode === Mode.EXPANDED || mode === Mode.SEARCH) {
-            notice.actor.destroy();
-            return;
-        }
-        this._noticeButton.child?.destroy();
-        this._noticeButton.set_child(notice.actor);
-        this._state.notice = notice;
-        if (mode === Mode.NOTICE)
-            this._resize();
-        else
-            this._state.setMode(Mode.NOTICE);
-        if (!this.hovered)
-            this._later('notice', NOTICE_TIME, () => this._endNotice());
-    }
-
-    _activateNotice() {
-        const notice = this._state.notice;
-        this._endNotice();
-        notice?.activate();
-    }
-
-    _endNotice() {
-        this._cancel('notice');
-        if (this._state.mode !== Mode.NOTICE)
-            return;
-        this._state.notice = null;
-        this._state.setMode(this.hovered ? Mode.EXPANDED : Mode.COLLAPSED);
-        this._later('notice-clear', OPEN_TIME, () => {
-            if (this._state.mode !== Mode.NOTICE)
-                this._noticeButton.child?.destroy();
-        });
-    }
-
     // dying: the stage is being torn down, its actors are already gone (only the others are disconnected).
     _dropSources(dying = false) {
         this._signals.forEach(([obj, id]) => !(dying && obj instanceof Clutter.Actor) && obj.disconnect(id));
@@ -1173,6 +1232,8 @@ export class Isla {
         for (const child of this._panels.get_children())
             this._panels.remove_child(child);
         this._dots.destroy();
+        this._restBar.destroy();
+        this._winBar.destroy();
         this._apps.destroy();
         Main.layoutManager.untrackChrome(this._card);
         Main.layoutManager.untrackChrome(this._capsule);

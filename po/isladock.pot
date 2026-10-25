@@ -1,17 +1,22 @@
+# IslaDock — created and designed by Frank Molina.
 msgid ""
 msgstr ""
 "Project-Id-Version: IslaDock\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: extension/dockItem.js:97 extension/prefs.js:551 extension/isla/apps.js:271
+#: extension/dockItem.js:98 extension/prefs.js:555 extension/isla/apps.js:353 extension/isla/search.js:454
 msgid "Aplicaciones"
 msgstr ""
 
-#: extension/dockItem.js:97 extension/prefs.js:552 extension/isla/apps.js:272
+#: extension/dockItem.js:98 extension/isla/apps.js:180 extension/isla/apps.js:354 extension/isla/windowBar.js:100
+msgid "Notificaciones"
+msgstr ""
+
+#: extension/dockItem.js:98 extension/prefs.js:556 extension/isla/apps.js:180 extension/isla/apps.js:354
 msgid "Portapapeles"
 msgstr ""
 
-#: extension/dockItem.js:97 extension/prefs.js:555 extension/isla/apps.js:272 extension/isla/power/power.js:62
+#: extension/dockItem.js:99 extension/prefs.js:559 extension/isla/apps.js:181 extension/isla/apps.js:354
 msgid "Ajustes"
 msgstr ""
 
@@ -268,710 +273,726 @@ msgid "Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Activ
 msgstr ""
 
 #: extension/prefs.js:465
-msgid "Respiración"
-msgstr ""
-
-#: extension/prefs.js:465
-msgid "En reposo, el fondo late muy despacio"
+msgid "Barra en el escritorio"
 msgstr ""
 
 #: extension/prefs.js:466
-msgid "Ahorrar batería"
+msgid "Sin ventanas a la vista: música o fecha y hora, apps minimizadas y tus botones. La rueda del mouse abre el dock"
 msgstr ""
 
 #: extension/prefs.js:467
-msgid "Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento ni respiración. "
+msgid "App activa en la isla"
 msgstr ""
 
 #: extension/prefs.js:468
-msgid "Si en Accesibilidad apagas las animaciones, la isla también se calma"
+msgid "Con ventanas abiertas: ícono y nombre de la app que usas, cuántas ventanas más hay, la música y la campana"
 msgstr ""
 
 #: extension/prefs.js:469
-msgid "Esconder la isla"
+msgid "Respiración"
+msgstr ""
+
+#: extension/prefs.js:469
+msgid "En reposo, el fondo late muy despacio"
 msgstr ""
 
 #: extension/prefs.js:470
-msgid "Nunca"
+msgid "Ahorrar batería"
 msgstr ""
 
 #: extension/prefs.js:471
-msgid "Cuando una ventana la toca"
+msgid "Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento ni respiración. "
 msgstr ""
 
 #: extension/prefs.js:472
+msgid "Si en Accesibilidad apagas las animaciones, la isla también se calma"
+msgstr ""
+
+#: extension/prefs.js:473
+msgid "Esconder la isla"
+msgstr ""
+
+#: extension/prefs.js:474
+msgid "Nunca"
+msgstr ""
+
+#: extension/prefs.js:475
+msgid "Cuando una ventana la toca"
+msgstr ""
+
+#: extension/prefs.js:476
 msgid "Siempre (aparece al llevar el mouse abajo)"
 msgstr ""
 
-#: extension/prefs.js:477
+#: extension/prefs.js:481
 msgid "Funciones"
 msgstr ""
 
-#: extension/prefs.js:478
+#: extension/prefs.js:482
 msgid "Clic largo sobre la isla: No molestar. Arrastrar hacia arriba: aplicaciones."
 msgstr ""
 
-#: extension/prefs.js:480
+#: extension/prefs.js:484 extension/isla/searchFiles.js:74
 msgid "Música"
 msgstr ""
 
-#: extension/prefs.js:480
+#: extension/prefs.js:484
 msgid "Lo que suena, con sus botones (Shift + rueda cambia de canción)"
 msgstr ""
 
-#: extension/prefs.js:481
+#: extension/prefs.js:485
 msgid "Notificaciones flotantes"
 msgstr ""
 
-#: extension/prefs.js:482
+#: extension/prefs.js:486
 msgid "Cada notificación aparece sola arriba en el centro, sin isla ni barra, y se va sola"
 msgstr ""
 
-#: extension/prefs.js:483
+#: extension/prefs.js:487
 msgid "La rueda cambia el volumen"
 msgstr ""
 
-#: extension/prefs.js:484
+#: extension/prefs.js:488
 msgid "Vista en miniatura de las ventanas"
 msgstr ""
 
-#: extension/prefs.js:485
+#: extension/prefs.js:489
 msgid "Al dejar el mouse sobre una app abierta (Firefox, Archivos…) aparece lo que tiene en pantalla"
 msgstr ""
 
-#: extension/prefs.js:486
+#: extension/prefs.js:490
 msgid "Progreso de tareas"
 msgstr ""
 
-#: extension/prefs.js:487
+#: extension/prefs.js:491
 msgid "Descargas, copias… solo de las apps que lo publican (como en Dash to Dock)"
 msgstr ""
 
-#: extension/prefs.js:488
+#: extension/prefs.js:492
 msgid "Mensajes sin leer en los íconos"
 msgstr ""
 
-#: extension/prefs.js:489
+#: extension/prefs.js:493
 msgid "Un número sobre la app (Telegram, Thunderbird…), solo de las apps que lo publican"
 msgstr ""
 
-#: extension/prefs.js:490
+#: extension/prefs.js:494
 msgid "Símbolo de mayúsculas en la isla"
 msgstr ""
 
-#: extension/prefs.js:491
+#: extension/prefs.js:495
 msgid "Mientras estén activas, un pequeño ⇪ en la esquina de la isla"
 msgstr ""
 
-#: extension/prefs.js:492 extension/isla/power/power.js:56 extension/isla/power/services.js:266
-msgid "Cafeína"
+#: extension/prefs.js:496 extension/isla/power/power.js:56 extension/isla/power/services.js:267
+msgid "Modo activo"
 msgstr ""
 
-#: extension/prefs.js:493
-msgid "La pantalla no se apaga ni el equipo se suspende. También en el panel Ajustes"
+#: extension/prefs.js:497
+msgid "La pantalla siempre encendida; puedes suspender cuando quieras. También en el panel Ajustes"
 msgstr ""
 
-#: extension/prefs.js:494
+#: extension/prefs.js:498 extension/isla/notifications/panel.js:131 extension/isla/notifications/panel.js:133
 msgid "No molestar"
 msgstr ""
 
-#: extension/prefs.js:494
+#: extension/prefs.js:498
 msgid "También con un clic largo sobre la isla"
 msgstr ""
 
-#: extension/prefs.js:498
+#: extension/prefs.js:502
 msgid "Estado"
 msgstr ""
 
-#: extension/prefs.js:499
+#: extension/prefs.js:503
 msgid "Lo que se pierde al quitar la barra superior: en la isla y antes de Ajustes."
 msgstr ""
 
-#: extension/prefs.js:501
+#: extension/prefs.js:505
 msgid "Porcentaje de la batería"
 msgstr ""
 
-#: extension/prefs.js:502
+#: extension/prefs.js:506
 msgid "El número junto al ícono. Sin batería no aparece nada"
 msgstr ""
 
-#: extension/prefs.js:503
+#: extension/prefs.js:507
 msgid "Espacios de trabajo"
 msgstr ""
 
-#: extension/prefs.js:504
+#: extension/prefs.js:508
 msgid "Un punto por espacio: clic para ir a uno, la rueda pasa al siguiente. Con uno solo no aparece"
 msgstr ""
 
-#: extension/prefs.js:508
+#: extension/prefs.js:512
 msgid "Herramientas"
 msgstr ""
 
-#: extension/prefs.js:509
+#: extension/prefs.js:513
 msgid "Clic derecho sobre la isla: temporizador de 5, 15 o 25 minutos, uno a tu medida o un Pomodoro."
 msgstr ""
 
-#: extension/prefs.js:515
+#: extension/prefs.js:519
 msgid "Dock"
 msgstr ""
 
-#: extension/prefs.js:517
+#: extension/prefs.js:521
 msgid "Íconos"
 msgstr ""
 
-#: extension/prefs.js:519
+#: extension/prefs.js:523
 msgid "Tamaño de los íconos"
 msgstr ""
 
-#: extension/prefs.js:520
+#: extension/prefs.js:524
 msgid "Con la isla abierta, en píxeles"
 msgstr ""
 
-#: extension/prefs.js:523
+#: extension/prefs.js:527
 msgid "Agrandar al pasar el mouse"
 msgstr ""
 
-#: extension/prefs.js:524
+#: extension/prefs.js:528
 msgid "Íconos en gris (apagados)"
 msgstr ""
 
-#: extension/prefs.js:524
+#: extension/prefs.js:528
 msgid "Toman color al pasar el mouse"
 msgstr ""
 
-#: extension/prefs.js:525
+#: extension/prefs.js:529
 msgid "Clic en la app que está al frente"
 msgstr ""
 
-#: extension/prefs.js:526
+#: extension/prefs.js:530
 msgid "Minimizar"
 msgstr ""
 
-#: extension/prefs.js:527
+#: extension/prefs.js:531
 msgid "Pasar a su siguiente ventana"
 msgstr ""
 
-#: extension/prefs.js:528
+#: extension/prefs.js:532
 msgid "Mostrar sus miniaturas"
 msgstr ""
 
-#: extension/prefs.js:529
+#: extension/prefs.js:533
 msgid "Con una sola ventana, siempre minimiza. Clic central: ventana nueva"
 msgstr ""
 
-#: extension/prefs.js:530
+#: extension/prefs.js:534
 msgid "La rueda sobre una app pasa por sus ventanas"
 msgstr ""
 
-#: extension/prefs.js:531
+#: extension/prefs.js:535
 msgid "Sobre el resto de la isla la rueda sigue cambiando el volumen"
 msgstr ""
 
-#: extension/prefs.js:533
+#: extension/prefs.js:537
 msgid "Tema de íconos"
 msgstr ""
 
-#: extension/prefs.js:534
+#: extension/prefs.js:538
 msgid "El del sistema"
 msgstr ""
 
-#: extension/prefs.js:534
+#: extension/prefs.js:538
 msgid "{nombre}  (tuyo)"
 msgstr ""
 
-#: extension/prefs.js:535
+#: extension/prefs.js:539
 msgid "Los de ~/.icons aparecen aquí"
 msgstr ""
 
-#: extension/prefs.js:536
+#: extension/prefs.js:540
 msgid "Tus íconos sueltos"
 msgstr ""
 
-#: extension/prefs.js:536
+#: extension/prefs.js:540
 msgid "~/.icons/isla-dock o ~/.icons — .svg o .png con el nombre de la app"
 msgstr ""
 
-#: extension/prefs.js:537 extension/isla/apps.js:538 extension/isla/stack/cascadeView.js:168 extension/isla/stack/gridView.js:42
+#: extension/prefs.js:541 extension/isla/apps.js:673 extension/isla/search.js:550 extension/isla/stack/cascadeView.js:168
 msgid "Abrir carpeta"
 msgstr ""
 
-#: extension/prefs.js:548
+#: extension/prefs.js:552
 msgid "Al final del dock"
 msgstr ""
 
-#: extension/prefs.js:549 extension/isla/apps.js:271 extension/isla/apps.js:742 extension/isla/apps.js:742
+#: extension/prefs.js:553 extension/isla/apps.js:353 extension/isla/apps.js:860 extension/isla/apps.js:860
 msgid "Descargas"
 msgstr ""
 
-#: extension/prefs.js:549
+#: extension/prefs.js:553
 msgid "Su pila se configura más abajo"
 msgstr ""
 
-#: extension/prefs.js:550 extension/isla/apps.js:271
+#: extension/prefs.js:554 extension/isla/apps.js:180 extension/isla/apps.js:353 extension/isla/stack/trash.js:42
 msgid "Papelera"
 msgstr ""
 
-#: extension/prefs.js:550
+#: extension/prefs.js:554
 msgid "Clic derecho para vaciarla"
 msgstr ""
 
-#: extension/prefs.js:551
+#: extension/prefs.js:555
 msgid "Ver y buscar todo lo que tienes instalado"
 msgstr ""
 
-#: extension/prefs.js:553
+#: extension/prefs.js:557
 msgid "Historial de lo copiado (texto, enlaces, colores e imágenes). Super+V lo abre desde cualquier lugar; "
 msgstr ""
 
-#: extension/prefs.js:554
+#: extension/prefs.js:558
 msgid "mientras esté activo, Super+V deja de abrir las notificaciones (sigue Super+M)"
 msgstr ""
 
-#: extension/prefs.js:556
-msgid "Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína, volumen, captura, bloquear, apagar… "
+#: extension/prefs.js:560
+msgid "Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, modo activo, volumen, captura, bloquear, apagar… "
 msgstr ""
 
-#: extension/prefs.js:557
+#: extension/prefs.js:561
 msgid "Clic derecho o mantener pulsado: suspender"
 msgstr ""
 
-#: extension/prefs.js:558
+#: extension/prefs.js:562
 msgid "Quitar la barra superior de GNOME"
 msgstr ""
 
-#: extension/prefs.js:559
+#: extension/prefs.js:563
 msgid "Desaparece del todo; sus controles quedan en el botón Ajustes. Las esquinas activas siguen funcionando"
 msgstr ""
 
-#: extension/prefs.js:571 extension/prefs.js:621
+#: extension/prefs.js:575 extension/prefs.js:625
 msgid "Monitor"
 msgstr ""
 
-#: extension/prefs.js:572
+#: extension/prefs.js:576
 msgid "Con varios monitores, la isla vive en uno. Si ese monitor se desconecta, pasa al principal."
 msgstr ""
 
-#: extension/prefs.js:575 extension/prefs.js:615
+#: extension/prefs.js:579 extension/prefs.js:619
 msgid "El principal"
 msgstr ""
 
-#: extension/prefs.js:578 extension/prefs.js:618
+#: extension/prefs.js:582 extension/prefs.js:622
 msgid "Monitor {n}"
 msgstr ""
 
-#: extension/prefs.js:580
+#: extension/prefs.js:584
 msgid "Monitor de la isla"
 msgstr ""
 
-#: extension/prefs.js:585
+#: extension/prefs.js:589
 msgid "Ahora hay un solo monitor"
 msgstr ""
 
-#: extension/prefs.js:592
+#: extension/prefs.js:596 extension/isla/searchFiles.js:72
 msgid "Escritorio"
 msgstr ""
 
-#: extension/prefs.js:594
+#: extension/prefs.js:598
 msgid "Reloj en el escritorio"
 msgstr ""
 
-#: extension/prefs.js:595
+#: extension/prefs.js:599
 msgid "La hora y la fecha sobre tu fondo de pantalla, detrás de las ventanas. Los clics lo atraviesan."
 msgstr ""
 
-#: extension/prefs.js:597
+#: extension/prefs.js:601
 msgid "Mostrar el reloj"
 msgstr ""
 
-#: extension/prefs.js:598
+#: extension/prefs.js:602
 msgid "Estilo"
 msgstr ""
 
-#: extension/prefs.js:599
+#: extension/prefs.js:603
 msgid "Línea viva"
 msgstr ""
 
-#: extension/prefs.js:600
+#: extension/prefs.js:604
 msgid "Lateral acento"
 msgstr ""
 
-#: extension/prefs.js:601
+#: extension/prefs.js:605
 msgid "Semana fluida"
 msgstr ""
 
-#: extension/prefs.js:602
+#: extension/prefs.js:606
 msgid "Arco del día"
 msgstr ""
 
-#: extension/prefs.js:604
+#: extension/prefs.js:608 extension/isla/search.js:234 extension/isla/search.js:618
 msgid "Tamaño"
 msgstr ""
 
-#: extension/prefs.js:604
+#: extension/prefs.js:608
 msgid "Se ajusta solo a tu pantalla; esto lo agranda o achica"
 msgstr ""
 
-#: extension/prefs.js:605
+#: extension/prefs.js:609
 msgid "Pequeño"
 msgstr ""
 
-#: extension/prefs.js:605
+#: extension/prefs.js:609
 msgid "Grande"
 msgstr ""
 
-#: extension/prefs.js:606
+#: extension/prefs.js:610
 msgid "Posición"
 msgstr ""
 
-#: extension/prefs.js:607 extension/prefs.js:612
+#: extension/prefs.js:611 extension/prefs.js:616
 msgid "Arriba"
 msgstr ""
 
-#: extension/prefs.js:608
+#: extension/prefs.js:612
 msgid "En el centro de la pantalla"
 msgstr ""
 
-#: extension/prefs.js:609 extension/prefs.js:612
+#: extension/prefs.js:613 extension/prefs.js:616
 msgid "Abajo"
 msgstr ""
 
-#: extension/prefs.js:611
+#: extension/prefs.js:615
 msgid "Subir o bajar"
 msgstr ""
 
-#: extension/prefs.js:611
+#: extension/prefs.js:615
 msgid "Ajuste fino desde la posición elegida"
 msgstr ""
 
-#: extension/prefs.js:629
+#: extension/prefs.js:633
 msgid "Reloj lateral"
 msgstr ""
 
-#: extension/prefs.js:630
+#: extension/prefs.js:634
 msgid "Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora. "
 msgstr ""
 
-#: extension/prefs.js:631
+#: extension/prefs.js:635
 msgid "Sirve cuando las ventanas maximizadas tapan el reloj del escritorio."
 msgstr ""
 
-#: extension/prefs.js:633
+#: extension/prefs.js:637
 msgid "Mostrar el reloj lateral"
 msgstr ""
 
-#: extension/prefs.js:634
+#: extension/prefs.js:638
 msgid "Estilo del reloj"
 msgstr ""
 
-#: extension/prefs.js:635
+#: extension/prefs.js:639
 msgid "Editorial"
 msgstr ""
 
-#: extension/prefs.js:636
+#: extension/prefs.js:640
 msgid "Isla con semana"
 msgstr ""
 
-#: extension/prefs.js:637
+#: extension/prefs.js:641
 msgid "Línea del día"
 msgstr ""
 
-#: extension/prefs.js:638
+#: extension/prefs.js:642
 msgid "Horizonte"
 msgstr ""
 
-#: extension/prefs.js:640
+#: extension/prefs.js:644
 msgid "Borde"
 msgstr ""
 
-#: extension/prefs.js:641
+#: extension/prefs.js:645
 msgid "Derecho"
 msgstr ""
 
-#: extension/prefs.js:642
+#: extension/prefs.js:646
 msgid "Izquierdo"
 msgstr ""
 
-#: extension/prefs.js:644
+#: extension/prefs.js:648
 msgid "Un clic abre el calendario"
 msgstr ""
 
-#: extension/prefs.js:645
+#: extension/prefs.js:649
 msgid "Con tus recordatorios"
 msgstr ""
 
-#: extension/prefs.js:651
+#: extension/prefs.js:655
 msgid "Letra"
 msgstr ""
 
-#: extension/prefs.js:652
+#: extension/prefs.js:656
 msgid "El reloj está diseñado con la letra Inter; mientras no esté instalada usa Cantarell. "
 msgstr ""
 
-#: extension/prefs.js:653
+#: extension/prefs.js:657
 msgid "Para instalarla: sudo apt install fonts-inter (y luego cerrar sesión)."
 msgstr ""
 
-#: extension/prefs.js:675
+#: extension/prefs.js:679
 msgid "Acerca de"
 msgstr ""
 
-#: extension/prefs.js:678
+#: extension/prefs.js:682
 msgid "Un dock en forma de isla para GNOME"
 msgstr ""
 
-#: extension/prefs.js:690
+#: extension/prefs.js:694
 msgid "Creador y diseñador"
 msgstr ""
 
-#: extension/prefs.js:691
+#: extension/prefs.js:695
 msgid "Versión"
 msgstr ""
 
-#: extension/prefs.js:692
+#: extension/prefs.js:696
 msgid "Licencia"
 msgstr ""
 
-#: extension/prefs.js:692
+#: extension/prefs.js:696
 msgid "GNU GPL 2.0 o posterior"
 msgstr ""
 
-#: extension/prefs.js:704
+#: extension/prefs.js:708
 msgid "Copia de la configuración"
 msgstr ""
 
-#: extension/prefs.js:705
+#: extension/prefs.js:709
 msgid "Guarda todo lo que elegiste aquí en un archivo, para otro equipo o para volver atrás."
 msgstr ""
 
-#: extension/prefs.js:707
+#: extension/prefs.js:711
 msgid "Exportar"
 msgstr ""
 
-#: extension/prefs.js:707
+#: extension/prefs.js:711
 msgid "Guardar la configuración en un archivo"
 msgstr ""
 
-#: extension/prefs.js:709
+#: extension/prefs.js:713
 msgid "Exportar…"
 msgstr ""
 
-#: extension/prefs.js:712
+#: extension/prefs.js:716
 msgid "Importar"
 msgstr ""
 
-#: extension/prefs.js:712
+#: extension/prefs.js:716
 msgid "Cargar una configuración guardada"
 msgstr ""
 
-#: extension/prefs.js:714
+#: extension/prefs.js:718
 msgid "Importar…"
 msgstr ""
 
-#: extension/prefs.js:720
+#: extension/prefs.js:724
 msgid "Configuración de IslaDock (.json)"
 msgstr ""
 
-#: extension/prefs.js:727
+#: extension/prefs.js:731
 msgid "Exportar la configuración"
 msgstr ""
 
-#: extension/prefs.js:739
+#: extension/prefs.js:743
 msgid "Configuración guardada"
 msgstr ""
 
-#: extension/prefs.js:741
+#: extension/prefs.js:745
 msgid "No se pudo guardar: {error}"
 msgstr ""
 
-#: extension/prefs.js:746
+#: extension/prefs.js:750
 msgid "Importar la configuración"
 msgstr ""
 
-#: extension/prefs.js:757
+#: extension/prefs.js:761
 msgid "Configuración cargada ({n} opciones; {malas} no válidas se dejaron igual)"
 msgstr ""
 
-#: extension/prefs.js:758
+#: extension/prefs.js:762
 msgid "Configuración cargada ({n} opciones)"
 msgstr ""
 
-#: extension/prefs.js:760
+#: extension/prefs.js:764
 msgid "Ese archivo no es una configuración de IslaDock: {error}"
 msgstr ""
 
-#: extension/prefs.js:782
+#: extension/prefs.js:786
 msgid "Apoya a IslaDock"
 msgstr ""
 
-#: extension/prefs.js:783
+#: extension/prefs.js:787
 msgid "Si IslaDock te es útil, puedes apoyar su desarrollo con una donación voluntaria."
 msgstr ""
 
-#: extension/prefs.js:788
+#: extension/prefs.js:792
 msgid "Donar con PayPal"
 msgstr ""
 
-#: extension/prefs.js:805
+#: extension/prefs.js:809
 msgid "Carpetas de Archivos"
 msgstr ""
 
-#: extension/prefs.js:806
+#: extension/prefs.js:810
 msgid "Clic en Archivos: tus carpetas, como la pila de descargas. Clic central: abre Archivos. "
 msgstr ""
 
-#: extension/prefs.js:807
+#: extension/prefs.js:811
 msgid "Clic derecho sobre una carpeta añadida: quitarla."
 msgstr ""
 
-#: extension/prefs.js:809
+#: extension/prefs.js:813
 msgid "Mostrar las carpetas al hacer clic en Archivos"
 msgstr ""
 
-#: extension/prefs.js:822
+#: extension/prefs.js:826
 msgid "Siempre está"
 msgstr ""
 
-#: extension/prefs.js:833 extension/isla/stack/folders.js:45 extension/isla/stack/folders.js:77
+#: extension/prefs.js:837 extension/isla/searchFiles.js:83 extension/isla/stack/folders.js:45 extension/isla/stack/folders.js:77
 msgid "Carpeta personal"
 msgstr ""
 
-#: extension/prefs.js:835 extension/isla/stack/folders.js:98
+#: extension/prefs.js:839 extension/isla/stack/folders.js:98
 msgid "Quitar de la lista"
 msgstr ""
 
-#: extension/prefs.js:846
+#: extension/prefs.js:850
 msgid "Añadir otra carpeta"
 msgstr ""
 
-#: extension/prefs.js:849
+#: extension/prefs.js:853
 msgid "Carpeta para añadir a Archivos"
 msgstr ""
 
-#: extension/prefs.js:869
+#: extension/prefs.js:873
 msgid "Pila de descargas"
 msgstr ""
 
-#: extension/prefs.js:870
+#: extension/prefs.js:874
 msgid "Clic en Descargas: tus últimos archivos. Clic central: la carpeta. Clic derecho: cambiar la vista."
 msgstr ""
 
-#: extension/prefs.js:872
+#: extension/prefs.js:876
 msgid "Vista"
 msgstr ""
 
-#: extension/prefs.js:873
+#: extension/prefs.js:877
 msgid "Cascada diagonal"
 msgstr ""
 
-#: extension/prefs.js:874
+#: extension/prefs.js:878
 msgid "Cuadrícula"
 msgstr ""
 
-#: extension/prefs.js:875
+#: extension/prefs.js:879
 msgid "Lista"
 msgstr ""
 
-#: extension/prefs.js:878
+#: extension/prefs.js:882
 msgid "Máximo en cascada"
 msgstr ""
 
-#: extension/prefs.js:882
+#: extension/prefs.js:886
 msgid "Máximo en cuadrícula"
 msgstr ""
 
-#: extension/prefs.js:887
+#: extension/prefs.js:891
 msgid "Máximo en lista"
 msgstr ""
 
-#: extension/prefs.js:890
+#: extension/prefs.js:894
 msgid "Avisar cuando termina una descarga"
 msgstr ""
 
-#: extension/prefs.js:891
+#: extension/prefs.js:895
 msgid "«Descarga lista» aparece arriba, como las demás notificaciones"
 msgstr ""
 
-#: extension/prefs.js:894
+#: extension/prefs.js:898
 msgid "Carpeta"
 msgstr ""
 
-#: extension/prefs.js:897
+#: extension/prefs.js:901
 msgid "Descargas del sistema"
 msgstr ""
 
-#: extension/prefs.js:900
+#: extension/prefs.js:904
 msgid "Elegir…"
 msgstr ""
 
-#: extension/prefs.js:902
+#: extension/prefs.js:906
 msgid "Carpeta de la pila de descargas"
 msgstr ""
 
-#: extension/prefs.js:912
+#: extension/prefs.js:916
 msgid "Volver a Descargas del sistema"
 msgstr ""
 
-#: extension/isla/apps.js:119 extension/isla/search.js:303 extension/isla/stack/fileActions.js:19
+#: extension/isla/apps.js:125 extension/isla/search.js:833 extension/isla/stack/fileActions.js:19
 msgid "No se pudo abrir"
 msgstr ""
 
-#: extension/isla/apps.js:540
+#: extension/isla/apps.js:663
+msgid "No molestar 1 hora"
+msgstr ""
+
+#: extension/isla/apps.js:663
+msgid "No molestar hasta mañana"
+msgstr ""
+
+#: extension/isla/apps.js:664
+msgid "No molestar siempre"
+msgstr ""
+
+#: extension/isla/apps.js:667 extension/isla/notifications/panel.js:133
+msgid "Quitar No molestar"
+msgstr ""
+
+#: extension/isla/apps.js:669 extension/isla/notifications/panel.js:178
+msgid "Limpiar todo"
+msgstr ""
+
+#: extension/isla/apps.js:675
 msgid "Vista: cascada"
 msgstr ""
 
-#: extension/isla/apps.js:540
+#: extension/isla/apps.js:675
 msgid "Vista: cuadrícula"
 msgstr ""
 
-#: extension/isla/apps.js:540
+#: extension/isla/apps.js:675
 msgid "Vista: lista"
 msgstr ""
 
-#: extension/isla/apps.js:548
+#: extension/isla/apps.js:683 extension/isla/stack/trash.js:42
 msgid "Abrir la papelera"
 msgstr ""
 
-#: extension/isla/apps.js:550
+#: extension/isla/apps.js:685 extension/isla/stack/trash.js:147
 msgid "Vaciar la papelera…"
 msgstr ""
 
-#: extension/isla/apps.js:562
+#: extension/isla/apps.js:697
 msgid "Nueva ventana"
 msgstr ""
 
-#: extension/isla/apps.js:572
+#: extension/isla/apps.js:707
 msgid "Quitar del dock"
 msgstr ""
 
-#: extension/isla/apps.js:574
+#: extension/isla/apps.js:709
 msgid "Fijar en el dock"
 msgstr ""
 
-#: extension/isla/apps.js:576
+#: extension/isla/apps.js:711
 msgid "Cerrar todas las ventanas"
 msgstr ""
 
-#: extension/isla/apps.js:582
-msgid "¿Vaciar la papelera?"
-msgstr ""
-
-#: extension/isla/apps.js:583
-msgid "Todo lo que está en la papelera se borrará para siempre."
-msgstr ""
-
-#: extension/isla/apps.js:585 extension/isla/calendar.js:475 extension/isla/timer.js:179 extension/isla/stack/fileActions.js:51
-msgid "Cancelar"
-msgstr ""
-
-#: extension/isla/apps.js:587
-msgid "Vaciar"
-msgstr ""
-
-#: extension/isla/apps.js:593
-msgid "No se pudo vaciar la papelera"
-msgstr ""
-
-#: extension/isla/apps.js:742
+#: extension/isla/apps.js:860
 msgid "descargando…"
 msgstr ""
 
@@ -987,7 +1008,7 @@ msgstr ""
 msgid "Mes anterior"
 msgstr ""
 
-#: extension/isla/calendar.js:226
+#: extension/isla/calendar.js:226 extension/isla/notifications/panel.js:160 extension/isla/notifications/panel.js:166
 msgid "Hoy"
 msgstr ""
 
@@ -1045,6 +1066,10 @@ msgstr ""
 
 #: extension/isla/calendar.js:463
 msgid "Minutos"
+msgstr ""
+
+#: extension/isla/calendar.js:475 extension/isla/timer.js:179 extension/isla/stack/fileActions.js:51 extension/isla/stack/fileActions.js:75
+msgid "Cancelar"
 msgstr ""
 
 #: extension/isla/calendar.js:477
@@ -1215,7 +1240,7 @@ msgstr ""
 msgid "L M X J V S D"
 msgstr ""
 
-#: extension/isla/floating.js:238
+#: extension/isla/floating.js:203 extension/isla/notifications/notifications.js:321
 msgid "Cerrar"
 msgstr ""
 
@@ -1231,7 +1256,7 @@ msgstr ""
 msgid "Cámara"
 msgstr ""
 
-#: extension/isla/privacy.js:31 extension/isla/power/power.js:377
+#: extension/isla/privacy.js:31 extension/isla/power/power.js:383
 msgid "Micrófono"
 msgstr ""
 
@@ -1239,7 +1264,7 @@ msgstr ""
 msgid "Ubicación"
 msgstr ""
 
-#: extension/isla/privacy.js:128
+#: extension/isla/privacy.js:129
 msgid "En uso: {lista}"
 msgstr ""
 
@@ -1251,15 +1276,157 @@ msgstr ""
 msgid "Detener grabación"
 msgstr ""
 
-#: extension/isla/search.js:143
+#: extension/isla/restBar.js:127
+msgid "Calendario"
+msgstr ""
+
+#: extension/isla/restBar.js:151
+msgid "{dia}, {n} de {mes}"
+msgstr ""
+
+#: extension/isla/restBar.js:177
+msgid "Anterior"
+msgstr ""
+
+#: extension/isla/restBar.js:178 extension/isla/restBar.js:190 extension/isla/windowBar.js:84
+msgid "Pausa"
+msgstr ""
+
+#: extension/isla/restBar.js:179
+msgid "Siguiente"
+msgstr ""
+
+#: extension/isla/restBar.js:190
+msgid "Reproducir"
+msgstr ""
+
+#: extension/isla/restBar.js:292 extension/isla/windowBar.js:199
+msgid "{n} ventanas más"
+msgstr ""
+
+#: extension/isla/search.js:178
+msgid "Resultados"
+msgstr ""
+
+#: extension/isla/search.js:188
 msgid "Buscar apps, archivos o hacer una cuenta…"
 msgstr ""
 
-#: extension/isla/search.js:207
+#: extension/isla/search.js:191
+msgid "Espacio: vista previa · ↵ abrir"
+msgstr ""
+
+#: extension/isla/search.js:235
+msgid "Modificado"
+msgstr ""
+
+#: extension/isla/search.js:236
+msgid "Abrir ↵"
+msgstr ""
+
+#: extension/isla/search.js:332
 msgid "Enter copia el resultado"
 msgstr ""
 
-#: extension/isla/sideClock.js:75
+#: extension/isla/search.js:373
+msgid "Ver {n} más en Archivos"
+msgstr ""
+
+#: extension/isla/search.js:380
+msgid "Buscar “{texto}” en la web"
+msgstr ""
+
+#: extension/isla/search.js:425
+msgid "Sin resultados para “{texto}”"
+msgstr ""
+
+#: extension/isla/search.js:454
+msgid "Archivos"
+msgstr ""
+
+#: extension/isla/search.js:454 extension/isla/stack/folders.js:45
+msgid "Carpetas"
+msgstr ""
+
+#: extension/isla/search.js:531 extension/isla/search.js:631
+msgid "{n} elemento"
+msgid_plural "{n} elementos"
+msgstr[0] ""
+msgstr[1] ""
+
+#: extension/isla/search.js:551 extension/isla/search.js:770 extension/isla/stack/folders.js:96 extension/isla/stack/stackPopup.js:185
+msgid "Copiar ruta"
+msgstr ""
+
+#: extension/isla/search.js:618
+msgid "Contenido"
+msgstr ""
+
+#: extension/isla/search.js:638
+msgid "{n} página"
+msgid_plural "{n} páginas"
+msgstr[0] ""
+msgstr[1] ""
+
+#: extension/isla/search.js:730
+msgid "No se encontró el archivo"
+msgstr ""
+
+#: extension/isla/search.js:762
+msgid "Ruta copiada"
+msgstr ""
+
+#: extension/isla/searchFiles.js:70
+msgid "Documentos"
+msgstr ""
+
+#: extension/isla/searchFiles.js:73 extension/isla/clipboard/panel.js:18
+msgid "Imágenes"
+msgstr ""
+
+#: extension/isla/searchFiles.js:75
+msgid "Vídeos"
+msgstr ""
+
+#: extension/isla/searchFiles.js:113
+msgid "hace unos minutos"
+msgstr ""
+
+#: extension/isla/searchFiles.js:113 extension/isla/searchFiles.js:141
+msgid "hoy"
+msgstr ""
+
+#: extension/isla/searchFiles.js:115 extension/isla/searchFiles.js:141 extension/isla/stack/fileActions.js:107 extension/isla/notifications/panel.js:46
+msgid "ayer"
+msgstr ""
+
+#: extension/isla/searchFiles.js:117
+msgid "hace {n} día"
+msgid_plural "hace {n} días"
+msgstr[0] ""
+msgstr[1] ""
+
+#: extension/isla/searchFiles.js:120
+msgid "hace {n} mes"
+msgid_plural "hace {n} meses"
+msgstr[0] ""
+msgstr[1] ""
+
+#: extension/isla/searchFiles.js:122
+msgid "hace {n} año"
+msgid_plural "hace {n} años"
+msgstr[0] ""
+msgstr[1] ""
+
+#: extension/isla/searchFiles.js:131
+msgid "a. m."
+msgstr ""
+
+#: extension/isla/searchFiles.js:131
+msgid "p. m."
+msgstr ""
+
+#: extension/isla/sideClock.js:76
 msgid "Reloj"
 msgstr ""
 
@@ -1375,7 +1542,7 @@ msgstr ""
 msgid "Encendido"
 msgstr ""
 
-#: extension/isla/power/power.js:52 extension/isla/power/power.js:55
+#: extension/isla/power/power.js:52 extension/isla/power/power.js:55 extension/isla/power/power.js:56
 msgid "Apagado"
 msgstr ""
 
@@ -1387,11 +1554,11 @@ msgstr ""
 msgid "Nocturna"
 msgstr ""
 
-#: extension/isla/power/power.js:54 extension/isla/power/power.js:56
+#: extension/isla/power/power.js:54
 msgid "Activa"
 msgstr ""
 
-#: extension/isla/power/power.js:54 extension/isla/power/power.js:56
+#: extension/isla/power/power.js:54
 msgid "Apagada"
 msgstr ""
 
@@ -1399,7 +1566,7 @@ msgstr ""
 msgid "Oscuro"
 msgstr ""
 
-#: extension/isla/power/power.js:55
+#: extension/isla/power/power.js:55 extension/isla/power/power.js:56 extension/isla/notifications/panel.js:131
 msgid "Activo"
 msgstr ""
 
@@ -1439,31 +1606,31 @@ msgstr ""
 msgid "Apagar"
 msgstr ""
 
-#: extension/isla/power/power.js:209
+#: extension/isla/power/power.js:215
 msgid "Salida: {nombre}"
 msgstr ""
 
-#: extension/isla/power/power.js:209 extension/isla/power/power.js:388 extension/isla/power/power.js:397
+#: extension/isla/power/power.js:215 extension/isla/power/power.js:394 extension/isla/power/power.js:403
 msgid "Salida de sonido"
 msgstr ""
 
-#: extension/isla/power/power.js:371 extension/isla/power/power.js:372
+#: extension/isla/power/power.js:377 extension/isla/power/power.js:378
 msgid "Silenciar el micrófono"
 msgstr ""
 
-#: extension/isla/power/power.js:371 extension/isla/power/power.js:372
+#: extension/isla/power/power.js:377 extension/isla/power/power.js:378
 msgid "Silenciar"
 msgstr ""
 
-#: extension/isla/power/power.js:377
+#: extension/isla/power/power.js:383
 msgid "Volumen"
 msgstr ""
 
-#: extension/isla/power/power.js:546
+#: extension/isla/power/power.js:552
 msgid "Apagar…"
 msgstr ""
 
-#: extension/isla/power/power.js:555
+#: extension/isla/power/power.js:561
 msgid "Suspender, reiniciar, cerrar sesión o apagar"
 msgstr ""
 
@@ -1479,31 +1646,31 @@ msgstr ""
 msgid "Rendimiento"
 msgstr ""
 
-#: extension/isla/power/services.js:33
+#: extension/isla/power/services.js:34
 msgid "No se pudo abrir Configuración"
 msgstr ""
 
-#: extension/isla/power/services.js:114
+#: extension/isla/power/services.js:115
 msgid "Red cableada"
 msgstr ""
 
-#: extension/isla/power/services.js:208
+#: extension/isla/power/services.js:209
 msgid "Modo de energía: {modo}"
 msgstr ""
 
-#: extension/isla/power/services.js:227
+#: extension/isla/power/services.js:228
 msgid "No se pudo cambiar el modo de energía"
 msgstr ""
 
-#: extension/isla/power/services.js:266
-msgid "Cafeína: la pantalla no se apaga"
-msgstr ""
-
-#: extension/isla/power/services.js:342
-msgid "Luz nocturna"
+#: extension/isla/power/services.js:267
+msgid "Modo activo: la pantalla siempre encendida"
 msgstr ""
 
 #: extension/isla/power/services.js:343
+msgid "Luz nocturna"
+msgstr ""
+
+#: extension/isla/power/services.js:344
 msgid "Estilo oscuro"
 msgstr ""
 
@@ -1531,24 +1698,28 @@ msgstr ""
 msgid "No se pudo mover a la papelera"
 msgstr ""
 
-#: extension/isla/stack/fileActions.js:78 extension/isla/clipboard/panel.js:32
+#: extension/isla/stack/fileActions.js:72
+msgid "¿Vaciar la papelera?"
+msgstr ""
+
+#: extension/isla/stack/fileActions.js:73
+msgid "Todo lo que está en la papelera se borrará para siempre."
+msgstr ""
+
+#: extension/isla/stack/fileActions.js:77
+msgid "Vaciar"
+msgstr ""
+
+#: extension/isla/stack/fileActions.js:83
+msgid "No se pudo vaciar la papelera"
+msgstr ""
+
+#: extension/isla/stack/fileActions.js:100 extension/isla/notifications/panel.js:38 extension/isla/clipboard/panel.js:32
 msgid "ahora"
 msgstr ""
 
-#: extension/isla/stack/fileActions.js:85 extension/isla/clipboard/panel.js:40
-msgid "ayer"
-msgstr ""
-
-#: extension/isla/stack/folders.js:45
-msgid "Carpetas"
-msgstr ""
-
-#: extension/isla/stack/folders.js:92 extension/isla/stack/stackPopup.js:177
+#: extension/isla/stack/folders.js:92 extension/isla/stack/stackPopup.js:177 extension/isla/stack/trash.js:135
 msgid "Abrir"
-msgstr ""
-
-#: extension/isla/stack/folders.js:96 extension/isla/stack/stackPopup.js:185
-msgid "Copiar ruta"
 msgstr ""
 
 #: extension/isla/stack/gridView.js:165
@@ -1575,6 +1746,126 @@ msgstr ""
 msgid "Mover a la papelera…"
 msgstr ""
 
+#: extension/isla/stack/trash.js:43
+msgid "1 elemento"
+msgstr ""
+
+#: extension/isla/stack/trash.js:43
+msgid "{n} elementos"
+msgstr ""
+
+#: extension/isla/stack/trash.js:139
+msgid "Restaurar"
+msgstr ""
+
+#: extension/isla/notifications/notifications.js:302 extension/isla/notifications/panel.js:25 extension/isla/notifications/panel.js:224
+msgid "Sistema"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:23
+msgid "Todas"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:24
+msgid "Mensajes"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:27
+msgid "1 hora"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:27
+msgid "Hasta mañana"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:27
+msgid "Siempre"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:40 extension/isla/clipboard/panel.js:35
+msgid "hace {n} min"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:128
+msgid "Todo leído"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:128
+msgid "{n} sin leer"
+msgid_plural "{n} sin leer"
+msgstr[0] ""
+msgstr[1] ""
+
+#: extension/isla/notifications/panel.js:135
+msgid "Ajustes de notificaciones"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:157
+msgid "Todo al día"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:157
+msgid "No tienes avisos pendientes"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:161
+msgid "Anteriores"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:170 extension/isla/notifications/panel.js:331
+msgid "Historial"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:231
+msgid "Ver menos"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:231
+msgid "Ver {n} más"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:241
+msgid "Descartar"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:310
+msgid "Silencio activado"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:314
+msgid "Silencio hasta mañana a las {hora}"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:314
+msgid "Silencio hasta las {hora}"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:319
+msgid "{n} aviso guardado, lo verás al terminar."
+msgid_plural "{n} avisos guardados, los verás al terminar."
+msgstr[0] ""
+msgstr[1] ""
+
+#: extension/isla/notifications/panel.js:321
+msgid "Los avisos que lleguen te esperan aquí."
+msgstr ""
+
+#: extension/isla/notifications/panel.js:327
+msgid "Volver"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:331
+msgid "Avisos que ya descartaste"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:334
+msgid "Sin historial"
+msgstr ""
+
+#: extension/isla/notifications/panel.js:339
+msgid "Borrar historial"
+msgstr ""
+
 #: extension/isla/clipboard/history.js:111
 msgid "Imagen {hora}.png"
 msgstr ""
@@ -1591,20 +1882,12 @@ msgstr ""
 msgid "Enlaces"
 msgstr ""
 
-#: extension/isla/clipboard/panel.js:18
-msgid "Imágenes"
-msgstr ""
-
 #: extension/isla/clipboard/panel.js:19
 msgid "Colores"
 msgstr ""
 
 #: extension/isla/clipboard/panel.js:25
 msgid "Clic para copiar"
-msgstr ""
-
-#: extension/isla/clipboard/panel.js:35
-msgid "hace {n} min"
 msgstr ""
 
 #: extension/isla/clipboard/panel.js:38

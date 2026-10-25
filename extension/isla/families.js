@@ -10,6 +10,8 @@
 // the clipboard's pages trade places, the dial's knob goes round, the switches flip.
 import Cairo from 'cairo';
 
+import {bellPath, clapperPath, moonPath} from './symbols.js';
+
 export const FAMILIES = ['burbuja', 'galleta-cuadrada', 'bento', 'petalos', 'mosaico'];
 
 const C = 23;
@@ -227,12 +229,30 @@ function squareCookie(cr, t) {
     cr.restore();
 }
 
-const PHASE = {apps: 0.6, clipboard: 2.3, power: 4.1};
+const PHASE = {apps: 0.6, clipboard: 2.3, power: 4.1, notifications: 3.2};
 
-// Draws `kind` ('apps', 'clipboard' or 'power') of `family` on a 46 px canvas (the
-// caller scales). level: 0 rest, 1 hover or open (the main fill a little lighter, or
-// darker on the light palette). t: the gesture. accent: [r, g, b] 0-255.
-export function drawFamily(cr, family, kind, level, t, dark, accent) {
+// Notifications in every family: a solid bell (its clapper swings while open), or the moon.
+function bell(cr, c, t, quiet) {
+    source(cr, c);
+    if (quiet) {
+        moonPath(cr);
+        cr.fill();
+        return;
+    }
+    bellPath(cr);
+    cr.fill();
+    cr.save();
+    cr.translate(2 * Math.sin(t * Math.PI), 0);
+    clapperPath(cr);
+    cr.fill();
+    cr.restore();
+}
+
+// Draws `kind` ('apps', 'clipboard', 'power' or 'notifications') of `family` on a 46 px
+// canvas (the caller scales). level: 0 rest, 1 hover or open (the main fill a little
+// lighter, or darker on the light palette). t: the gesture. accent: [r, g, b] 0-255.
+// quiet: the notifications button in do not disturb (the moon).
+export function drawFamily(cr, family, kind, level, t, dark, accent, quiet = false) {
     const p = tokens(accent, dark);
     const lit = c => (level ? dark ? mix(c, WHITE, 0.92) : mix(c, BLACK, 0.96) : c);
     const big = kind === 'apps' ? 20 : 27;
@@ -247,7 +267,10 @@ export function drawFamily(cr, family, kind, level, t, dark, accent) {
             squareCookie(cr, t);
         source(cr, lit(p.ac));
         cr.fill();
-        inBox(cr, big, () => (kind === 'apps' ? mosaic : kind === 'clipboard' ? stack : dial)(cr, WHITE, t));
+        if (kind === 'notifications')
+            inBox(cr, 24, () => bell(cr, WHITE, t, quiet));
+        else
+            inBox(cr, big, () => (kind === 'apps' ? mosaic : kind === 'clipboard' ? stack : dial)(cr, WHITE, t));
         break;
     case 'bento':
     case 'mosaico':
@@ -258,7 +281,9 @@ export function drawFamily(cr, family, kind, level, t, dark, accent) {
         source(cr, p.tintBorder);
         cr.setLineWidth(1);
         cr.stroke();
-        if (family === 'bento') {
+        if (kind === 'notifications') {
+            inBox(cr, 24, () => bell(cr, family === 'bento' ? p.glyph : p.acGlyph, t, quiet));
+        } else if (family === 'bento') {
             inBox(cr, kind === 'apps' ? 20 : 25, () =>
                 (kind === 'apps' ? bento : kind === 'clipboard' ? bentoClip : bentoToggle)(cr, p.glyph, p.ac, t));
         } else {
@@ -279,7 +304,10 @@ export function drawFamily(cr, family, kind, level, t, dark, accent) {
         cr.arc(C, C, 19, 0, 2 * Math.PI);
         source(cr, lit(p.ac));
         cr.fill();
-        inBox(cr, big, () => (kind === 'apps' ? petals : kind === 'clipboard' ? petalClip : petalDial)(cr, t));
+        if (kind === 'notifications')
+            inBox(cr, 24, () => bell(cr, WHITE, t, quiet));
+        else
+            inBox(cr, big, () => (kind === 'apps' ? petals : kind === 'clipboard' ? petalClip : petalDial)(cr, t));
         break;
     }
     }

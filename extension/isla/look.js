@@ -9,16 +9,12 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
-
-import {BlurLayer} from './blur.js';
-import {dockMonitorIndex} from './monitor.js';
-
 export const PANEL_ALPHA = 0.86;
+const DOCK_ALPHA_MIN = 0.6;
 
 const css = (c, alpha = c.alpha / 255) => `rgba(${c.red}, ${c.green}, ${c.blue}, ${alpha.toFixed(3)})`;
 
-// -> {light, style (CSS for the widget), blur (a skin's blur look, or null),
-//     layers(radius) (the skin's own pieces: Aurora's halo) or null}
+// -> {light, style (CSS for the widget), layers(radius) (the skin's own pieces: Aurora's halo) or null}
 export function islandLook(state) {
     const look = baseLook(state);
     const extra = state.skin?.floatingLook?.();
@@ -36,7 +32,7 @@ function baseLook(state) {
     // A skin whose background stays clear: use its panel colors.
     const clear = !bg?.get_stage() || bg.get_theme_node().get_background_color().alpha < 10;
     if (clear) {
-        return {light: false, blur: null,
+        return {light: false,
             style: style ? `background-color: ${style.panelFill}; border-color: ${style.panelBorder};` : ''};
     }
     const node = bg.get_theme_node();
@@ -48,19 +44,30 @@ function baseLook(state) {
         rule += ` border-color: ${css(edge)};`;
     if (style)
         rule += ` box-shadow: 0 6px 20px ${style.shadow};`;
-    return {light, style: rule, blur: null};
+    return {light, style: rule};
 }
 
-// Fills a frame (St.Widget with a BinLayout): the blur, the skin's layers
+// How much of the dock's background covers what is behind it (its color's alpha, then the
+// island's own opacity); never below DOCK_ALPHA_MIN, so what sits on it keeps reading.
+export function dockAlpha(state) {
+    const bg = state.skin?.isla?._bg;
+    if (!bg?.get_stage())
+        return PANEL_ALPHA;
+    const fill = bg.get_theme_node().get_background_color();
+    return Math.max(DOCK_ALPHA_MIN, fill.alpha / 255 * (bg.opacity / 255));
+}
+
+// islandLook() with the dock's own transparency instead of the panels' one.
+export function dockLook(state) {
+    const look = islandLook(state);
+    if (look.style)
+        look.style = look.style.replace(`, ${PANEL_ALPHA.toFixed(3)})`, `, ${dockAlpha(state).toFixed(3)})`);
+    return look;
+}
+
+// Fills a frame (St.Widget with a BinLayout): the skin's layers
 // (bound to the content, `_around` px bigger on each side) and the content on top.
 export function dressFrame(look, frame, content, radius) {
-    const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-    if (look.blur) {
-        const blur = new BlurLayer(dockMonitorIndex());
-        frame.add_child(blur);
-        if (!blur.configure(true, radius, 'all', sf, look.blur))
-            blur.destroy();
-    }
     for (const layer of look.layers?.(radius) ?? []) {
         const m = layer._around ?? 0;
         layer.add_constraint(new Clutter.BindConstraint({source: content, coordinate: Clutter.BindCoordinate.POSITION, offset: -m}));

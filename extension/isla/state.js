@@ -10,17 +10,17 @@
 //   'dnd-changed' (on)
 //   'compact-changed' (on)      the open dock would not fit the screen: panels drop their text
 //   'status-changed'            a small status item (battery, keyboard…) came, went or moved
+//   'music-changed' (playing), 'music-info'   the song (state.musicTitle) or whether it plays changed
 //   'command' (name, ...args)   e.g. 'media', 'playpause' | 'toggle-dnd' | 'volume-level', 0.4
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
 export const Mode = {
     COLLAPSED: 'colapsada',
     EXPANDED: 'expandida',
-    NOTICE: 'aviso',
     SEARCH: 'busqueda',
 };
 
-// Lower number = more important (section 3 of ISLA.md). The notice itself is a mode.
+// Lower number = more important (section 3 of ISLA.md).
 export const Priority = {
     RECORDING: 1,
     TIMER_DONE: 2,
@@ -30,9 +30,8 @@ export const Priority = {
 };
 
 const ALLOWED = {
-    [Mode.COLLAPSED]: [Mode.EXPANDED, Mode.NOTICE, Mode.SEARCH],
+    [Mode.COLLAPSED]: [Mode.EXPANDED, Mode.SEARCH],
     [Mode.EXPANDED]: [Mode.COLLAPSED, Mode.SEARCH],
-    [Mode.NOTICE]: [Mode.COLLAPSED, Mode.EXPANDED, Mode.SEARCH],
     [Mode.SEARCH]: [Mode.COLLAPSED, Mode.EXPANDED],
 };
 
@@ -43,7 +42,6 @@ export class IslaState extends Signals.EventEmitter {
         this._activities = new Map();   // id -> {priority, mini, panel, order}
         this._order = 0;
         this.dnd = false;
-        this.notice = null;
         this.compact = false;
         this._holds = new Set();
         this._status = new Map();       // id -> {id, order, folded, open}

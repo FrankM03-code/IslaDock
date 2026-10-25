@@ -16,16 +16,17 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as AppFavorites from 'resource:///org/gnome/shell/ui/appFavorites.js';
 import * as BoxPointer from 'resource:///org/gnome/shell/ui/boxpointer.js';
-import * as Dialog from 'resource:///org/gnome/shell/ui/dialog.js';
 import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
-import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
 import {DockItem, DockSeparator} from '../dockItem.js';
 import {RowLayout} from './row.js';
+import {watchAccent} from './accent.js';
+import {trashIcon} from './trashIcon.js';
 import {dockMonitor} from './monitor.js';
 import {downloadsDir} from './stack/downloadsModel.js';
+import * as FileActions from './stack/fileActions.js';
 import {_} from './i18n.js';
 
 // Magnification by distance to the hovered icon, as a factor of the base size.
@@ -48,6 +49,7 @@ export class AppsRow extends Signals.EventEmitter {
         this._downloads = {busy: false, fresh: false, progress: null};
         this._trashFull = false;
         this._badges = new Map();     // app id -> count
+        this._mirrors = new Map();    // kind -> the desktop bar's copy (mirror())
 
         this._layout = new RowLayout(0);
         this.actor = new St.Widget({style_class: 'isla-apps', layout_manager: this._layout, y_align: Clutter.ActorAlign.END});
@@ -73,22 +75,26 @@ export class AppsRow extends Signals.EventEmitter {
         this._on(tracker, 'tracked-windows-changed', () => this._later('windows', 50, () => this._refreshState()));
         this._on(tracker, 'notify::focus-app', () => this._refreshState());
         this._on(this._resolver, 'changed', () => this._refreshIcons());
-        for (const key of ['mostrar-descargas', 'mostrar-papelera', 'mostrar-aplicaciones', 'mostrar-portapapeles', 'mostrar-energia'])
+        for (const key of ['mostrar-descargas', 'mostrar-papelera', 'mostrar-aplicaciones', 'centro-notificaciones',
+            'mostrar-portapapeles', 'mostrar-energia'])
             this._on(this._settings, `changed::${key}`, () => this._rebuild());
         for (const key of ['tamano-base', 'magnificacion', 'desaturar-en-reposo'])
             this._on(this._settings, `changed::${key}`, () => this.configure());
         if (this._state.calm)
             this._on(this._state.calm, 'changed', () => this.configure());
-        this._on(this._settings, 'changed::isla-oscura', () => this._updatePortal());
+        this._on(this._settings, 'changed::isla-oscura', () => this._updateButtons());
         for (const key of ['accent-style', 'accent-palette'])
-            this._on(this._settings, `changed::${key}`, () => this._updatePortal());
-        this._on(this._interface, 'changed::color-scheme', () => this._updatePortal());
+            this._on(this._settings, `changed::${key}`, () => this._updateButtons());
+        this._on(this._interface, 'changed::color-scheme', () => this._updateButtons());
         // The Apps button stays open while the app grid is open.
-        this._on(Main.overview, 'shown', () => this._updatePortal());
-        this._on(Main.overview, 'hidden', () => this._updatePortal());
+        this._on(Main.overview, 'shown', () => this._updateButtons());
+        this._on(Main.overview, 'hidden', () => this._updateButtons());
         if (Main.overview.dash?.showAppsButton)
-            this._on(Main.overview.dash.showAppsButton, 'notify::checked', () => this._updatePortal());
+            this._on(Main.overview.dash.showAppsButton, 'notify::checked', () => this._updateButtons());
         this._watchTrash();
+        this._watchFileManager();
+        // A new accent color: the bin's lid follows.
+        this._unwatchAccent = watchAccent(() => this._both('trash').forEach(i => i.setGIcon(this._trashIcon())));
     }
 
     // ---------- helpers ----------
@@ -138,40 +144,114 @@ export class AppsRow extends Signals.EventEmitter {
     setSkin(skin) {
         this._skin = skin;
         this.configure();
-        this._updatePortal();
+        this._updateButtons();
     }
 
     // Contrast with the skin; the launcher is open while the app grid is,
     // Portapapeles and Ajustes while their panel is.
-    _updatePortal() {
+    _updateButtons() {
         const showApps = Main.overview.dash?.showAppsButton;
         const open = {apps: Main.overview.visible && !!showApps?.checked, ...this._panelsOpen};
         const palette = this._settings.get_string('accent-palette');
         const dark = palette === 'oscuro' || (palette === 'auto' && this._interface.get_string('color-scheme') === 'prefer-dark');
-        for (const kind of ['apps', 'clipboard', 'power']) {
-            const button = this._items?.get(kind)?.dockButton;
-            button?.setLight(this._skin?.portalGraphite ?? false);
-            button?.setPalette(dark);
-            button?.setStyle(this._settings.get_string('accent-style'));
-            button?.setOpen(!!open[kind]);
+        for (const kind of ['apps', 'notifications', 'clipboard', 'power']) {
+            for (const item of this._both(kind)) {
+                const button = item.dockButton;
+                button.setLight(this._skin?.buttonsGraphite ?? false);
+                button.setPalette(dark);
+                button.setStyle(this._settings.get_string('accent-style'));
+                // The bar's copy never shows a panel of its own.
+                button.setOpen(item === this._items?.get(kind) && !!open[kind]);
+            }
         }
-        this._items?.get('clipboard')?.dockButton.setCount(this._state.clipboardCount ?? 0);
+        this.updateClipboardCount();
+        this.updateNotifications();
+    }
+
+    // The dock's item of `kind` and the desktop bar's copy, those that exist.
+    _both(kind) {
+        return [this._items?.get(kind), this._mirrors.get(kind)].filter(Boolean);
+    }
+
+    // A copy of Papelera, Notificaciones, Portapapeles or Ajustes for the desktop bar
+    // (restBar.js), `size` px: it looks and counts like the dock's own; a click goes
+    // out as 'mirror-activate' (kind, button) for the island to open the real one.
+    mirror(kind, size) {
+        const label = {trash: _('Papelera'), notifications: _('Notificaciones'), clipboard: _('Portapapeles'),
+            power: _('Ajustes')}[kind];
+        const item = new DockItem({kind, key: `espejo-${kind}`, label});
+        // The dock's items sit on its bottom edge; in the bar they go in the middle like the rest.
+        item.y_align = Clutter.ActorAlign.CENTER;
+        item.configure({base: size, max: size, scale: St.ThemeContext.get_for_stage(global.stage).scale_factor, calm: false});
+        item.connect('activate', (_i, button) => this.emit('mirror-activate', kind, button));
+        item.connect('destroy', () => this._mirrors.delete(kind));
+        this._mirrors.set(kind, item);
+        if (kind === 'trash')
+            item.setGIcon(this._trashIcon());
+        this._updateButtons();
+        return item;
+    }
+
+    // Notificaciones: unread ones in the badge (state.notifUnread), the moon in do not disturb
+    // with a dot for what waits (state.notifWaiting).
+    updateNotifications(sway = false) {
+        for (const item of this._both('notifications')) {
+            const button = item.dockButton;
+            button.setQuiet(!!this._state.dnd);
+            button.setCount(this._state.dnd ? this._state.notifWaiting ?? 0 : this._state.notifUnread ?? 0);
+            if (sway && !this._state.dnd)
+                button.sway();
+        }
+    }
+
+    get notificationsItem() {
+        return this._items?.get('notifications') ?? null;
     }
 
     // From the panels: 'clipboard' or 'power' opened or closed.
     setPanelOpen(kind, open) {
         this._panelsOpen = {...this._panelsOpen, [kind]: open};
-        this._updatePortal();
+        this._updateButtons();
     }
 
     // How many items Portapapeles keeps (state.clipboardCount): its badge.
     updateClipboardCount() {
-        this._items?.get('clipboard')?.dockButton.setCount(this._state.clipboardCount ?? 0);
+        this._both('clipboard').forEach(i => i.dockButton.setCount(this._state.clipboardCount ?? 0));
+    }
+
+    // What the icons and the gaps between them take: as laid out now (size null), or with icons
+    // of `size` px. The island works out from it how big they can be (measuring again right after
+    // a change still gives the old widths).
+    iconsWidth(size = null) {
+        const items = new Set(this._items.values());
+        const sf = this._p.scale;
+        const spacing = size === null ? this._layout.spacing : Math.round(size * this._spacingRatio * sf);
+        let w = 0;
+        for (const box of [this.actor, this.tail]) {
+            const kids = box.get_children().filter(c => c.visible);
+            w += Math.max(0, kids.length - 1) * spacing;
+            // The separators keep their width.
+            for (const kid of kids.filter(k => items.has(k)))
+                w += size === null || kid.zoomWidth === undefined ? kid.width : kid.width - kid.zoomWidth + size * sf;
+        }
+        // Room for the hover zoom too: the icon under the pointer and its neighbours on each side.
+        if (size !== null && this._p.magnify)
+            w += size * sf * ZOOM.reduce((sum, z, d) => sum + (z - 1) * (d ? 2 : 1), 0);
+        return w;
+    }
+
+    // Too many icons for the screen: the island asks for smaller ones (null = the chosen size).
+    setFit(size) {
+        if (size === (this._fit ?? null))
+            return false;
+        this._fit = size;
+        this.configure();
+        return true;
     }
 
     configure() {
         const skin = this._skin;
-        const base = this._settings.get_int('tamano-base');
+        const base = Math.min(this._settings.get_int('tamano-base'), this._fit ?? Infinity);
         const magnify = this._settings.get_boolean('magnificacion') && !this._state.calm?.magnifyOff;
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         this._p = {
@@ -181,7 +261,7 @@ export class AppsRow extends Signals.EventEmitter {
             scale: sf,
             calm: this._settings.get_boolean('desaturar-en-reposo') && !skin?.forcesColorIcons,
         };
-        const spacing = (skin?.itemSpacing ?? 6) / 32;
+        const spacing = this._spacingRatio = (skin?.itemSpacing ?? 6) / 32;
         this._layout.spacing = this._tailLayout.spacing = Math.round(base * spacing * sf);
         this._layout.layout_changed();
         this._tailLayout.layout_changed();
@@ -253,8 +333,10 @@ export class AppsRow extends Signals.EventEmitter {
         // The app launcher goes first, on the left, with its own thin line.
         if (this._settings.get_boolean('mostrar-aplicaciones'))
             entries.unshift({kind: 'apps', key: 'apps'}, ...entries.length ? [{kind: 'separator', key: 'sep-0'}] : []);
-        // Portapapeles and Ajustes: last, after their own thin line.
+        // Notificaciones (right after the player), Portapapeles and Ajustes: last, after their own thin line.
         const tail = [];
+        if (this._settings.get_boolean('centro-notificaciones'))
+            tail.push({kind: 'notifications', key: 'notifications'});
         if (this._settings.get_boolean('mostrar-portapapeles'))
             tail.push({kind: 'clipboard', key: 'clipboard'});
         if (this._settings.get_boolean('mostrar-energia'))
@@ -269,7 +351,7 @@ export class AppsRow extends Signals.EventEmitter {
         if (entry.kind === 'separator')
             return new DockSeparator();
         const label = {app: entry.app?.get_name(), downloads: _('Descargas'), trash: _('Papelera'), apps: _('Aplicaciones'),
-            clipboard: _('Portapapeles'), power: _('Ajustes')}[entry.kind];
+            notifications: _('Notificaciones'), clipboard: _('Portapapeles'), power: _('Ajustes')}[entry.kind];
         const item = new DockItem({kind: entry.kind, key: entry.key, app: entry.app ?? null, label});
         item.connect('activate', (_i, button) => this._onActivate(item, button));
         item.connect('hover-changed', (_i, hover) => this._onItemHover(item, hover));
@@ -303,7 +385,7 @@ export class AppsRow extends Signals.EventEmitter {
             actor.destroy();
             this._items.delete(key);
         }
-        const inTail = entry => entry.kind === 'power' || entry.kind === 'clipboard' || entry.key === 'sep-3';
+        const inTail = entry => ['power', 'clipboard', 'notifications'].includes(entry.kind) || entry.key === 'sep-3';
         const rows = [[this.actor, entries.filter(e => !inTail(e))], [this.tail, entries.filter(inTail)]];
         for (const [row, list] of rows) list.forEach((entry, i) => {
             let actor = this._items.get(entry.key);
@@ -330,7 +412,7 @@ export class AppsRow extends Signals.EventEmitter {
         this._hovered = -1;
         this._refreshIcons();
         this._refreshState();
-        this._updatePortal();
+        this._updateButtons();
         this.emit('changed');
     }
 
@@ -348,9 +430,9 @@ export class AppsRow extends Signals.EventEmitter {
         }
     }
 
+    // IslaDock's own bin, in GNOME's accent color, whatever the icon theme.
     _trashIcon() {
-        const name = this._trashFull ? 'user-trash-full' : 'user-trash';
-        return this._resolver.lookup(this._trashFull ? 'papelera-llena' : 'papelera', new Gio.ThemedIcon({name}), [name]);
+        return trashIcon(this._trashFull);
     }
 
     _refreshState() {
@@ -363,7 +445,34 @@ export class AppsRow extends Signals.EventEmitter {
             }
             else if (item.kind === 'downloads')
                 this._showDownloads(item);
+            if (item.kind === 'downloads' || item.kind === 'trash')
+                item.setRunning(this._folderWindows(item.kind));
         }
+    }
+
+    // Archivos says which folders its windows show (org.freedesktop.FileManager1):
+    // Descargas and Papelera get the running dot while one of them is open.
+    _watchFileManager() {
+        this._fmCancel = new Gio.Cancellable();
+        Gio.DBusProxy.new_for_bus(Gio.BusType.SESSION, Gio.DBusProxyFlags.DO_NOT_AUTO_START, null,
+            'org.freedesktop.FileManager1', '/org/freedesktop/FileManager1', 'org.freedesktop.FileManager1', this._fmCancel,
+            (_o, res) => {
+                try {
+                    this._fileManager = Gio.DBusProxy.new_for_bus_finish(res);
+                } catch {
+                    return;
+                }
+                this._fileManagerId = this._fileManager.connect('g-properties-changed', () => this._refreshState());
+                this._refreshState();
+            });
+    }
+
+    // How many Archivos windows show the downloads folder or the trash.
+    _folderWindows(kind) {
+        const windows = this._fileManager?.get_cached_property('OpenWindowsWithLocations')?.deepUnpack() ?? {};
+        const downloads = kind === 'downloads' ? Gio.File.new_for_path(this._downloadsDir()) : null;
+        const shows = uri => (downloads ? Gio.File.new_for_uri(uri).equal(downloads) : uri.startsWith('trash:'));
+        return Object.values(windows).filter(locations => locations.some(shows)).length;
     }
 
     // A counter published by the app (unread messages, files left...).
@@ -393,6 +502,15 @@ export class AppsRow extends Signals.EventEmitter {
                 Main.overview.showApps();
             return;
         }
+        // Notificaciones: its panel with a click, the quick menu with a right click.
+        if (item.kind === 'notifications') {
+            this._hideTooltip();
+            if (button === 3)
+                this._openMenu(item);
+            else
+                this._state.command('notifications-toggle', item);
+            return;
+        }
         // Portapapeles: its history panel.
         if (item.kind === 'clipboard') {
             this._hideTooltip();
@@ -419,6 +537,12 @@ export class AppsRow extends Signals.EventEmitter {
         if (item.kind === 'downloads' && button === 1) {
             this._hideTooltip();
             this._state.command('stack-toggle', item);
+            return;
+        }
+        // Papelera: what is in it with a left click, the trash in Archivos with the middle one.
+        if (item.kind === 'trash' && button === 1) {
+            this._hideTooltip();
+            this._state.command('trash-toggle', item);
             return;
         }
         // Archivos: the home folders with a left click, the app itself with the middle one.
@@ -534,6 +658,17 @@ export class AppsRow extends Signals.EventEmitter {
     }
 
     _fillMenu(menu, item) {
+        if (item.kind === 'notifications') {
+            const quiet = !!this._state.dnd;
+            for (const [value, label] of [['hora', _('No molestar 1 hora')], ['manana', _('No molestar hasta mañana')],
+                ['siempre', _('No molestar siempre')]])
+                menu.addAction(label, () => this._state.command('dnd-set', value));
+            if (quiet)
+                menu.addAction(_('Quitar No molestar'), () => this._state.command('dnd-set', 'off'));
+            menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+            menu.addAction(_('Limpiar todo'), () => this._state.command('notifications-clear'));
+            return;
+        }
         if (item.kind === 'downloads') {
             menu.addAction(_('Abrir carpeta'), () => this._launch(GLib.filename_to_uri(this._downloadsDir(), null)));
             menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -577,24 +712,7 @@ export class AppsRow extends Signals.EventEmitter {
     }
 
     _confirmEmptyTrash() {
-        const dialog = new ModalDialog.ModalDialog();
-        dialog.contentLayout.add_child(new Dialog.MessageDialogContent({
-            title: _('¿Vaciar la papelera?'),
-            description: _('Todo lo que está en la papelera se borrará para siempre.'),
-        }));
-        dialog.addButton({label: _('Cancelar'), action: () => dialog.close(), key: Clutter.KEY_Escape});
-        dialog.addButton({
-            label: _('Vaciar'),
-            action: () => {
-                dialog.close();
-                try {
-                    Gio.Subprocess.new(['gio', 'trash', '--empty'], Gio.SubprocessFlags.NONE);
-                } catch (e) {
-                    Main.notifyError(_('No se pudo vaciar la papelera'), e.message);
-                }
-            },
-        });
-        dialog.open();
+        FileActions.confirmEmptyTrash();
     }
 
     // ---------- drag to reorder ----------
@@ -603,7 +721,7 @@ export class AppsRow extends Signals.EventEmitter {
         if (!(source instanceof DockItem) || source.kind !== 'app' || !this._items || !this._appItems.includes(source))
             return DND.DragMotionResult.CONTINUE;
         const children = this.actor.get_children();
-        const end = children.findIndex(a => a.kind === 'downloads' || a.kind === 'trash' || a.kind === 'power' || a.kind === 'clipboard' ||
+        const end = children.findIndex(a => ['downloads', 'trash', 'power', 'clipboard', 'notifications'].includes(a.kind) ||
             a.key === 'sep-2' || a.key === 'sep-3');
         const limit = end < 0 ? children.length : end;
         // The launcher and its line stay first.
@@ -769,7 +887,7 @@ export class AppsRow extends Signals.EventEmitter {
             if (!this._items || full === this._trashFull)
                 return;
             this._trashFull = full;
-            this._items.get('trash')?.setGIcon(this._trashIcon());
+            this._both('trash').forEach(i => i.setGIcon(this._trashIcon()));
         });
     }
 
@@ -784,6 +902,11 @@ export class AppsRow extends Signals.EventEmitter {
 
     destroy() {
         this._dropSources();
+        this._unwatchAccent?.();
+        this._fmCancel?.cancel();
+        if (this._fileManagerId)
+            this._fileManager.disconnect(this._fileManagerId);
+        this._fileManager = null;
         if (this._trashMonitor) {
             this._trashMonitor.disconnect(this._trashMonitorId);
             this._trashMonitor.cancel();

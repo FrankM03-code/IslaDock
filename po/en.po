@@ -1,3 +1,4 @@
+# IslaDock — created and designed by Frank Molina.
 msgid ""
 msgstr ""
 "Project-Id-Version: IslaDock\n"
@@ -182,12 +183,6 @@ msgstr "Caps Lock symbol on the island"
 msgid "Mientras estén activas, un pequeño ⇪ en la esquina de la isla"
 msgstr "While it is on, a small ⇪ on the island's corner"
 
-msgid "Cafeína"
-msgstr "Caffeine"
-
-msgid "La pantalla no se apaga ni el equipo se suspende. También en el panel Ajustes"
-msgstr "The screen does not turn off and the computer does not suspend. Also in the Settings panel"
-
 msgid "No molestar"
 msgstr "Do Not Disturb"
 
@@ -304,9 +299,6 @@ msgstr "History of what was copied (text, links, colors and images). Super+V ope
 
 msgid "mientras esté activo, Super+V deja de abrir las notificaciones (sigue Super+M)"
 msgstr "while it is on, Super+V no longer opens the notifications (Super+M still does)"
-
-msgid "Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína, volumen, captura, bloquear, apagar… "
-msgstr "Network, Bluetooth, power mode, night light, dark style, caffeine, volume, screenshot, lock, power off… "
 
 msgid "Clic derecho o mantener pulsado: suspender"
 msgstr "Right click or press and hold: suspend"
@@ -767,9 +759,6 @@ msgstr "Power mode: {modo}"
 msgid "No se pudo cambiar el modo de energía"
 msgstr "Could not change the power mode"
 
-msgid "Cafeína: la pantalla no se apaga"
-msgstr "Caffeine: the screen stays on"
-
 msgid "Luz nocturna"
 msgstr "Night light"
 
@@ -1049,9 +1038,6 @@ msgstr "Dark"
 msgid "Paleta de los botones"
 msgstr "Button palette"
 
-msgid "Afecta al estilo Hoja"
-msgstr "Affects the Leaf style"
-
 msgid "Arco del día"
 msgstr "Arc of the day"
 
@@ -1245,3 +1231,230 @@ msgstr "Petals"
 
 msgid "Tres burbujas hermanas del color de acento"
 msgstr "Three sister bubbles in the accent color"
+
+msgid "1 elemento"
+msgstr "1 item"
+
+msgid "Restaurar"
+msgstr "Restore"
+
+msgid "{n} elementos"
+msgstr "{n} items"
+
+msgid "1 hora"
+msgstr "1 hour"
+
+msgid "Abrir ↵"
+msgstr "Open ↵"
+
+msgid "Ajustes de notificaciones"
+msgstr "Notification settings"
+
+msgid "Anterior"
+msgstr "Previous"
+
+msgid "Anteriores"
+msgstr "Earlier"
+
+msgid "App activa en la isla"
+msgstr "Active app on the island"
+
+msgid "Archivos"
+msgstr "Files"
+
+msgid "Avisos que ya descartaste"
+msgstr "Notifications you dismissed"
+
+msgid "Barra en el escritorio"
+msgstr "Bar on the desktop"
+
+msgid "Borrar historial"
+msgstr "Clear history"
+
+msgid "Buscar “{texto}” en la web"
+msgstr "Search the web for “{texto}”"
+
+msgid "Calendario"
+msgstr "Calendar"
+
+msgid "Con ventanas abiertas: ícono y nombre de la app que usas, cuántas ventanas más hay, la música y la campana"
+msgstr "With windows open: icon and name of the app you are using, how many other windows there are, the music and the bell"
+
+msgid "Contenido"
+msgstr "Contents"
+
+msgid "Descartar"
+msgstr "Dismiss"
+
+msgid "Documentos"
+msgstr "Documents"
+
+msgid "Espacio: vista previa · ↵ abrir"
+msgstr "Space: preview · ↵ open"
+
+msgid "Hasta mañana"
+msgstr "Until tomorrow"
+
+msgid "Historial"
+msgstr "History"
+
+msgid "La pantalla siempre encendida; puedes suspender cuando quieras. También en el panel Ajustes"
+msgstr "The screen always on; you can still suspend whenever you want. Also in the Settings panel"
+
+msgid "Limpiar todo"
+msgstr "Clear all"
+
+msgid "Los avisos que lleguen te esperan aquí."
+msgstr "Notifications that arrive wait for you here."
+
+msgid "Mensajes"
+msgstr "Messages"
+
+msgid "Modificado"
+msgstr "Modified"
+
+msgid "Modo activo"
+msgstr "Stay awake"
+
+msgid "Modo activo: la pantalla siempre encendida"
+msgstr "Stay awake: the screen always on"
+
+msgid "No molestar 1 hora"
+msgstr "Do not disturb for 1 hour"
+
+msgid "No molestar hasta mañana"
+msgstr "Do not disturb until tomorrow"
+
+msgid "No molestar siempre"
+msgstr "Do not disturb always"
+
+msgid "No se encontró el archivo"
+msgstr "File not found"
+
+msgid "No tienes avisos pendientes"
+msgstr "You have no pending notifications"
+
+msgid "Notificaciones"
+msgstr "Notifications"
+
+msgid "Pausa"
+msgstr "Pause"
+
+msgid "Quitar No molestar"
+msgstr "Turn off Do not disturb"
+
+msgid "Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, modo activo, volumen, captura, bloquear, apagar… "
+msgstr "Network, Bluetooth, power mode, night light, dark style, stay awake, volume, screenshot, lock, power off… "
+
+msgid "Reproducir"
+msgstr "Play"
+
+msgid "Resultados"
+msgstr "Results"
+
+msgid "Ruta copiada"
+msgstr "Path copied"
+
+msgid "Siempre"
+msgstr "Always"
+
+msgid "Siguiente"
+msgstr "Next"
+
+msgid "Silencio activado"
+msgstr "Silence on"
+
+msgid "Silencio hasta las {hora}"
+msgstr "Silent until {hora}"
+
+msgid "Silencio hasta mañana a las {hora}"
+msgstr "Silent until tomorrow at {hora}"
+
+msgid "Sin historial"
+msgstr "No history"
+
+msgid "Sin resultados para “{texto}”"
+msgstr "No results for “{texto}”"
+
+msgid "Sin ventanas a la vista: música o fecha y hora, apps minimizadas y tus botones. La rueda del mouse abre el dock"
+msgstr "With no window in sight: music or date and time, minimized apps and your buttons. The mouse wheel opens the dock"
+
+msgid "Sistema"
+msgstr "System"
+
+msgid "Todas"
+msgstr "All"
+
+msgid "Todo al día"
+msgstr "All caught up"
+
+msgid "Todo leído"
+msgstr "All read"
+
+msgid "Ver menos"
+msgstr "Show less"
+
+msgid "Ver {n} más"
+msgstr "Show {n} more"
+
+msgid "Ver {n} más en Archivos"
+msgstr "Show {n} more in Files"
+
+msgid "Volver"
+msgstr "Back"
+
+msgid "Vídeos"
+msgstr "Videos"
+
+msgid "a. m."
+msgstr "AM"
+
+msgid "hace unos minutos"
+msgstr "a few minutes ago"
+
+msgid "hace {n} año"
+msgid_plural "hace {n} años"
+msgstr[0] "{n} year ago"
+msgstr[1] "{n} years ago"
+
+msgid "hace {n} día"
+msgid_plural "hace {n} días"
+msgstr[0] "{n} day ago"
+msgstr[1] "{n} days ago"
+
+msgid "hace {n} mes"
+msgid_plural "hace {n} meses"
+msgstr[0] "{n} month ago"
+msgstr[1] "{n} months ago"
+
+msgid "hoy"
+msgstr "today"
+
+msgid "p. m."
+msgstr "PM"
+
+msgid "{dia}, {n} de {mes}"
+msgstr "{dia}, {mes} {n}"
+
+msgid "{n} aviso guardado, lo verás al terminar."
+msgid_plural "{n} avisos guardados, los verás al terminar."
+msgstr[0] "{n} notification saved, you will see it when this ends."
+msgstr[1] "{n} notifications saved, you will see them when this ends."
+
+msgid "{n} elemento"
+msgid_plural "{n} elementos"
+msgstr[0] "{n} item"
+msgstr[1] "{n} items"
+
+msgid "{n} página"
+msgid_plural "{n} páginas"
+msgstr[0] "{n} page"
+msgstr[1] "{n} pages"
+
+msgid "{n} sin leer"
+msgid_plural "{n} sin leer"
+msgstr[0] "{n} unread"
+msgstr[1] "{n} unread"
+
+msgid "{n} ventanas más"
+msgstr "{n} more windows"

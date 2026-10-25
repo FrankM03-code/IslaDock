@@ -19,8 +19,9 @@ const PROFILES = {
     'performance': [N_('Rendimiento'), 'power-profile-performance-symbolic'],
 };
 const ROTATION = ['power-saver', 'balanced', 'performance'];
-// Inhibit idle (8) and suspend (4), like the Caffeine extension.
-const INHIBIT_FLAGS = 4 | 8;
+// Modo activo inhibits idle only (8): the screen never blanks, but suspending
+// by hand (the menu, the power button, the lid) still works (2026-10-24, the user's wish).
+const INHIBIT_FLAGS = 8;
 
 function themed(name) {
     return new Gio.ThemedIcon({name});
@@ -242,8 +243,8 @@ class PowerModeToggle extends Signals.EventEmitter {
     }
 }
 
-// Cafeína: our own inhibitor in GNOME's session manager (no suspend, no screen
-// blank). It is remembered in 'cafeina-activa', so it comes back after a GNOME
+// Modo activo (once "Cafeína"): our own inhibitor in GNOME's session manager (no
+// screen blank; suspending by hand still works). It is remembered in 'cafeina-activa', so it comes back after a GNOME
 // restart or the lock screen (which switches extensions off and on). The
 // panel's button and the switch in Preferences both just write that key.
 class CaffeineToggle extends Signals.EventEmitter {
@@ -263,7 +264,7 @@ class CaffeineToggle extends Signals.EventEmitter {
     }
 
     get title() {
-        return this.on ? _('Cafeína: la pantalla no se apaga') : _('Cafeína');
+        return this.on ? _('Modo activo: la pantalla siempre encendida') : _('Modo activo');
     }
 
     _call(method, params, done) {
@@ -272,7 +273,7 @@ class CaffeineToggle extends Signals.EventEmitter {
                 try {
                     done?.(bus.call_finish(res));
                 } catch (e) {
-                    console.error(`isla-dock: cafeína: ${e.message}`);
+                    console.error(`isla-dock: modo activo: ${e.message}`);
                     done?.(null);
                 }
             });
@@ -289,7 +290,7 @@ class CaffeineToggle extends Signals.EventEmitter {
     _inhibit() {
         this._pending = true;
         this.emit('changed');
-        this._call('Inhibit', new GLib.Variant('(susu)', ['isla-dock', 0, 'Cafeína (IslaDock)', INHIBIT_FLAGS]), reply => {
+        this._call('Inhibit', new GLib.Variant('(susu)', ['isla-dock', 0, 'Modo activo (IslaDock)', INHIBIT_FLAGS]), reply => {
             this._pending = false;
             if (reply)
                 this._cookie = reply.deepUnpack()[0];
@@ -332,7 +333,7 @@ class CaffeineToggle extends Signals.EventEmitter {
     }
 }
 
-// Row 1, in order: red, bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína.
+// Row 1, in order: red, bluetooth, modo de energía, luz nocturna, estilo oscuro, modo activo.
 export function createToggles(dir, settings) {
     return [
         new NetworkToggle(),

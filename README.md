@@ -11,7 +11,7 @@ convierte en el dock completo.
 
 - **Isla que se expande**: puntos de color por cada app abierta, respiración suave en reposo.
 - **Música** (MPRIS): barras que se mueven mientras suena; carátula y controles al abrir la isla.
-- **Notificaciones flotantes**: cada notificación aparece sola arriba en el centro, con el aspecto de la isla, y se va sola. También el aviso «Descarga lista».
+- **Centro de notificaciones**: una campana en el dock con los avisos sin leer; cada aviso sale sobre el dock en una sola fila con las acciones de la app, y luego te espera en el panel (filtros, historial, No molestar por 1 hora, hasta mañana o siempre). Si lo apagas, las notificaciones salen flotando arriba en el centro.
 - **No molestar** con un clic largo sobre la isla.
 - **Gestos**: rueda = volumen, Shift + rueda = cambiar canción, clic central = pausa,
   arrastrar hacia arriba = aplicaciones.
@@ -26,7 +26,7 @@ convierte en el dock completo.
 - **Botón de aplicaciones** (cuatro puntos) para verlas todas; los botones de acento en tres estilos (Cristal tintado, Marcador lateral, Hoja); la isla se queda visible en el cajón de aplicaciones.
 - **Fondo desenfocado en el cajón**: tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades.
 - **Panel Ajustes**: red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, volumen, captura, bloquear, cerrar sesión, reiniciar y apagar.
-- **Cafeína**: la pantalla no se apaga ni el equipo se suspende (en el panel Ajustes).
+- **Modo activo**: la pantalla no se apaga, pero puedes suspender cuando quieras (en el panel Ajustes).
 - **Mayúsculas**: para teclados sin luz de Bloq Mayús, un pequeño ⇪ en la isla mientras están activas.
 - **Reloj de escritorio**: hora y fecha sobre el fondo de pantalla en cuatro estilos (Línea viva, Lateral acento, Semana fluida, Arco del día), arriba, al centro o abajo (Preferencias → Escritorio).
 - **Sin barra superior** (opcional, encendido por defecto): todo queda en la isla y el panel Ajustes.
@@ -37,6 +37,8 @@ convierte en el dock completo.
 - **Calma**: con batería o en modo Ahorro se apagan los efectos costosos; respeta «Reducir animaciones» de GNOME.
 - **Copia de la configuración**: exportar e importar todos los ajustes.
 - **Idiomas**: español e inglés (`po/`; para añadir uno, copia `po/en.po` y ejecuta `python3 po/traducir.py mo`).
+- **Barra del escritorio**: sin ventanas a la vista, la isla plegada muestra la música o la fecha y hora, las apps minimizadas y tus botones; la rueda del mouse abre el dock.
+- **App activa en la isla**: con ventanas abiertas, la isla plegada muestra el ícono, el nombre y el título de la ventana que usas, cuántas ventanas más hay, la música y la campana.
 - **Pieles**: Clásica, Clásica oscura y Aurora.
 - Tus propios íconos: elige tema o pon archivos en `~/.icons/isla-dock`.
 

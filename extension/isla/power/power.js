@@ -8,7 +8,7 @@
 //   finas     tiles with name and state; sliders with their percentage in a soft card; a short
 //             bottom row whose Apagar opens Suspender · Reiniciar · Cerrar sesión · Apagar
 //   lineas    no backgrounds: bare icons, an accent dot under what is on
-// The toggles: red · bluetooth · modo de energía · luz nocturna · estilo oscuro · cafeína; then
+// The toggles: red · bluetooth · modo de energía · luz nocturna · estilo oscuro · modo activo; then
 // volume (and the sound output: speakers, headphones, HDMI…) and the microphone, while there is one.
 // With a battery, a line on top says its charge, state and time left. Icons: Tabler (MIT, icons/).
 // It wears the island's own solid color and edge (Aurora's halo too, skin.floatingLook), with
@@ -31,8 +31,9 @@ import * as Volume from 'resource:///org/gnome/shell/ui/status/volume.js';
 import {Slider} from 'resource:///org/gnome/shell/ui/slider.js';
 import {showScreenshotUI} from 'resource:///org/gnome/shell/ui/screenshot.js';
 
+import {addPanelChrome, dropChrome} from '../chrome.js';
 import {dressFrame, islandLook} from '../look.js';
-import {dockWorkArea} from '../monitor.js';
+import {dockWorkArea, insideDock} from '../monitor.js';
 import {createToggles, openSettings} from './services.js';
 import {acquireBattery, describe, releaseBattery} from './battery.js';
 import {Mode} from '../state.js';
@@ -53,7 +54,7 @@ const TOGGLES = [
     {name: N_('Energía'), icon: ['gauge', 'gauge'], states: null},
     {name: N_('Nocturna'), icon: ['sun-low', 'sun-low'], states: [N_('Activa'), N_('Apagada')]},
     {name: N_('Oscuro'), icon: ['moon', 'moon'], states: [N_('Activo'), N_('Apagado')]},
-    {name: N_('Cafeína'), icon: ['coffee', 'coffee'], states: [N_('Activa'), N_('Apagada')]},
+    {name: N_('Modo activo'), icon: ['coffee', 'coffee'], states: [N_('Activo'), N_('Apagado')]},
 ];
 
 // id: [Tabler icon, tooltip, caption (Tarjetas con nombre), action, SystemActions property that hides it]
@@ -79,6 +80,8 @@ export class Power {
         this._toggles = createToggles(dir, settings);
         this._panel = null;
         this._ids = [
+            // The dock narrows when the hover zoom ends: the open panel keeps within its edges.
+            [capsule, capsule.connect('notify::width', () => this._panel && this._place())],
             [state, state.connect('command', (_s, name, ...args) => {
                 if (name === 'power-toggle')
                     this.toggle(args[0]);
@@ -127,6 +130,10 @@ export class Power {
                     this._hideTooltip();
                 return;
             }
+            // The focus open() gives the first button comes before the panel has a place:
+            // no tooltip then (its position would be NaN).
+            if (!button.has_allocation())
+                return;
             this._tooltip._owner = button;
             this._tooltip.text = button._tip;
             this._tooltip.show();
@@ -588,9 +595,10 @@ export class Power {
         if (look.style)
             content.style = look.style;
         dressFrame(look, panel, content, RADIUS);
-        Main.layoutManager.addTopChrome(panel);
+        addPanelChrome(panel);
         Main.layoutManager.addTopChrome(this._tooltip);
         this._place();
+        panel.connect('notify::width', () => this._panel === panel && this._place());
         panel.connect('captured-event', (_a, event) => this._onEvent(event));
         panel.connect('key-press-event', (_a, event) => this._onKey(event));
         this._grab = Main.pushModal(panel, {actionMode: Shell.ActionMode.POPUP});
@@ -601,7 +609,7 @@ export class Power {
         this._state.command('hide-tooltip');
     }
 
-    // Right edge with the button's, 9 px above the island, inside the work area.
+    // Right edge with the button's (never past the dock's), 9 px above the island, inside the work area.
     _place() {
         const panel = this._panel;
         const [ax] = this._anchor.get_transformed_position();
@@ -611,7 +619,7 @@ export class Power {
         const [, h] = panel.get_preferred_height(w);
         const area = dockWorkArea();
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        let x = ax + aw - w;
+        let x = insideDock(ax + aw - w, w, this._capsule);
         x = Math.min(Math.max(x, area.x + 4 * sf), area.x + area.width - w - 4 * sf);
         const y = Math.max(cy - GAP * sf - h, area.y + 4 * sf);
         panel.set_position(Math.round(x), Math.round(y));
@@ -695,10 +703,7 @@ export class Power {
         Main.layoutManager.removeChrome(tooltip);
         tooltip.destroy();
         panel.reactive = false;
-        const done = () => {
-            Main.layoutManager.removeChrome(panel);
-            panel.destroy();
-        };
+        const done = () => dropChrome(panel);
         if (animate) {
             panel.ease({opacity: 0, translation_y: SHIFT, duration: ms(OUT_TIME), mode: Clutter.AnimationMode.EASE_OUT_QUAD,
                 onStopped: done});

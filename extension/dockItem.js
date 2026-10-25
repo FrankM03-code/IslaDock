@@ -15,7 +15,8 @@ import {DockButton} from './isla/dockButtons.js';
 import {ms} from './isla/timing.js';
 import {_} from './isla/i18n.js';
 
-export const INDICATOR_GAP = 1;
+// Icons that fill their whole square (Chrome…) need room before the mark under them.
+export const INDICATOR_GAP = 4;
 export const INDICATOR_HEIGHT = 3;
 const INDICATOR_WIDTH = 4;
 const INDICATOR_FOCUSED = 8;   // the app in front: longer marks
@@ -88,13 +89,14 @@ export const DockItem = GObject.registerClass({
         this._tile.set_pivot_point(0.5, 1);
         this._tile.add_child(this._icon);
         this._holder = new IconHolder(this._tile);
-        // The launcher, Portapapeles and Ajustes: round buttons with their own symbol.
-        if (kind === 'apps' || kind === 'clipboard' || kind === 'power') {
+        // The launcher, Notificaciones, Portapapeles and Ajustes: round buttons with their own symbol.
+        if (kind === 'apps' || kind === 'notifications' || kind === 'clipboard' || kind === 'power') {
             this.dockButton = new DockButton(kind);
             this._tile.add_child(this.dockButton);
             this._icon.hide();
             this.can_focus = true;
-            this.accessible_name = {apps: _('Aplicaciones'), clipboard: _('Portapapeles'), power: _('Ajustes')}[kind];
+            this.accessible_name = {apps: _('Aplicaciones'), notifications: _('Notificaciones'), clipboard: _('Portapapeles'),
+                power: _('Ajustes')}[kind];
             this.connect('key-focus-in', () => this.dockButton.setFocused(true));
             this.connect('key-focus-out', () => this.dockButton.setFocused(false));
             this.connect('notify::pressed', () => this.dockButton.setPressed(this.pressed));
@@ -174,7 +176,6 @@ export const DockItem = GObject.registerClass({
         this.connect('leave-event', stop);
         this.connect('destroy', stop);
     }
-
 
     // A number on the corner of the icon (it grows with the icon).
     setBadge(count) {
@@ -273,6 +274,11 @@ export const DockItem = GObject.registerClass({
         }
         this._updateCalm(false);
         this.setSize(p.base, false);
+    }
+
+    // Width of the icon's place as laid out now (the rest of the item doesn't change with the size).
+    get zoomWidth() {
+        return this._holder.width;
     }
 
     // Animates the icon to `size` logical px (the dock reflows around it).

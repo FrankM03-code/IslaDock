@@ -101,10 +101,28 @@
       <default>false</default>
       <summary>Isla oscura</summary>
     </key>
-    <key name="isla-transparencia" type="d">
-      <range min="0" max="0.9"/>
+    <key name="barra-escritorio" type="b">
+      <default>true</default>
+      <summary>Sin ventanas a la vista, la isla en reposo es una barra: papelera, música o fecha y hora, apps minimizadas, campana, Portapapeles y Ajustes</summary>
+    </key>
+    <key name="barra-ventanas" type="b">
+      <default>true</default>
+      <summary>Con ventanas a la vista, la isla en reposo muestra la app activa (ícono y nombre), cuántas ventanas más hay, la música y la campana</summary>
+    </key>
+    <key name="centro-notificaciones" type="b">
+      <default>true</default>
+      <summary>Centro de notificaciones propio: campana en el dock, panel y avisos que salen desde el dock</summary>
+    </key>
+    <key name="no-molestar-hasta" type="x">
       <default>0</default>
-      <summary>Transparencia del fondo de la isla (0 = sólida)</summary>
+      <summary>Fin de No molestar (segundos unix; 0 = hasta apagarlo)</summary>
+    </key>
+    <key name="no-molestar-modo" type="s">
+      <choices>
+        <choice value="hora"/><choice value="manana"/><choice value="siempre"/>
+      </choices>
+      <default>'siempre'</default>
+      <summary>Duración elegida de No molestar</summary>
     </key>
     <key name="isla-respiracion" type="b">
       <default>true</default>
@@ -124,7 +142,7 @@
     </key>
     <key name="cafeina-activa" type="b">
       <default>false</default>
-      <summary>Cafeína encendida (se recuerda al reiniciar GNOME)</summary>
+      <summary>Modo activo encendido: la pantalla no se apaga (se recuerda al reiniciar GNOME)</summary>
     </key>
     <key name="mayus-insignia" type="b">
       <default>true</default>

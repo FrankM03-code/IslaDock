@@ -7,10 +7,10 @@ import Cairo from 'cairo';
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
-import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import {SkinBase} from './base.js';
+import {blurEffect} from '../blur.js';
 import {Mode, Priority} from '../state.js';
 import {ms} from '../timing.js';
 
@@ -30,7 +30,7 @@ export class AuroraSkin extends SkinBase {
         return true;
     }
 
-    get portalGraphite() {
+    get buttonsGraphite() {
         return false;
     }
 
@@ -147,7 +147,7 @@ export class AuroraSkin extends SkinBase {
         cr.$dispose();
     }
 
-    // How the halo reacts: resting, music, open, notice, do not disturb.
+    // How the halo reacts: resting, music, open, do not disturb.
     _react() {
         const state = this.isla._state;
         const mode = state.mode;
@@ -167,14 +167,8 @@ export class AuroraSkin extends SkinBase {
             opacity = state.dnd ? 0 : 0.6;
         this._halo.remove_transition('opacity');
         const target = Math.round(255 * opacity);
-        if (mode === Mode.NOTICE && !state.dnd) {
-            // A flash, then back.
-            this._halo.ease({opacity: 255, duration: ms(150), mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                onComplete: () => this._halo?.ease({opacity: Math.round(255 * 0.55), duration: ms(600), delay: ms(250)})});
-        } else {
-            this._halo.ease({opacity: target, duration: ms(600), mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                onComplete: () => this._halo && this._run()});
-        }
+        this._halo.ease({opacity: target, duration: ms(600), mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => this._halo && this._run()});
         this._run();
         this._halo.queue_repaint();
     }
@@ -198,10 +192,5 @@ export class AuroraSkin extends SkinBase {
 }
 
 function haloBlur(sf, radius = 10) {
-    const blur = new Shell.BlurEffect({mode: Shell.BlurMode.ACTOR, brightness: 1});
-    if (GObject.Object.find_property.call(Shell.BlurEffect, 'radius'))
-        blur.radius = radius * sf;
-    else
-        blur.sigma = radius / 2 * sf;
-    return blur;
+    return blurEffect(radius * sf);
 }

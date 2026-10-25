@@ -112,6 +112,7 @@ export class PrivacyStatus {
         if (!kinds.length) {
             this._details = false;
             this._state.removeStatus('privacy');
+            this._publish([], '');
             return;
         }
         for (const box of [this._folded, this._openIcons]) {
@@ -131,7 +132,17 @@ export class PrivacyStatus {
         this._open.accessible_name = summary;
         this._folded.accessible_name = summary;
         this._state.setStatus('privacy', {order: ORDER, folded: this._folded, open: this._open});
+        this._publish(kinds.map(([, icon]) => icon), summary);
         this._state.command('resize');
+    }
+
+    // For the window bar (windowBar.js), which shows the same orange pill.
+    _publish(icons, summary) {
+        if (icons.join() === (this._state.privacyIcons ?? []).join() && summary === this._state.privacySummary)
+            return;
+        this._state.privacyIcons = icons;
+        this._state.privacySummary = summary;
+        this._state.command('privacy-changed');
     }
 
     destroy() {
@@ -139,6 +150,7 @@ export class PrivacyStatus {
             GLib.source_remove(this._retry);
         this._retry = 0;
         this._state.removeStatus('privacy');
+        this._publish([], '');
         this._state.disconnect(this._modeId);
         this._watched.forEach(([actor, id, , gone]) => {
             actor.disconnect(id);

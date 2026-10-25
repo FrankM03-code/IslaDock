@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// What can be done with a file of the stack. Nothing is ever deleted for good:
-// the only destructive action is moving to the trash, after asking.
+// What can be done with a file of the stack. Nothing is ever deleted for good,
+// except by emptying the trash: that and moving to the trash ask first.
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -60,6 +60,28 @@ export function confirmTrash(entry) {
                     Main.notifyError(_('No se pudo mover a la papelera'), e.message);
                 }
             });
+        },
+    });
+    dialog.open();
+    return dialog;
+}
+
+export function confirmEmptyTrash() {
+    const dialog = new ModalDialog.ModalDialog();
+    dialog.contentLayout.add_child(new Dialog.MessageDialogContent({
+        title: _('¿Vaciar la papelera?'),
+        description: _('Todo lo que está en la papelera se borrará para siempre.'),
+    }));
+    dialog.addButton({label: _('Cancelar'), action: () => dialog.close(), key: Clutter.KEY_Escape});
+    dialog.addButton({
+        label: _('Vaciar'),
+        action: () => {
+            dialog.close();
+            try {
+                Gio.Subprocess.new(['gio', 'trash', '--empty'], Gio.SubprocessFlags.NONE);
+            } catch (e) {
+                Main.notifyError(_('No se pudo vaciar la papelera'), e.message);
+            }
         },
     });
     dialog.open();

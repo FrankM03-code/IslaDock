@@ -4,14 +4,13 @@
 // view) the user's own wallpaper, blurred and a little darker, instead of the
 // theme's flat color. One copy per monitor, at the bottom of the overview;
 // the blur is cached, so it costs nothing while it stays still.
-import GObject from 'gi://GObject';
-import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 
-const HAS_BLUR_RADIUS = !!GObject.Object.find_property.call(Shell.BlurEffect, 'radius');
+import {blurEffect} from './blur.js';
+
 const RADIUS = 30;
 const BRIGHTNESS = 0.6;
 
@@ -40,12 +39,7 @@ export class OverviewBlur {
                 if (!actor)
                     return;
                 actor.remove_effect_by_name('blur');
-                const effect = new Shell.BlurEffect({mode: Shell.BlurMode.ACTOR, brightness: BRIGHTNESS});
-                if (HAS_BLUR_RADIUS)
-                    effect.radius = RADIUS * sf;
-                else
-                    effect.sigma = RADIUS / 2 * sf;
-                actor.add_effect_with_name('blur', effect);
+                actor.add_effect_with_name('blur', blurEffect(RADIUS * sf, BRIGHTNESS));
             };
             // A new wallpaper brings a new actor: it gets the blur too.
             const changedId = manager.connect('changed', blur);

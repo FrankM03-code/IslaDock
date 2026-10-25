@@ -13,24 +13,9 @@ import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 
 const BLUR_RADIUS = 30;
 
-// Makes colors more intense after the blur (Vidrio líquido): mix away from the
-// grey of the same luminance by `factor`.
-const Saturate = GObject.registerClass(
-class IslaSaturate extends Shell.GLSLEffect {
-    vfunc_build_pipeline() {
-        this.add_glsl_snippet(Cogl.SnippetHook.FRAGMENT,
-            'uniform float factor;',
-            `float l = dot(cogl_color_out.rgb, vec3(0.2126, 0.7152, 0.0722));
-             cogl_color_out.rgb = clamp(mix(vec3(l), cogl_color_out.rgb, factor), 0.0, 1.0);`,
-            false);
-    }
-
-    setFactor(factor) {
-        this.set_uniform_float(this.get_uniform_location('factor'), 1, [factor]);
-        this.queue_repaint();
-    }
-});
-const HAS_BLUR_RADIUS = !!GObject.Object.find_property.call(Shell.BlurEffect, 'radius');
+export function blurEffect(radius, brightness = 1) {
+    return new Shell.BlurEffect({mode: Shell.BlurMode.ACTOR, brightness, radius});
+}
 
 // Rounded-corner mask for the blurred backdrop (Clutter can only clip rectangles).
 const RoundedMask = GObject.registerClass(
@@ -72,11 +57,14 @@ class IslaBlur extends St.Widget {
         this._mask = new RoundedMask();
         this.add_effect(this._mask);
         this._manager = null;
+        // Destroyed with its panel: the wallpaper source is shared and counted, and its
+        // 'bg-changed' would otherwise rebuild a copy inside this dead actor.
+        this.connect('destroy', () => this._drop());
     }
 
-    // look: {radius, brightness, saturation} of the blur (a skin's choice).
+    // look: {radius, brightness} of the blur (a skin's choice).
     configure(enabled, radius = 0, corners = 'none', scale = 1, look = {}) {
-        this._look = {radius: BLUR_RADIUS, brightness: 1, saturation: 1, ...look};
+        this._look = {radius: BLUR_RADIUS, brightness: 1, ...look};
         this._radius = radius * scale;
         this._corners = corners;
         this._scale = scale;
@@ -113,18 +101,7 @@ class IslaBlur extends St.Widget {
             return;
         const look = this._look;
         actor.remove_effect_by_name('blur');
-        actor.remove_effect_by_name('saturate');
-        const effect = new Shell.BlurEffect({mode: Shell.BlurMode.ACTOR, brightness: look.brightness});
-        if (HAS_BLUR_RADIUS)
-            effect.radius = look.radius * this._scale;
-        else
-            effect.sigma = look.radius * this._scale / 2;
-        actor.add_effect_with_name('blur', effect);
-        if (look.saturation !== 1) {
-            const saturate = new Saturate();
-            actor.add_effect_with_name('saturate', saturate);
-            saturate.setFactor(look.saturation);
-        }
+        actor.add_effect_with_name('blur', blurEffect(look.radius * this._scale, look.brightness));
         this.queue_relayout();
     }
 

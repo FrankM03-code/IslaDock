@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // When the island must be calmer, in one place:
 //  · "Reducir animaciones" (GNOME's Accesibilidad switches animations off):
-//    no Aurora halo moving, no breathing, no magnified icons, no Vidrio
-//    oscuro lens. GNOME already makes every slide instant then.
+//    no Aurora halo moving, no breathing, no magnified icons. GNOME already
+//    makes every slide instant then.
 //  · Ahorro de energía ('ahorro-energia', on by default): running on battery
 //    or in the "Ahorro" power mode, no blur, no Aurora halo moving and no
 //    breathing.
@@ -64,10 +64,6 @@ export class Calm extends Signals.EventEmitter {
     }
 
     get magnifyOff() {
-        return this.reduced;
-    }
-
-    get lensOff() {
         return this.reduced;
     }
 

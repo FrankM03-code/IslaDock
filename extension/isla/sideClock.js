@@ -357,7 +357,10 @@ export class SideClock {
         this._update();
         this._bubble.show();
         this._place();
-        this._bubble.ease({translation_x: 0, opacity: 255, duration: ms(IN_TIME), mode: Clutter.AnimationMode.EASE_OUT_CUBIC});
+        // X11 takes the clickable region when the bubble is shown, still outside the
+        // screen: without a new one, a click on it goes to the window behind (a browser).
+        this._bubble.ease({translation_x: 0, opacity: 255, duration: ms(IN_TIME), mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
+            onStopped: () => Main.layoutManager._queueUpdateRegions?.()});
         this._mark.ease({opacity: 0, duration: ms(IN_TIME)});
     }
 

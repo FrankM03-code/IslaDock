@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 Frank Molina
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Installs IslaDock for the current user from this folder.
 set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")"

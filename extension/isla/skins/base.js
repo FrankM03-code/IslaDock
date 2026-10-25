@@ -17,9 +17,9 @@ export class SkinBase {
         return `isla-skin-${this.key}`;
     }
 
-    // Wallpaper blur behind the capsule: {radius, brightness, saturation} or null.
+    // Wallpaper blur behind the capsule: {radius, brightness} or null.
     get blur() {
-        return {radius: 30, brightness: 1, saturation: 1};
+        return {radius: 30, brightness: 1};
     }
 
     // true: icons always in full color (ignores desaturar-en-reposo).
@@ -32,8 +32,8 @@ export class SkinBase {
         return [];
     }
 
-    // The Apps button's text turns graphite over a very light island.
-    get portalGraphite() {
+    // The round buttons (launcher, Notificaciones, Portapapeles, Ajustes) turn graphite over a light island.
+    get buttonsGraphite() {
         return !this.isla._settings.get_boolean('isla-oscura');
     }
 

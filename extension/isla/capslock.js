@@ -1,14 +1,16 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Mayúsculas: for keyboards with no Caps Lock light. While it is on, a small
-// ⇪ badge sits on the island's right corner (switch in Preferences).
+// ⇪ badge sits on the island's right corner (switch in Preferences). Turning it on
+// over a maximized window brings the hidden island out for a moment to show it.
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 
 import {IslandBadge} from './badge.js';
 
 export class CapsLock {
-    constructor({settings, capsule, dir}) {
+    constructor({state, settings, capsule, dir}) {
+        this._state = state;
         this._settings = settings;
         this._badge = new IslandBadge(capsule, new Gio.FileIcon({file: dir.get_child('icons').get_child('isla-mayus-symbolic.svg')}),
             'isla-insignia-mayus');
@@ -20,6 +22,8 @@ export class CapsLock {
                 return;
             this._on = on;
             this._sync(true);
+            if (on && this._settings.get_boolean('mayus-insignia'))
+                this._state.command('nudge');
         });
         this._settingsId = settings.connect('changed::mayus-insignia', () => this._sync(false));
         this._sync(false);

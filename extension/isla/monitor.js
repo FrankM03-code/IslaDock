@@ -24,3 +24,15 @@ export function dockMonitor() {
 export function dockWorkArea() {
     return Main.layoutManager.getWorkAreaForMonitor(dockMonitorIndex());
 }
+
+// x of a panel `w` wide kept within the open dock's edges (as the Ajustes panel sits), when the
+// dock is at least as wide; a wider panel is centered on the dock instead.
+export function insideDock(x, w, capsule) {
+    if (!capsule?.get_stage())
+        return x;
+    const [cx] = capsule.get_transformed_position();
+    const [cw] = capsule.get_transformed_size();
+    if (w > cw)
+        return cx + cw / 2 - w / 2;
+    return Math.min(Math.max(x, cx), cx + cw - w);
+}

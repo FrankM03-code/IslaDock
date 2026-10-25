@@ -81,7 +81,6 @@ function drawPreview(key, cr, w, h) {
     dots();
 }
 
-
 function switchRow(settings, key, title, subtitle = '') {
     const row = new Adw.SwitchRow({title, subtitle});
     settings.bind(key, row, 'active', Gio.SettingsBindFlags.DEFAULT);
@@ -462,6 +461,10 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         look.add(switchRow(settings, 'desenfoque', _('Desenfocar lo que hay detrás'), _('Apágalo si quieres la isla aún más liviana')));
         look.add(switchRow(settings, 'desenfoque-cajon', _('Fondo desenfocado en el cajón de aplicaciones'),
             _('Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades')));
+        look.add(switchRow(settings, 'barra-escritorio', _('Barra en el escritorio'),
+            _('Sin ventanas a la vista: música o fecha y hora, apps minimizadas y tus botones. La rueda del mouse abre el dock')));
+        look.add(switchRow(settings, 'barra-ventanas', _('App activa en la isla'),
+            _('Con ventanas abiertas: ícono y nombre de la app que usas, cuántas ventanas más hay, la música y la campana')));
         look.add(switchRow(settings, 'isla-respiracion', _('Respiración'), _('En reposo, el fondo late muy despacio')));
         look.add(switchRow(settings, 'ahorro-energia', _('Ahorrar batería'),
             _('Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento ni respiración. ') +
@@ -489,8 +492,8 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             _('Un número sobre la app (Telegram, Thunderbird…), solo de las apps que lo publican')));
         functions.add(switchRow(settings, 'mayus-insignia', _('Símbolo de mayúsculas en la isla'),
             _('Mientras estén activas, un pequeño ⇪ en la esquina de la isla')));
-        functions.add(switchRow(settings, 'cafeina-activa', _('Cafeína'),
-            _('La pantalla no se apaga ni el equipo se suspende. También en el panel Ajustes')));
+        functions.add(switchRow(settings, 'cafeina-activa', _('Modo activo'),
+            _('La pantalla siempre encendida; puedes suspender cuando quieras. También en el panel Ajustes')));
         functions.add(switchRow(settings, 'no-molestar', _('No molestar'), _('También con un clic largo sobre la isla')));
         page.add(functions);
 
@@ -553,7 +556,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             _('Historial de lo copiado (texto, enlaces, colores e imágenes). Super+V lo abre desde cualquier lugar; ') +
             _('mientras esté activo, Super+V deja de abrir las notificaciones (sigue Super+M)')));
         extras.add(switchRow(settings, 'mostrar-energia', _('Ajustes'),
-            _('Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, cafeína, volumen, captura, bloquear, apagar… ') +
+            _('Red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, modo activo, volumen, captura, bloquear, apagar… ') +
             _('Clic derecho o mantener pulsado: suspender')));
         extras.add(switchRow(settings, 'ocultar-barra-superior', _('Quitar la barra superior de GNOME'),
             _('Desaparece del todo; sus controles quedan en el botón Ajustes. Las esquinas activas siguen funcionando')));

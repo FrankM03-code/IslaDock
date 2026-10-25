@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Frank Molina
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Translations without the gettext tools (not installed here):
 #   python3 po/traducir.py pot   → po/isladock.pot from every _('…') / N_('…') in extension/
 #   python3 po/traducir.py mo    → extension/locale/<lang>/LC_MESSAGES/isladock.mo from po/<lang>.po
@@ -15,6 +17,8 @@ EXT = os.path.join(ROOT, 'extension')
 PO = os.path.join(ROOT, 'po')
 DOMAIN = 'isladock'
 CALL = re.compile(r"(?<![\w.$])N?_\(\s*'((?:\\.|[^'\\])*)'\s*\)")
+# ngettext('one', 'many', n): kept as "one\0many", the way the .mo stores plurals.
+PLURAL = re.compile(r"(?<![\w.$])ngettext\(\s*'((?:\\.|[^'\\])*)'\s*,\s*'((?:\\.|[^'\\])*)'")
 
 
 def extract():
@@ -29,6 +33,9 @@ def extract():
                 for m in CALL.finditer(line):
                     text = ast.literal_eval("'" + m.group(1) + "'")
                     found.setdefault(text, []).append(f'{rel}:{n}')
+                for m in PLURAL.finditer(line):
+                    one, many = (ast.literal_eval("'" + g + "'") for g in m.groups())
+                    found.setdefault(f'{one}\0{many}', []).append(f'{rel}:{n}')
     return found
 
 
@@ -38,36 +45,44 @@ def quote(s):
 
 def write_pot():
     found = extract()
-    out = ['msgid ""', 'msgstr ""', '"Project-Id-Version: IslaDock\\n"', '"Content-Type: text/plain; charset=UTF-8\\n"', '']
+    out = ['# IslaDock — created and designed by Frank Molina.', 'msgid ""', 'msgstr ""', '"Project-Id-Version: IslaDock\\n"', '"Content-Type: text/plain; charset=UTF-8\\n"', '']
     for text, places in found.items():
         out.append('#: ' + ' '.join(places[:4]))
-        out.append('msgid ' + quote(text))
-        out.append('msgstr ""')
-        out.append('')
+        if '\0' in text:
+            one, many = text.split('\0')
+            out += ['msgid ' + quote(one), 'msgid_plural ' + quote(many), 'msgstr[0] ""', 'msgstr[1] ""', '']
+        else:
+            out += ['msgid ' + quote(text), 'msgstr ""', '']
     open(os.path.join(PO, f'{DOMAIN}.pot'), 'w', encoding='utf-8').write('\n'.join(out))
     print(f'{len(found)} textos → po/{DOMAIN}.pot')
 
 
+# {msgid: msgstr}; a plural is {"one\0many": "form0\0form1"} (empty while a form is missing).
 def read_po(path):
-    entries, msgid, msgstr, where = {}, None, None, None
+    entries, ids, strs, where = {}, None, [], None
 
     def unq(s):
         return ast.literal_eval(s)
+
+    def done():
+        if ids is not None:
+            entries['\0'.join(ids)] = '\0'.join(strs) if all(strs) else ''
     for line in open(path, encoding='utf-8'):
         line = line.strip()
         if line.startswith('msgid '):
-            if msgid is not None:
-                entries[msgid] = msgstr
-            msgid, msgstr, where = unq(line[6:]), '', 'id'
-        elif line.startswith('msgstr '):
-            msgstr, where = unq(line[7:]), 'str'
+            done()
+            ids, strs, where = [unq(line[6:])], [], 'id'
+        elif line.startswith('msgid_plural '):
+            ids.append(unq(line[13:]))
+        elif line.startswith('msgstr'):
+            strs.append(unq(line.split(' ', 1)[1]))
+            where = 'str'
         elif line.startswith('"'):
             if where == 'id':
-                msgid += unq(line)
+                ids[-1] += unq(line)
             elif where == 'str':
-                msgstr += unq(line)
-    if msgid is not None:
-        entries[msgid] = msgstr
+                strs[-1] += unq(line)
+    done()
     return entries
 
 

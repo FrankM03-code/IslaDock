@@ -19,11 +19,13 @@ import {Timer} from './isla/timer.js';
 import {Progress} from './isla/progress.js';
 import {Stack} from './isla/stack/stack.js';
 import {Folders} from './isla/stack/folders.js';
+import {Trash} from './isla/stack/trash.js';
 import {Power} from './isla/power/power.js';
 import {FloatingNotices} from './isla/floating.js';
 import {TopBar} from './isla/topbar.js';
 import {OverviewBlur} from './isla/overviewBlur.js';
 import {CapsLock} from './isla/capslock.js';
+import {VolumeOsd} from './isla/volumeOsd.js';
 import {DesktopClock} from './isla/clock.js';
 import {BatteryStatus} from './isla/battery.js';
 import {KeyboardStatus} from './isla/keyboard.js';
@@ -31,11 +33,12 @@ import {WorkspacesStatus} from './isla/workspaces.js';
 import {SideClock} from './isla/sideClock.js';
 import {PrivacyStatus} from './isla/privacy.js';
 import {CalendarPanel} from './isla/calendar.js';
+import {Notifications} from './isla/notifications/notifications.js';
 import {dockMonitorIndex, setDockSettings} from './isla/monitor.js';
 import {Calm} from './isla/calm.js';
 import {IslaState} from './isla/state.js';
 
-// Modules that a setting can switch off: [key or null, factory].
+// Modules that a setting can switch off: [key or null, factory, (settings) => also needed, keys it reads].
 const MODULES = {
     gestures: [null, ctx => new Gestures(ctx)],
     dnd: [null, ctx => new DoNotDisturb(ctx)],
@@ -48,13 +51,18 @@ const MODULES = {
     progress: [null, ctx => new Progress(ctx)],
     stack: [null, ctx => new Stack(ctx)],
     folders: [null, ctx => new Folders(ctx)],
+    trash: [null, ctx => new Trash(ctx)],
     topbar: ['ocultar-barra-superior', () => new TopBar()],
     clipboard: ['mostrar-portapapeles', ctx => new Clipboard(ctx)],
     power: [null, ctx => new Power(ctx)],
-    floating: ['avisos-flotantes', ctx => new FloatingNotices(ctx)],
+    // The notification center's popups take the place of the floating notices.
+    floating: ['avisos-flotantes', ctx => new FloatingNotices(ctx), s => !s.get_boolean('centro-notificaciones'),
+        ['centro-notificaciones']],
+    notifications: ['centro-notificaciones', ctx => new Notifications(ctx)],
     prefsWindow: [null, ctx => new PrefsWindow(ctx)],
     overviewBlur: ['desenfoque-cajon', () => new OverviewBlur()],
     capsLock: [null, ctx => new CapsLock(ctx)],
+    volumeOsd: [null, ctx => new VolumeOsd(ctx)],
     clock: ['reloj-escritorio', ctx => new DesktopClock(ctx)],
     battery: [null, ctx => new BatteryStatus(ctx)],
     keyboard: [null, ctx => new KeyboardStatus(ctx)],
@@ -100,10 +108,10 @@ export default class IslaDockExtension extends Extension {
         this._isla = new Isla({settings: this._settings, resolver: this._resolver, state: this._state});
         this._ctx = {state: this._state, settings: this._settings, capsule: this._isla.capsule, title: this.metadata.name, uuid: this.uuid,
             resolver: this._resolver, dir: this.dir};
-        for (const [name, [key]] of Object.entries(MODULES)) {
+        for (const [name, [key, , , also = []]] of Object.entries(MODULES)) {
             this._sync(name);
-            if (key)
-                this._ids.push(this._settings.connect(`changed::${key}`, () => this._sync(name)));
+            for (const k of [key, ...also].filter(Boolean))
+                this._ids.push(this._settings.connect(`changed::${k}`, () => this._sync(name)));
         }
     }
 
@@ -124,8 +132,8 @@ export default class IslaDockExtension extends Extension {
         this._ids.forEach(id => this._settings.disconnect(id));
         this._ids = [];
         // Modules first: they hand back what they lent to the island.
-        for (const module of this._modules.values())
-            module.destroy();
+        for (const [name, module] of this._modules)
+            this._destroyModule(name, module);
         this._modules.clear();
         this._isla?.destroy();
         this._isla = null;
@@ -141,8 +149,8 @@ export default class IslaDockExtension extends Extension {
     }
 
     _sync(name) {
-        const [key, create] = MODULES[name];
-        const on = !key || this._settings.get_boolean(key);
+        const [key, create, needed] = MODULES[name];
+        const on = (!key || this._settings.get_boolean(key)) && (!needed || needed(this._settings));
         const module = this._modules.get(name);
         if (on && !module) {
             try {
@@ -151,8 +159,17 @@ export default class IslaDockExtension extends Extension {
                 console.error(`isla-dock: no se pudo iniciar ${name}: ${e.message}`);
             }
         } else if (!on && module) {
-            module.destroy();
+            this._destroyModule(name, module);
             this._modules.delete(name);
+        }
+    }
+
+    // One module failing to clean up must not leave the others (and the island) behind.
+    _destroyModule(name, module) {
+        try {
+            module.destroy();
+        } catch (e) {
+            console.error(`isla-dock: no se pudo cerrar ${name}: ${e.message}`);
         }
     }
 

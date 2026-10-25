@@ -280,6 +280,10 @@ export class Media {
         if (!entry || !title) {
             this._setWave(false);
             this._state.removeActivity('music');
+            if (this._state.musicTitle) {
+                this._state.musicTitle = null;
+                this._state.emit('music-info');
+            }
             if (this._state.musicPlaying) {
                 this._state.musicPlaying = false;
                 this._state.emit('music-changed', false);
@@ -298,6 +302,11 @@ export class Media {
         if (this._state.musicPlaying !== playing) {
             this._state.musicPlaying = playing;
             this._state.emit('music-changed', playing);
+        }
+        // The desktop bar (restBar.js) shows the bare song title.
+        if (this._state.musicTitle !== title) {
+            this._state.musicTitle = title;
+            this._state.emit('music-info');
         }
 
     }
@@ -391,8 +400,6 @@ export class Media {
         }
     }
 
-
-
     // Playing: the bars jump to random heights one after another.
     // Paused: they rest low.
     _setWave(playing) {
@@ -465,6 +472,9 @@ export class Media {
         for (const name of [...this._players.keys()])
             this._remove(name);
         this._state.removeActivity('music');
+        this._state.musicPlaying = false;
+        this._state.musicTitle = null;
+        this._state.emit('music-info');
         this._state.release('musica');
         this._menu?.destroy();
         this._soup?.abort();

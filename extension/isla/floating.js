@@ -7,18 +7,18 @@
 // what the notification points to; the × or a right click closes it.
 // Same rules as GNOME's banners: none in do-not-disturb, none for low urgency,
 // critical ones stay until they are dealt with. The cards look like the island
-// (its color, transparency, edge and blur, Aurora's halo, Vidrio oscuro's
-// lens), so the set reads as one. Each new card also nudges the dock, which
-// peeks out for a moment when a window keeps it hidden.
+// (its color, transparency, edge and Aurora's halo), so the set reads as one.
+// Each new card also nudges the dock, which peeks out for a moment when a
+// window keeps it hidden.
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
-import Meta from 'gi://Meta';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
+import {GnomeBanners, wantsBanner} from './banners.js';
 import {dressFrame, islandLook} from './look.js';
 import {ms} from './timing.js';
 import {_} from './i18n.js';
@@ -44,43 +44,13 @@ export class FloatingNotices {
         Main.layoutManager.addTopChrome(this._box);
         this._boxId = this._box.connect('notify::size', () => this._place());
         this._monitorsId = Main.layoutManager.connect('monitors-changed', () => this._place());
-        this._blockGnomeBanners();
+        this._banners = new GnomeBanners();
+        this._banners.hold();
         this._trayIds = [
             Main.messageTray.connect('source-added', (_t, source) => this._watch(source)),
             Main.messageTray.connect('source-removed', (_t, source) => this._unwatch(source)),
         ];
         Main.messageTray.getSources().forEach(s => this._watch(s));
-    }
-
-    // GNOME's banner stays away while we run, whatever else blocks or unblocks it
-    // (the top bar's menus do); what others ask for is kept and given back.
-    _blockGnomeBanners() {
-        const tray = Main.messageTray;
-        const proto = Object.getPrototypeOf(tray);
-        let desc = null;
-        for (let p = proto; p && !desc; p = Object.getPrototypeOf(p))
-            desc = Object.getOwnPropertyDescriptor(p, 'bannerBlocked');
-        if (!desc?.set)
-            return;
-        this._bannerSetter = desc.set;
-        this._othersBlock = !!tray.bannerBlocked;
-        Object.defineProperty(tray, 'bannerBlocked', {
-            configurable: true,
-            get: () => this._othersBlock,
-            set: v => {
-                this._othersBlock = !!v;
-            },
-        });
-        desc.set.call(tray, true);
-    }
-
-    _restoreGnomeBanners() {
-        if (!this._bannerSetter)
-            return;
-        const tray = Main.messageTray;
-        delete tray.bannerBlocked;
-        this._bannerSetter.call(tray, this._othersBlock);
-        this._bannerSetter = null;
     }
 
     _watch(source) {
@@ -92,12 +62,6 @@ export class FloatingNotices {
     _unwatch(source) {
         this._sources.get(source)?.forEach(id => source.disconnect(id));
         this._sources.delete(source);
-    }
-
-    _wantsBanner(notification) {
-        if (notification.urgency === MessageTray.Urgency.LOW)
-            return false;
-        return notification.source?.policy?.showBanners || notification.urgency === MessageTray.Urgency.CRITICAL;
     }
 
     _onNotification(source, notification) {
@@ -123,7 +87,7 @@ export class FloatingNotices {
     }
 
     _show(source, notification) {
-        if (this._state.dnd || !this._wantsBanner(notification))
+        if (this._state.dnd || !wantsBanner(notification))
             return;
         // Seen here: GNOME won't queue it as a banner (and won't show it later).
         notification.acknowledged = true;
@@ -174,20 +138,9 @@ export class FloatingNotices {
         const top = mon.y + (panel.visible ? panel.height : 0) + TOP_GAP * sf;
         const [w] = this._box.get_size();
         this._box.set_position(Math.round(mon.x + (mon.width - w) / 2), Math.round(top));
-        // Vidrio oscuro's lenses read their place on screen when allocated: once the box has moved.
-        if (!this._later) {
-            this._later = global.compositor.get_laters().add(Meta.LaterType.BEFORE_REDRAW, () => {
-                this._later = 0;
-                this._cards.forEach(c => c.actor.get_children().forEach(a => a.queue_relayout()));
-                return false;
-            });
-        }
     }
 
     destroy() {
-        if (this._later)
-            global.compositor.get_laters().remove(this._later);
-        this._later = 0;
         this._trayIds.forEach(id => Main.messageTray.disconnect(id));
         this._trayIds = [];
         for (const source of [...this._sources.keys()])
@@ -197,7 +150,7 @@ export class FloatingNotices {
         this._cards.forEach(c => c.destroy());
         this._cards = [];
         this._holdRedirect(false);
-        this._restoreGnomeBanners();
+        this._banners.release();
         Main.layoutManager.disconnect(this._monitorsId);
         this._box.disconnect(this._boxId);
         Main.layoutManager.removeChrome(this._box);

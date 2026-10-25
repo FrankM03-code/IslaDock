@@ -16,6 +16,7 @@ import {CascadeView} from './cascadeView.js';
 import {GridView} from './gridView.js';
 import {ListView} from './listView.js';
 import * as FileActions from './fileActions.js';
+import {addPanelChrome} from '../chrome.js';
 import {Mode} from '../state.js';
 import {dockWorkArea} from '../monitor.js';
 import {_} from '../i18n.js';
@@ -84,7 +85,7 @@ export class StackPopup {
         const View = VIEWS[this._kindShown];
         const view = this._view = new View({style, sf, on, labels: this._model.labels});
         this._anchor = anchor;
-        Main.layoutManager.addTopChrome(view.actor);
+        addPanelChrome(view.actor);
         view.fill(this._model.files, this._model.total, this._max(this._kindShown));
         this._place();
         view.actor.connect('captured-event', (_a, event) => this._onEvent(event));
@@ -210,8 +211,8 @@ export class StackPopup {
         }
         view.actor.reactive = false;
         const done = () => {
-            Main.layoutManager.removeChrome(view.actor);
-            view.destroy();
+            if (!view.actor._islaGone)
+                view.destroy();
         };
         if (animate)
             view.animateOut(done);

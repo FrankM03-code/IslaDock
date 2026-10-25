@@ -98,10 +98,7 @@ export class ClipboardPanel {
             content.add_child(label);
             const button = new St.Button({style_class: 'isla-clip-seg', accessible_name: _(f.label), can_focus: true,
                 track_hover: true, child: content});
-            button.connect('clicked', () => {
-                this._filter = f.key;
-                this.refresh();
-            });
+            button.connect('clicked', () => this.setFilter(f.key));
             this._on.tooltip(button, f.label, () => button.has_style_pseudo_class('checked'));
             track.add_child(button);
             return {key: f.key, button, label};
@@ -131,10 +128,6 @@ export class ClipboardPanel {
         this._clear.connect('clicked', () => this._history.clearUnpinned());
         footer.add_child(this._clear);
         this.actor.add_child(footer);
-    }
-
-    get filter() {
-        return this._filter;
     }
 
     setFilter(key) {
