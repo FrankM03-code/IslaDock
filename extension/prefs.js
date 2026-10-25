@@ -6,6 +6,7 @@ import Cairo from 'cairo';
 import Gdk from 'gi://Gdk';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import Graphene from 'gi://Graphene';
 import Gtk from 'gi://Gtk';
 import PangoCairo from 'gi://PangoCairo';
 
@@ -15,6 +16,7 @@ import {USER_DOCK_ICONS, listIconThemes} from './iconThemes.js';
 import {_, N_, fmt} from './isla/i18n.js';
 import {ACCENT_STYLES, CORAL_RGB, accentLook, rgba} from './isla/accentStyles.js';
 import {SYMBOLS} from './isla/symbols.js';
+import {WeatherGroup} from './weatherPrefs.js';
 import {FAMILIES, drawFamily} from './isla/families.js';
 
 const PAYPAL_DONATION_URL = 'https://paypal.me/frankmolina29';
@@ -90,7 +92,7 @@ function switchRow(settings, key, title, subtitle = '') {
 // Drop-down bound to a string key: options = [[value, label], ...].
 // Settings that are state, not choices: never copied.
 const NOT_EXPORTED = ['temporizador-fin', 'temporizador-modo', 'banners-previos', 'portapapeles-liberado',
-    'calendario-liberado', 'no-molestar', 'cafeina-activa'];
+    'calendario-liberado', 'no-molestar', 'cafeina-activa', 'preferencias-abrir'];
 
 export function exportSettings(settings, metadata) {
     const values = {};
@@ -359,7 +361,8 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         return group;
     }
 
-    // The Ajustes panel's look; the subtitle tells what the chosen one is like.
+    // The Ajustes panel's look, folded under an arrow: unfolded, a card per look with its picture
+    // (previews/, light or dark with the island) and what it is like.
     _panelStyleRow(settings) {
         const styles = [
             ['agrupada', _('Sesión agrupada'), _('Botones cuadrados; bloquear, salir, suspender y apagar juntos en una cápsula')],
@@ -367,12 +370,52 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             ['finas', _('Tarjetas finas'), _('Nombre y estado en cada botón, porcentaje del volumen y una fila de abajo más corta')],
             ['lineas', _('Solo líneas'), _('Sin fondos, solo íconos; un punto de color bajo lo que está encendido')],
         ];
-        const row = comboRow(settings, 'panel-style', _('Estilo del panel de ajustes'), styles.map(([v, label]) => [v, label]));
-        const sync = () => (row.subtitle = (styles.find(([v]) => v === settings.get_string('panel-style')) ?? styles[0])[2]);
+        const expander = new Adw.ExpanderRow({title: _('Estilo del panel de ajustes')});
+        const flow = new Gtk.FlowBox({selection_mode: Gtk.SelectionMode.NONE, homogeneous: true, column_spacing: 10,
+            row_spacing: 10, min_children_per_line: 2, max_children_per_line: 2, margin_top: 10, margin_bottom: 10,
+            margin_start: 10, margin_end: 10});
+        const previews = this.dir.get_child('previews');
+        let radio = null;
+        const checks = [], pictures = [];
+        for (const [style, name, about] of styles) {
+            const picture = new Gtk.Picture({can_shrink: true, content_fit: Gtk.ContentFit.CONTAIN, height_request: 190,
+                margin_top: 8, margin_bottom: 8, margin_start: 8, margin_end: 8});
+            pictures.push([style, picture]);
+            const frame = new Gtk.Frame({child: picture});
+            const check = new Gtk.CheckButton({label: name, group: radio});
+            radio ??= check;
+            check.connect('toggled', () => {
+                if (check.active && settings.get_string('panel-style') !== style)
+                    settings.set_string('panel-style', style);
+            });
+            checks.push([style, check]);
+            const card = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 6});
+            card.append(frame);
+            card.append(check);
+            card.append(new Gtk.Label({label: about, xalign: 0, wrap: true, css_classes: ['dim-label', 'caption']}));
+            const click = new Gtk.GestureClick();
+            click.connect('released', () => (check.active = true));
+            frame.add_controller(click);
+            flow.append(card);
+        }
+        expander.add_row(new Gtk.ListBoxRow({child: flow, activatable: false, selectable: false}));
+
+        // The panel wears the island's tone: so do the pictures.
+        const paint = () => {
+            const tone = settings.get_boolean('isla-oscura') ? 'oscura' : 'clara';
+            pictures.forEach(([style, picture]) => picture.set_file(previews.get_child(`panel-${style}-${tone}.png`)));
+        };
+        // Folded, the row says which one is chosen.
+        const sync = () => {
+            const chosen = styles.find(([v]) => v === settings.get_string('panel-style')) ?? styles[0];
+            checks.find(([v]) => v === chosen[0])[1].set_active(true);
+            expander.subtitle = chosen[1];
+        };
+        paint();
         sync();
-        const id = settings.connect('changed::panel-style', sync);
-        row.connect('destroy', () => settings.disconnect(id));
-        return row;
+        const ids = [settings.connect('changed::panel-style', sync), settings.connect('changed::isla-oscura', paint)];
+        expander.connect('destroy', () => ids.forEach(id => settings.disconnect(id)));
+        return expander;
     }
 
     // Animation speed: a slider from quick to slow.
@@ -438,6 +481,29 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         dialog.present();
     }
 
+    // The calendar's place name asks for the Clima group ('preferencias-abrir' = 'clima'), also
+    // when the window is already open: show it and put the cursor in the search.
+    _openWeather(window, settings, page, weather) {
+        const open = () => {
+            if (settings.get_string('preferencias-abrir') !== 'clima')
+                return;
+            settings.set_string('preferencias-abrir', '');
+            window.set_visible_page(page);
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 150, () => {
+                const scrolled = weather.group.get_ancestor(Gtk.ScrolledWindow.$gtype);
+                const content = scrolled.get_child() instanceof Gtk.Viewport ? scrolled.get_child().get_child() : scrolled.get_child();
+                const [ok, point] = weather.group.compute_point(content, new Graphene.Point({x: 0, y: 0}));
+                if (ok)
+                    scrolled.vadjustment.value = Math.max(0, point.y - 12);
+                weather.entry.grab_focus();
+                return GLib.SOURCE_REMOVE;
+            });
+        };
+        const id = settings.connect('changed::preferencias-abrir', open);
+        window.connect('close-request', () => settings.disconnect(id));
+        open();
+    }
+
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
         window._settings = settings;
@@ -496,6 +562,10 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             _('La pantalla siempre encendida; puedes suspender cuando quieras. También en el panel Ajustes')));
         functions.add(switchRow(settings, 'no-molestar', _('No molestar'), _('También con un clic largo sobre la isla')));
         page.add(functions);
+
+        const weather = new WeatherGroup(window);
+        page.add(weather.group);
+        this._openWeather(window, settings, page, weather);
 
         const status = new Adw.PreferencesGroup({
             title: _('Estado'),

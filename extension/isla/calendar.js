@@ -9,7 +9,7 @@
 // theme's alarm sound, again and again for up to a minute) with a notification
 // that stays; clicking or closing it (or opening the calendar) stops the alarm. One missed while IslaDock
 // was off is only announced. Old reminders without a time count as 8:00.
-// The panel is solid: light over a light island, dark otherwise.
+// On top, the weather (weather.js). The panel is solid: light over a light island, dark otherwise.
 // It opens from the side clock (click) or with Super+M ('atajo-calendario'),
 // which GNOME uses for the date menu ('toggle-message-tray'): while this runs
 // that binding gives it up and gets it back after ('calendario-liberado').
@@ -36,6 +36,7 @@ import {_, fmt, localName} from './i18n.js';
 import {dressFrame, islandLook} from './look.js';
 import {dockMonitor, dockWorkArea} from './monitor.js';
 import {ms} from './timing.js';
+import {WeatherStrip} from './weather.js';
 
 const KEY = 'atajo-calendario';
 const KEPT = 'calendario-liberado';
@@ -260,6 +261,7 @@ export class CalendarPanel {
         // The card: the chosen day's reminders, or the form.
         this._card = new St.BoxLayout({style_class: 'isla-cal-tarjeta', orientation: Clutter.Orientation.VERTICAL});
 
+        box.add_child(new WeatherStrip(() => this.close(), this._settings).actor);
         box.add_child(head);
         box.add_child(this._grid);
         box.add_child(this._card);

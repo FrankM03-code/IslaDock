@@ -9,7 +9,8 @@
 //             bottom row whose Apagar opens Suspender · Reiniciar · Cerrar sesión · Apagar
 //   lineas    no backgrounds: bare icons, an accent dot under what is on
 // The toggles: red · bluetooth · modo de energía · luz nocturna · estilo oscuro · modo activo; then
-// volume (and the sound output: speakers, headphones, HDMI…) and the microphone, while there is one.
+// the brightness (brightness.js), the volume (and the sound output: speakers, headphones, HDMI…) and
+// the microphone, each while there is one.
 // With a battery, a line on top says its charge, state and time left. Icons: Tabler (MIT, icons/).
 // It wears the island's own solid color and edge (Aurora's halo too, skin.floatingLook), with
 // light pieces over a light island. Reiniciar, outside Tarjetas finas, is in GNOME's Apagar dialog.
@@ -36,6 +37,7 @@ import {dressFrame, islandLook} from '../look.js';
 import {dockWorkArea, insideDock} from '../monitor.js';
 import {createToggles, openSettings} from './services.js';
 import {acquireBattery, describe, releaseBattery} from './battery.js';
+import {Brightness} from './brightness.js';
 import {Mode} from '../state.js';
 import {ms} from '../timing.js';
 import {_, N_, fmt} from '../i18n.js';
@@ -78,6 +80,7 @@ export class Power {
         this._capsule = capsule;
         this._actions = SystemActions.getDefault();
         this._toggles = createToggles(dir, settings);
+        this._brightness = new Brightness(() => this._syncBrightness?.());
         this._panel = null;
         this._ids = [
             // The dock narrows when the hover zoom ends: the open panel keeps within its edges.
@@ -460,12 +463,54 @@ export class Power {
         return row;
     }
 
+    // Brillo (brightness.js): its icon, slider and, if asked, its percentage; only while there is one.
+    _brightnessRow(percent) {
+        const row = new St.BoxLayout({style_class: 'isla-q-nivel'});
+        row.add_child(new St.Bin({style_class: 'isla-q-nivel-boton', y_align: Clutter.ActorAlign.CENTER,
+            child: this._icon('brightness', 'isla-q-nivel-icono')}));
+        const slider = new Slider(0);
+        slider.add_style_class_name('isla-q-slider');
+        slider.x_expand = true;
+        slider.y_align = Clutter.ActorAlign.CENTER;
+        slider.accessible_name = _('Brillo');
+        row.add_child(slider);
+        const value = percent ? new St.Label({style_class: 'isla-q-valor', y_align: Clutter.ActorAlign.CENTER}) : null;
+        if (value)
+            row.add_child(value);
+        const brightness = this._brightness;
+        let syncing = false;
+        const showValue = () => value && (value.text = `${Math.round(slider.value * 100)} %`);
+        const sync = () => {
+            const shown = row.visible;
+            row.visible = brightness.available;
+            syncing = true;
+            slider.value = brightness.value;
+            syncing = false;
+            showValue();
+            // The monitor answered after the panel opened: it grows by a row.
+            if (shown !== row.visible && this._panel)
+                this._place();
+        };
+        slider.connect('notify::value', () => {
+            showValue();
+            if (!syncing)
+                brightness.value = slider.value;
+        });
+        this._syncBrightness = sync;
+        this._unwatch.push(() => (this._syncBrightness = null));
+        sync();
+        brightness.refresh();
+        return row;
+    }
+
     _separator() {
         return new St.Widget({style_class: 'isla-q-separador'});
     }
 
-    // Volume, its outputs and the microphone, one under the other (in a soft card for Tarjetas finas).
+    // Brightness, volume, its outputs and the microphone, one under the other (in a soft card for
+    // Tarjetas finas).
     _levels(box, percent) {
+        box.add_child(this._brightnessRow(percent));
         const volume = this._levelRow('volume', percent);
         box.add_child(volume);
         box.add_child(volume._outputs);
@@ -720,5 +765,6 @@ export class Power {
         this._ids = [];
         this._toggles.forEach(t => t.destroy?.());
         this._toggles = [];
+        this._brightness.destroy();
     }
 }

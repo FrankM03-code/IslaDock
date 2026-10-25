@@ -1458,3 +1458,42 @@ msgstr[1] "{n} sin leer"
 
 msgid "{n} ventanas más"
 msgstr "{n} ventanas más"
+
+msgid "Abrir Meteorología"
+msgstr "Abrir Meteorología"
+
+msgid "Brillo"
+msgstr "Brillo"
+
+msgid "Buscando…"
+msgstr "Buscando…"
+
+msgid "Buscar ciudad"
+msgstr "Buscar ciudad"
+
+msgid "Cambiar la ciudad del clima"
+msgstr "Cambiar la ciudad del clima"
+
+msgid "Ciudad del clima"
+msgstr "Ciudad del clima"
+
+msgid "Clima"
+msgstr "Clima"
+
+msgid "Clima de {nombre}"
+msgstr "Clima de {nombre}"
+
+msgid "La ciudad del clima del calendario y de Meteorología. Busca cualquier pueblo o ciudad (necesita internet)."
+msgstr "La ciudad del clima del calendario y de Meteorología. Busca cualquier pueblo o ciudad (necesita internet)."
+
+msgid "Ninguna todavía"
+msgstr "Ninguna todavía"
+
+msgid "No se encontró «{nombre}»"
+msgstr "No se encontró «{nombre}»"
+
+msgid "No se pudo buscar. ¿Hay internet?"
+msgstr "No se pudo buscar. ¿Hay internet?"
+
+msgid "Usar esta"
+msgstr "Usar esta"

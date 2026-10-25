@@ -327,5 +327,9 @@
       <default>true</default>
       <summary>Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento y sin respiración</summary>
     </key>
+    <key name="preferencias-abrir" type="s">
+      <default>''</default>
+      <summary>Parte de las preferencias que se abre la próxima vez (clima = grupo Clima); se borra al usarla</summary>
+    </key>
   </schema>
 </schemalist>

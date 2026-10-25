@@ -30,7 +30,7 @@ convierte en el dock completo.
 - **Mayúsculas**: para teclados sin luz de Bloq Mayús, un pequeño ⇪ en la isla mientras están activas.
 - **Reloj de escritorio**: hora y fecha sobre el fondo de pantalla en cuatro estilos (Línea viva, Lateral acento, Semana fluida, Arco del día), arriba, al centro o abajo (Preferencias → Escritorio).
 - **Sin barra superior** (opcional, encendido por defecto): todo queda en la isla y el panel Ajustes.
-- **Lo que se perdía sin la barra**: batería, avisos de micrófono, cámara, ubicación y pantalla compartida, idioma del teclado, espacios de trabajo, y un calendario con recordatorios (Super + M).
+- **Lo que se perdía sin la barra**: batería, avisos de micrófono, cámara, ubicación y pantalla compartida, idioma del teclado, espacios de trabajo, y un calendario con recordatorios (Super + M) y el clima de los próximos días; la ciudad del clima se busca por nombre (cualquier pueblo, no solo las ciudades que conoce GNOME) en Preferencias → Isla → Clima o con un clic en su nombre.
 - **Reloj lateral**: escondido en el borde de la pantalla; al llevar el mouse sale la hora en cuatro estilos (Editorial, Isla con semana, Línea del día, Horizonte), también sobre ventanas maximizadas.
 - **Dock**: un punto por ventana abierta, número de mensajes sin leer, acción al hacer clic en la app activa (minimizar, pasar de ventana o miniaturas), Super + 1…9, elegir el monitor.
 - **Sonido**: elegir la salida (parlantes, audífonos, HDMI…) y silenciar el micrófono en el panel Ajustes; con varios reproductores, clic derecho en la música para elegir cuál.

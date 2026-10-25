@@ -1458,3 +1458,42 @@ msgstr[1] "{n} unread"
 
 msgid "{n} ventanas más"
 msgstr "{n} more windows"
+
+msgid "Abrir Meteorología"
+msgstr "Open Weather"
+
+msgid "Brillo"
+msgstr "Brightness"
+
+msgid "Buscando…"
+msgstr "Searching…"
+
+msgid "Buscar ciudad"
+msgstr "Search city"
+
+msgid "Cambiar la ciudad del clima"
+msgstr "Change the weather city"
+
+msgid "Ciudad del clima"
+msgstr "Weather city"
+
+msgid "Clima"
+msgstr "Weather"
+
+msgid "Clima de {nombre}"
+msgstr "Weather for {nombre}"
+
+msgid "La ciudad del clima del calendario y de Meteorología. Busca cualquier pueblo o ciudad (necesita internet)."
+msgstr "The city for the calendar's weather and for the Weather app. Search any town or city (needs internet)."
+
+msgid "Ninguna todavía"
+msgstr "None yet"
+
+msgid "No se encontró «{nombre}»"
+msgstr "“{nombre}” was not found"
+
+msgid "No se pudo buscar. ¿Hay internet?"
+msgstr "Could not search. Is there internet?"
+
+msgid "Usar esta"
+msgstr "Use this one"
