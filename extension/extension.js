@@ -89,13 +89,20 @@ export default class IslaDockExtension extends Extension {
         setDockSettings(this._settings);
         this._modules = new Map();
         this._ids = [];
-        if (Main.layoutManager._startingUp)
+        if (Main.layoutManager._startingUp) {
+            // Log in straight to the desktop, not to GNOME's Activities overview.
+            this._hasOverview = Main.sessionMode.hasOverview;
+            Main.sessionMode.hasOverview = false;
             this._startId = Main.layoutManager.connect('startup-complete', () => this._build());
-        else
+        } else
             this._build();
     }
 
     _build() {
+        // Extensions load asynchronously: if GNOME already began opening the overview, close it.
+        if (this._hasOverview !== undefined && Main.overview.visible)
+            Main.overview.hide();
+        this._restoreOverview();
         if (this._startId) {
             Main.layoutManager.disconnect(this._startId);
             this._startId = 0;
@@ -173,7 +180,14 @@ export default class IslaDockExtension extends Extension {
         }
     }
 
+    _restoreOverview() {
+        if (this._hasOverview !== undefined)
+            Main.sessionMode.hasOverview = this._hasOverview;
+        this._hasOverview = undefined;
+    }
+
     disable() {
+        this._restoreOverview();
         if (this._startId)
             Main.layoutManager.disconnect(this._startId);
         this._startId = 0;
