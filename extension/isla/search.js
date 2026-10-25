@@ -483,8 +483,14 @@ export class Search {
             if (event.get_button() !== Clutter.BUTTON_PRIMARY)
                 return Clutter.EVENT_PROPAGATE;
             this._select(i);
-            if (event.get_click_count() >= 2)
+            // Clutter events have no click count: two presses on the same row, close enough.
+            const time = event.get_time();
+            const last = this._lastPress;
+            this._lastPress = {row, time};
+            if (last?.row === row && time - last.time <= Clutter.Settings.get_default().double_click_time) {
+                this._lastPress = null;
                 this._activate(i);
+            }
             return Clutter.EVENT_STOP;
         });
         row.connect('notify::hover', () => this._updateButtons(row, i));

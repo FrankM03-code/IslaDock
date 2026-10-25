@@ -9,7 +9,7 @@
   ],
   "settings-schema": "org.gnome.shell.extensions.isla-dock",
   "gettext-domain": "isladock",
-  "version-name": "2.2",
+  "version-name": "2.3",
   "url": "https://github.com/FrankM03-code/IslaDock",
   "donations": {
     "paypal": "frankmolina29"

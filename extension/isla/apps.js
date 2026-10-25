@@ -67,7 +67,9 @@ export class AppsRow extends Signals.EventEmitter {
         this._interface = new Gio.Settings({schema_id: 'org.gnome.desktop.interface'});
         this.configure();
         this._rebuild();
-        this._on(AppFavorites.getAppFavorites(), 'changed', () => this._rebuild());
+        // A drop moves a favorite by removing and adding it again: rebuilding in between would
+        // destroy the dragged icon. 'drag-ended' rebuilds instead.
+        this._on(AppFavorites.getAppFavorites(), 'changed', () => !this._dragging && this._rebuild());
         this._on(this._appSystem, 'app-state-changed', () => this._later('apps', 50, () => this._rebuild()));
         this._on(this._appSystem, 'installed-changed', () => this._refreshIcons());
         // One mark per open window under each icon, another look for the app in front.
@@ -363,12 +365,16 @@ export class AppsRow extends Signals.EventEmitter {
             this._hideTooltip();
             this.emit('busy-changed');
         });
-        item.connect('drag-ended', () => {
+        const dragEnded = () => {
             this._dragging = null;
             // Back to the real order (a drop already changed the favorites).
             this._later('apps', 50, () => this._rebuild());
             this.emit('busy-changed');
-        });
+        };
+        item.connect('drag-ended', dragEnded);
+        // Gone in the middle of its drag (the app closed): its 'drag-ended' never comes,
+        // and the dock would stay open without zoom.
+        item.connect('destroy', () => this._dragging === item && dragEnded());
         return item;
     }
 
@@ -409,7 +415,9 @@ export class AppsRow extends Signals.EventEmitter {
         this._appItems = [...this.actor.get_children(), ...this.tail.get_children()].filter(a => a.kind !== 'separator');
         for (const item of this._appItems)
             item.setBadge?.(item.app ? this._badges.get(item.app.get_id()) ?? null : null);
+        // Every icon back to its size: the pointer grows them again on its next move.
         this._hovered = -1;
+        this._applyZoom();
         this._refreshIcons();
         this._refreshState();
         this._updateButtons();
@@ -901,6 +909,7 @@ export class AppsRow extends Signals.EventEmitter {
     }
 
     destroy() {
+        this._dragging = null;
         this._dropSources();
         this._unwatchAccent?.();
         this._fmCancel?.cancel();
