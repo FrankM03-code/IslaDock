@@ -3,8 +3,10 @@
 // Brillo for the Ajustes panel. GNOME's own screen brightness when it has one (a laptop's
 // backlight: GNOME 48 keeps it in gsd-power, over D-Bus; 49 and later in Main.brightnessManager).
 // Otherwise the monitor itself, over its cable (DDC/CI), through the ddcutil program: only when
-// it is installed and the monitor answers. A monitor takes a moment to answer, so while one
-// change is on its way only the newest of the next ones is sent after it.
+// it is installed and the monitor answers. Talking to the monitor freezes the whole screen for
+// 100–200 ms (seen with NVIDIA's driver), so it is asked only once, at start, and a change is sent
+// only once the slider has rested for a moment; while one is on its way only the newest of the
+// next ones is sent after it.
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
@@ -14,6 +16,7 @@ import {loadInterfaceXML} from 'resource:///org/gnome/shell/misc/fileUtils.js';
 const BUS_NAME = 'org.gnome.SettingsDaemon.Power';
 const OBJECT_PATH = '/org/gnome/SettingsDaemon/Power';
 const VCP_BRIGHTNESS = '10';
+const SEND_DELAY = 300;   // ms the slider must rest before the monitor is told
 
 export class Brightness {
     // onChange(): the brightness came, went or changed (its value is this.value, 0 to 1).
@@ -83,14 +86,14 @@ export class Brightness {
             this._proxy.Brightness = Math.round(value * 100);
         } else if (this._ddc) {
             this._ddc.value = Math.round(value * this._ddc.max);
-            this._send(this._ddc.value);
+            if (this._sendId)
+                GLib.source_remove(this._sendId);
+            this._sendId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, SEND_DELAY, () => {
+                this._sendId = 0;
+                this._send(this._ddc.value);
+                return GLib.SOURCE_REMOVE;
+            });
         }
-    }
-
-    // The monitor may have been changed with its own buttons: asked again when the panel opens.
-    refresh() {
-        if (this._ddc && !this._busy)
-            this._probe();
     }
 
     // ---------- the monitor, over DDC/CI ----------
@@ -144,6 +147,8 @@ export class Brightness {
 
     destroy() {
         this._cancel.cancel();
+        if (this._sendId)
+            GLib.source_remove(this._sendId);
         if (this._managerId)
             this._manager.disconnect(this._managerId);
         if (this._scale && this._scaleId)

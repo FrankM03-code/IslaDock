@@ -30,8 +30,9 @@ const RADIUS = 22;            // St shrinks it to half the height when needed
 const OPEN_TIME = 380;
 const CLOSE_TIME = 250;
 const FADE_TIME = 120;
-const LEAVE_DELAY = 400;
-const RELEASE_DELAY = 3000;   // after a click outside closes a panel, before folding
+const LEAVE_DELAY = 400;     // waits do not follow the animation speed
+const FOLD_DELAY = 2500;     // the open island waits this long after the pointer leaves (a stray move must not fold it)
+const RELEASE_DELAY = 400;    // after a click outside closes a panel, before folding
 const EDGE_GRACE = 1500;      // open after touching the edge without reaching the island
 const ICON_STAGGER = 25;
 const MIN_ICON = 16;           // px: the smallest the icons get when there are too many
@@ -517,7 +518,7 @@ export class Isla {
         this._on(this._apps, 'item-hover', (_a, item, hover) => this._state.emit('item-hover', item, hover));
         this._on(this._apps, 'busy-changed', () => {
             if (!this._apps.busy && !this.hovered)
-                this._later('leave', ms(LEAVE_DELAY), () => this._maybeFold());
+                this._later('leave', FOLD_DELAY, () => this._maybeFold());
         });
 
         this._on(this._state, 'mode-changed', () => this._render(true));
@@ -730,9 +731,9 @@ export class Isla {
         this._lift(false);
         this._apps.resetZoom();
         this._apps.hideTooltip();
-        this._later('hide-check', ms(LEAVE_DELAY), () => this._checkHide());
+        this._later('hide-check', LEAVE_DELAY, () => this._checkHide());
         if (mode === Mode.EXPANDED)
-            this._later('leave', ms(LEAVE_DELAY), () => this._maybeFold());
+            this._later('leave', FOLD_DELAY, () => this._maybeFold());
     }
 
     // Folds unless something still needs the open island.

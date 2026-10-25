@@ -93,20 +93,23 @@ export default class IslaDockExtension extends Extension {
             // Log in straight to the desktop, not to GNOME's Activities overview.
             this._hasOverview = Main.sessionMode.hasOverview;
             Main.sessionMode.hasOverview = false;
-            this._startId = Main.layoutManager.connect('startup-complete', () => this._build());
-        } else
-            this._build();
+            this._startId = Main.layoutManager.connect('startup-complete', () => this._startupDone());
+        }
+        // Built right away, not at startup-complete: the island then comes in with GNOME's
+        // start-up animation instead of popping up after it.
+        this._build();
+    }
+
+    _startupDone() {
+        // Extensions load asynchronously: if GNOME already began opening the overview, close it.
+        if (Main.overview.visible)
+            Main.overview.hide();
+        this._restoreOverview();
+        Main.layoutManager.disconnect(this._startId);
+        this._startId = 0;
     }
 
     _build() {
-        // Extensions load asynchronously: if GNOME already began opening the overview, close it.
-        if (this._hasOverview !== undefined && Main.overview.visible)
-            Main.overview.hide();
-        this._restoreOverview();
-        if (this._startId) {
-            Main.layoutManager.disconnect(this._startId);
-            this._startId = 0;
-        }
         this._state = new IslaState();
         this._state.calm = new Calm(this._settings);
         this._dockMonitor = dockMonitorIndex();

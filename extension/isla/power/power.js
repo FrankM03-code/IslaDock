@@ -21,6 +21,7 @@
 // Commands it sends: 'panel-open' ('power', open).
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Pango from 'gi://Pango';
 import Shell from 'gi://Shell';
@@ -499,7 +500,6 @@ export class Power {
         this._syncBrightness = sync;
         this._unwatch.push(() => (this._syncBrightness = null));
         sync();
-        brightness.refresh();
         return row;
     }
 

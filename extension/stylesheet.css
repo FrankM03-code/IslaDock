@@ -835,31 +835,32 @@
 .panel-finas .isla-q-tile { border-radius: 14px; padding: 9px 10px; background-color: rgba(255, 255, 255, 0.06); }
 .panel-finas .isla-q-tile-caja { spacing: 2px; }
 .panel-finas .isla-q-tile .isla-q-icono { margin-bottom: 4px; }
-.panel-finas .isla-q-tile:checked { background-color: st-transparentize(-st-accent-color, 0.82); color: st-mix(-st-accent-color, #ffffff, 85%); }
+.panel-finas .isla-q-tile:checked { background-color: st-transparentize(-st-accent-color, 0.55); color: st-mix(-st-accent-color, #ffffff, 85%); }
 .panel-finas .isla-q-tile:checked .isla-q-icono { color: st-mix(-st-accent-color, #ffffff, 85%); }
-.panel-finas .isla-q-tile:checked:hover { background-color: st-transparentize(-st-accent-color, 0.72); }
+.panel-finas .isla-q-tile:checked:hover { background-color: st-transparentize(-st-accent-color, 0.45); }
 .isla-q-tile-estado { font-size: 8pt; color: rgba(255, 255, 255, 0.45); }
 .panel-finas .isla-q-tile:checked .isla-q-tile-estado { color: st-transparentize(st-mix(-st-accent-color, #ffffff, 85%), 0.25); }
-.isla-quick-panel.clara.panel-finas .isla-q-tile:checked { background-color: st-transparentize(-st-accent-color, 0.82); color: st-darken(-st-accent-color, 6%); }
-.isla-quick-panel.clara.panel-finas .isla-q-tile:checked .isla-q-icono { color: st-darken(-st-accent-color, 6%); }
+.isla-quick-panel.clara.panel-finas .isla-q-tile:checked { background-color: st-transparentize(-st-accent-color, 0.62); color: st-darken(-st-accent-color, 18%); }
+.isla-quick-panel.clara.panel-finas .isla-q-tile:checked:hover { background-color: st-transparentize(-st-accent-color, 0.52); }
+.isla-quick-panel.clara.panel-finas .isla-q-tile:checked .isla-q-icono { color: st-darken(-st-accent-color, 18%); }
 .isla-quick-panel.clara .isla-q-tile-estado { color: rgba(30, 32, 40, 0.50); }
-.isla-quick-panel.clara.panel-finas .isla-q-tile:checked .isla-q-tile-estado { color: st-transparentize(st-darken(-st-accent-color, 6%), 0.25); }
+.isla-quick-panel.clara.panel-finas .isla-q-tile:checked .isla-q-tile-estado { color: st-transparentize(st-darken(-st-accent-color, 18%), 0.2); }
 .isla-q-tarjeta-niveles { spacing: 4px; padding: 6px 12px; border-radius: 14px; background-color: rgba(255, 255, 255, 0.04); }
 .isla-quick-panel.clara .isla-q-tarjeta-niveles { background-color: rgba(30, 32, 40, 0.07); }
 .panel-finas .isla-q-herramienta.power { background-color: rgba(255, 90, 90, 0.16); }
 .panel-finas .isla-q-herramienta.power:hover, .panel-finas .isla-q-herramienta.power:focus,
 .panel-finas .isla-q-herramienta.power:checked { background-color: rgba(255, 90, 90, 0.26); }
 .isla-q-menu-apagar { spacing: 2px; padding: 6px; border-radius: 14px;
-  background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.09); }
-.isla-quick-panel.clara .isla-q-menu-apagar { background-color: rgba(30, 32, 40, 0.05); border-color: rgba(30, 32, 40, 0.15); }
+  background-color: st-transparentize(-st-accent-color, 0.78); border: 1px solid st-transparentize(-st-accent-color, 0.45); }
+.isla-quick-panel.clara .isla-q-menu-apagar { background-color: st-transparentize(-st-accent-color, 0.84); border-color: st-transparentize(-st-accent-color, 0.5); }
 .isla-q-menu-item { border-radius: 10px; padding: 7px 10px; color: #E9EAF0; }
 .isla-q-menu-item .isla-q-icono { color: #E9EAF0; }
 .isla-q-menu-caja { spacing: 8px; }
-.isla-q-menu-item:hover, .isla-q-menu-item:focus { background-color: rgba(255, 255, 255, 0.08); }
+.isla-q-menu-item:hover, .isla-q-menu-item:focus { background-color: st-transparentize(-st-accent-color, 0.6); }
 .isla-q-menu-item.power, .isla-q-menu-item.power .isla-q-icono { color: #FF7B7B; }
 .isla-q-menu-item.power:hover, .isla-q-menu-item.power:focus { background-color: rgba(255, 90, 90, 0.16); }
 .isla-quick-panel.clara .isla-q-menu-item, .isla-quick-panel.clara .isla-q-menu-item .isla-q-icono { color: #1E2028; }
-.isla-quick-panel.clara .isla-q-menu-item:hover, .isla-quick-panel.clara .isla-q-menu-item:focus { background-color: rgba(30, 32, 40, 0.08); }
+.isla-quick-panel.clara .isla-q-menu-item:hover, .isla-quick-panel.clara .isla-q-menu-item:focus { background-color: st-transparentize(-st-accent-color, 0.7); }
 .isla-quick-panel.clara .isla-q-menu-item.power, .isla-quick-panel.clara .isla-q-menu-item.power .isla-q-icono { color: #D93A3A; }
 
 /* Solo líneas */
