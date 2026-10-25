@@ -39,6 +39,9 @@ function roundRect(cr, x, y, w, h, r) {
 
 const DOTS = [[0.93, 0.45, 0.20], [0.25, 0.70, 0.45], [0.30, 0.50, 0.90]];
 
+// The width a picture of the Ajustes panel gets in Preferences at its usual size.
+const PANEL_PREVIEW_WIDTH = 224;
+
 // A drawing of the folded island in each skin, over a blue "wallpaper".
 function drawPreview(key, cr, w, h) {
     const sky = new Cairo.LinearGradient(0, 0, w, h);
@@ -371,17 +374,17 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             ['lineas', _('Solo líneas'), _('Sin fondos, solo íconos; un punto de color bajo lo que está encendido')],
         ];
         const expander = new Adw.ExpanderRow({title: _('Estilo del panel de ajustes')});
-        const flow = new Gtk.FlowBox({selection_mode: Gtk.SelectionMode.NONE, homogeneous: true, column_spacing: 10,
-            row_spacing: 10, min_children_per_line: 2, max_children_per_line: 2, margin_top: 10, margin_bottom: 10,
-            margin_start: 10, margin_end: 10});
+        // Two equal columns; each row only as tall as its pictures.
+        const grid = new Gtk.Grid({column_homogeneous: true, column_spacing: 10, row_spacing: 10, margin_top: 10,
+            margin_bottom: 10, margin_start: 10, margin_end: 10});
         const previews = this.dir.get_child('previews');
         let radio = null;
         const checks = [], pictures = [];
-        for (const [style, name, about] of styles) {
-            const picture = new Gtk.Picture({can_shrink: true, content_fit: Gtk.ContentFit.CONTAIN, height_request: 190,
+        for (const [i, [style, name, about]] of styles.entries()) {
+            const picture = new Gtk.Picture({can_shrink: true, content_fit: Gtk.ContentFit.CONTAIN, valign: Gtk.Align.CENTER,
                 margin_top: 8, margin_bottom: 8, margin_start: 8, margin_end: 8});
             pictures.push([style, picture]);
-            const frame = new Gtk.Frame({child: picture});
+            const frame = new Gtk.Frame({child: picture, vexpand: true});
             const check = new Gtk.CheckButton({label: name, group: radio});
             radio ??= check;
             check.connect('toggled', () => {
@@ -396,14 +399,20 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             const click = new Gtk.GestureClick();
             click.connect('released', () => (check.active = true));
             frame.add_controller(click);
-            flow.append(card);
+            grid.attach(card, i % 2, Math.floor(i / 2), 1, 1);
         }
-        expander.add_row(new Gtk.ListBoxRow({child: flow, activatable: false, selectable: false}));
+        expander.add_row(new Gtk.ListBoxRow({child: grid, activatable: false, selectable: false}));
 
         // The panel wears the island's tone: so do the pictures.
         const paint = () => {
             const tone = settings.get_boolean('isla-oscura') ? 'oscura' : 'clara';
-            pictures.forEach(([style, picture]) => picture.set_file(previews.get_child(`panel-${style}-${tone}.png`)));
+            // As tall as the look needs to fill the card's width: Tarjetas finas is almost square and,
+            // at the others' height, came out narrow and looked cut.
+            pictures.forEach(([style, picture]) => {
+                const texture = Gdk.Texture.new_from_file(previews.get_child(`panel-${style}-${tone}.png`));
+                picture.paintable = texture;
+                picture.height_request = Math.round(PANEL_PREVIEW_WIDTH * texture.height / texture.width);
+            });
         };
         // Folded, the row says which one is chosen.
         const sync = () => {
