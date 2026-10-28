@@ -40,7 +40,7 @@ import * as SystemActions from 'resource:///org/gnome/shell/misc/systemActions.j
 import {accentRGB} from './accent.js';
 import {N_, _, fmt, localName, ngettext} from './i18n.js';
 import {FilePreview} from './filePreview.js';
-import {dressFrame, islandLook} from './look.js';
+import {dockLook, dressFrame, islandLook} from './look.js';
 import {dockMonitor} from './monitor.js';
 import {candidates, fileInfo, folderLabel, highlight, indexedFiles, rank, recentFiles, relativeDate} from './searchFiles.js';
 import {Mode} from './state.js';
@@ -351,10 +351,11 @@ export class Launcher {
         // One floating panel; the overlay around it is clear (it only catches the clicks outside).
         const width = Math.min(WIDTH * sf, mon.width - 32 * sf);
         const panel = this._panel = new St.BoxLayout({style_class: 'isla-launcher-panel', vertical: true, width});
-        // The dock's own color and edge, less see-through than the dock (PANEL_ALPHA, as the
-        // calendar and Ajustes; Frank, 2026-10-27); its big shadow stays.
-        if (look.style)
-            panel.style = look.style.replace(/\s*box-shadow:[^;]*;/, '');
+        // The dock's own color and edge; light, as see-through as the dock (81 %, Frank 2026-10-28),
+        // dark at PANEL_ALPHA as the calendar and Ajustes. Its big shadow stays.
+        const fill = look.light ? dockLook(this._state) : look;
+        if (fill.style)
+            panel.style = fill.style.replace(/\s*box-shadow:[^;]*;/, '');
         this._width = width;
         // Room for the preview beside the list, or none on a small monitor.
         this._previewRoom = width + (PREVIEW + PREVIEW_GAP) * sf <= mon.width - 32 * sf;
@@ -465,7 +466,7 @@ export class Launcher {
 
         // The list on the left (always the panel's own inner width), the preview on the right.
         const body = new St.BoxLayout({style_class: 'isla-launcher-body'});
-        const list = new St.BoxLayout({vertical: true, style_class: 'isla-launcher-list', width: this._inner});
+        const list = this._list = new St.BoxLayout({vertical: true, style_class: 'isla-launcher-list', width: this._inner});
         body.add_child(list);
         this._vp = new FilePreview({onOpen: () => this._activate(this._selected), openButton: false});
         this._vp.actor.visible = false;
@@ -847,23 +848,37 @@ export class Launcher {
         draggable.connect('drag-cancelled', () => this._dragEnd());
     }
 
-    // Down to just above the open dock, in whole rows: no app is cut in half.
+    // Down to just above the open dock, in whole rows: no app is cut in half. Without a search the
+    // list keeps the height of "Todas" in every category, so the panel does not jump between tabs.
     _fitHeight() {
         const sf = this._sf;
         const mon = dockMonitor();
         const {top: dockTop} = this._dockEdge();
         this._scroll.style = null;
+        this._list.style = null;
         const [, columnH] = this._column.get_preferred_height(this._column.width);
         const [, scrollH] = this._scroll.get_preferred_height(this._inner);
-        const others = columnH - (this._scroll.visible ? scrollH : 0);
+        const [, listH] = this._list.get_preferred_height(this._inner);
+        const steady = !this._query;
+        const others = columnH - (steady ? listH : this._scroll.visible ? scrollH : 0);
         const room = Math.max(120 * sf, Math.min(dockTop - (DOCK_GAP + MARGIN) * sf, mon.height * MAX_HEIGHT) - others);
         const first = this._grid.get_first_child();
-        if (!first || scrollH <= room)
+        if (first)
+            [, this._rowH] = first.get_preferred_height(this._inner);
+        if (!this._rowH)
             return;
-        const [, rowH] = first.get_preferred_height(this._inner);
         const gap = ROW_GAP * sf;
-        const rows = Math.max(1, Math.floor((room + gap) / (rowH + gap)));
-        this._scroll.style = `max-height: ${Math.floor((rows * rowH + (rows - 1) * gap) / sf)}px;`;
+        const height = rows => Math.floor((rows * this._rowH + (rows - 1) * gap) / sf);
+        const fit = Math.max(1, Math.floor((room + gap) / (this._rowH + gap)));
+        if (steady) {
+            const all = Math.max(1, Math.ceil(this._installed().length / COLUMNS));
+            const rows = Math.min(all, fit);
+            this._list.style = `min-height: ${height(rows)}px;`;
+            if (all > rows)
+                this._scroll.style = `max-height: ${height(rows)}px;`;
+        } else if (scrollH > room) {
+            this._scroll.style = `max-height: ${height(fit)}px;`;
+        }
     }
 
     // ---------- selection and the detail bar ----------

@@ -5,11 +5,11 @@
 /* ---------- the capsule ---------- */
 .isla-capsule .isla-bg {
   border-radius: 22px;
-  background-color: rgba(255, 255, 255, 0.86);
+  background-color: rgba(255, 255, 255, 0.81);
   border: 1px solid rgba(30, 32, 40, 0.05);
   box-shadow: 0 14px 30px rgba(60, 55, 45, 0.14);
 }
-.isla-capsule.sin-desenfoque .isla-bg { background-color: rgba(255, 255, 255, 0.86); }
+.isla-capsule.sin-desenfoque .isla-bg { background-color: rgba(255, 255, 255, 0.81); }
 .isla-capsule.oscura .isla-bg { background-color: rgba(18, 20, 34, 0.86); border-color: rgba(255, 255, 255, 0.10); }
 .isla-capsule.oscura.sin-desenfoque .isla-bg { background-color: rgba(18, 20, 34, 0.86); }
 /* ---------- separators ---------- */

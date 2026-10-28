@@ -47,7 +47,7 @@ const PANEL_ORDER = ['recording', 'timer', 'music'];
 const CARD_GAP = 12;          // between the island and the glass card of some skins
 const CARD_FADE = 200;
 const CARD_FADE_OUT = 140;    // gone before the island finishes folding (CLOSE_TIME)
-const BG_OPACITY = 255;   // the transparency lives in the stylesheet (dock and launcher at 86 %, Frank 2026-10-27)
+const BG_OPACITY = 255;   // the transparency lives in the stylesheet (light dock and launcher at 81 %, Frank 2026-10-28)
 
 // The monitor strip: the island at its natural size, centered, standing BOTTOM px above the edge.
 // With a glass card (some skins put the activity panels there) both are centered as a group.
