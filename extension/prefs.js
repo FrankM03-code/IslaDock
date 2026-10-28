@@ -95,7 +95,7 @@ function switchRow(settings, key, title, subtitle = '') {
 // Drop-down bound to a string key: options = [[value, label], ...].
 // Settings that are state, not choices: never copied.
 const NOT_EXPORTED = ['temporizador-fin', 'temporizador-modo', 'banners-previos', 'portapapeles-liberado',
-    'calendario-liberado', 'no-molestar', 'cafeina-activa', 'preferencias-abrir'];
+    'calendario-liberado', 'lanzador-liberado', 'no-molestar', 'cafeina-activa', 'preferencias-abrir', 'isla-superior-pagina'];
 
 export function exportSettings(settings, metadata) {
     const values = {};
@@ -371,7 +371,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             ['agrupada', _('Sesión agrupada'), _('Botones cuadrados; bloquear, salir, suspender y apagar juntos en una cápsula')],
             ['tarjetas', _('Tarjetas con nombre'), _('Cada botón con su nombre; las acciones con el texto debajo')],
             ['finas', _('Tarjetas finas'), _('Nombre y estado en cada botón, porcentaje del volumen y una fila de abajo más corta')],
-            ['lineas', _('Solo líneas'), _('Sin fondos, solo íconos; un punto de color bajo lo que está encendido')],
+            ['anillos', _('Anillos'), _('Brillo, volumen y micrófono en anillos; botones en cápsulas y acciones con su nombre')],
         ];
         const expander = new Adw.ExpanderRow({title: _('Estilo del panel de ajustes')});
         // Two equal columns; each row only as tall as its pictures.
@@ -442,20 +442,21 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         return row;
     }
 
-    // The search shortcut: press "Cambiar" and then the keys.
-    _shortcutRow(window, settings) {
-        const row = new Adw.ActionRow({title: _('Atajo de la búsqueda rápida'), subtitle: _('Abre la isla como buscador')});
+    // A shortcut key (the quick search, the launcher): press "Cambiar" and then the keys.
+    _shortcutRow(window, settings, key = 'atajo-busqueda', title = _('Atajo de la búsqueda rápida'),
+        subtitle = _('Abre la isla como buscador'), resetTip = _('Volver a Ctrl + Espacio')) {
+        const row = new Adw.ActionRow({title, subtitle});
         const label = new Gtk.ShortcutLabel({valign: Gtk.Align.CENTER, disabled_text: _('Sin atajo')});
-        const sync = () => (label.accelerator = settings.get_strv('atajo-busqueda')[0] ?? '');
+        const sync = () => (label.accelerator = settings.get_strv(key)[0] ?? '');
         sync();
-        const id = settings.connect('changed::atajo-busqueda', sync);
+        const id = settings.connect(`changed::${key}`, sync);
         row.connect('destroy', () => settings.disconnect(id));
         const change = new Gtk.Button({label: _('Cambiar'), valign: Gtk.Align.CENTER});
-        change.connect('clicked', () => this._captureShortcut(window, settings));
+        change.connect('clicked', () => this._captureShortcut(window, settings, key, title));
         const reset = new Gtk.Button({icon_name: 'edit-undo-symbolic', valign: Gtk.Align.CENTER,
-            tooltip_text: _('Volver a Ctrl + Espacio')});
+            tooltip_text: resetTip});
         reset.add_css_class('flat');
-        reset.connect('clicked', () => settings.reset('atajo-busqueda'));
+        reset.connect('clicked', () => settings.reset(key));
         row.add_suffix(label);
         row.add_suffix(change);
         row.add_suffix(reset);
@@ -463,14 +464,14 @@ export default class IslaDockPreferences extends ExtensionPreferences {
     }
 
     // A small window that waits for a key combination. Esc cancels.
-    _captureShortcut(window, settings) {
+    _captureShortcut(window, settings, key = 'atajo-busqueda', title = _('Atajo de la búsqueda')) {
         const status = new Adw.StatusPage({
             icon_name: 'preferences-desktop-keyboard-shortcuts-symbolic',
             title: _('Pulsa el nuevo atajo'),
             description: _('Por ejemplo Ctrl + Espacio. Esc para cancelar.'),
         });
         const dialog = new Adw.Window({transient_for: window, modal: true, default_width: 440, default_height: 300,
-            content: status, title: _('Atajo de la búsqueda')});
+            content: status, title});
         const keys = new Gtk.EventControllerKey();
         keys.connect('key-pressed', (_c, keyval, _code, state) => {
             const mods = state & Gtk.accelerator_get_default_mod_mask();
@@ -482,7 +483,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             if (!Gtk.accelerator_valid(keyval, mods) || [Gdk.KEY_Control_L, Gdk.KEY_Control_R, Gdk.KEY_Shift_L,
                 Gdk.KEY_Shift_R, Gdk.KEY_Alt_L, Gdk.KEY_Alt_R, Gdk.KEY_Super_L, Gdk.KEY_Super_R].includes(keyval))
                 return Gdk.EVENT_STOP;
-            settings.set_strv('atajo-busqueda', [Gtk.accelerator_name(keyval, mods)]);
+            settings.set_strv(key, [Gtk.accelerator_name(keyval, mods)]);
             dialog.close();
             return Gdk.EVENT_STOP;
         });
@@ -536,13 +537,8 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         look.add(switchRow(settings, 'desenfoque', _('Desenfocar lo que hay detrás'), _('Apágalo si quieres la isla aún más liviana')));
         look.add(switchRow(settings, 'desenfoque-cajon', _('Fondo desenfocado en el cajón de aplicaciones'),
             _('Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades')));
-        look.add(switchRow(settings, 'barra-escritorio', _('Barra en el escritorio'),
-            _('Sin ventanas a la vista: música o fecha y hora, apps minimizadas y tus botones. La rueda del mouse abre el dock')));
-        look.add(switchRow(settings, 'barra-ventanas', _('App activa en la isla'),
-            _('Con ventanas abiertas: ícono y nombre de la app que usas, cuántas ventanas más hay, la música y la campana')));
-        look.add(switchRow(settings, 'isla-respiracion', _('Respiración'), _('En reposo, el fondo late muy despacio')));
         look.add(switchRow(settings, 'ahorro-energia', _('Ahorrar batería'),
-            _('Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento ni respiración. ') +
+            _('Con batería o en modo Ahorro: sin desenfoque ni halo de Aurora en movimiento. ') +
             _('Si en Accesibilidad apagas las animaciones, la isla también se calma')));
         look.add(comboRow(settings, 'ocultar', _('Esconder la isla'), [
             ['nunca', _('Nunca')],
@@ -586,10 +582,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             _('Un punto por espacio: clic para ir a uno, la rueda pasa al siguiente. Con uno solo no aparece')));
         page.add(status);
 
-        const tools = new Adw.PreferencesGroup({
-            title: _('Herramientas'),
-            description: _('Clic derecho sobre la isla: temporizador de 5, 15 o 25 minutos, uno a tu medida o un Pomodoro.'),
-        });
+        const tools = new Adw.PreferencesGroup({title: _('Herramientas')});
         tools.add(this._shortcutRow(window, settings));
         page.add(tools);
 
@@ -631,6 +624,22 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         extras.add(switchRow(settings, 'mostrar-descargas', _('Descargas'), _('Su pila se configura más abajo')));
         extras.add(switchRow(settings, 'mostrar-papelera', _('Papelera'), _('Clic derecho para vaciarla')));
         extras.add(switchRow(settings, 'mostrar-aplicaciones', _('Aplicaciones'), _('Ver y buscar todo lo que tienes instalado')));
+        extras.add(switchRow(settings, 'lanzador-isla', _('Lanzador Isla'),
+            _('El botón Aplicaciones abre el cajón propio de IslaDock. Apagado: la cuadrícula de GNOME. ') +
+            _('Mientras esté activo, Super + Espacio deja de cambiar la distribución del teclado')));
+        extras.add(switchRow(settings, 'super-abre-cajon', _('La tecla Windows abre las aplicaciones'),
+            _('Sola, abre y cierra el cajón (el mismo del botón Aplicaciones) en vez de Actividades')));
+        const launcherKey = this._shortcutRow(window, settings, 'atajo-lanzador', _('Atajo del Lanzador Isla'),
+            _('Abre y cierra el lanzador desde cualquier lugar'), _('Volver a Super + Espacio'));
+        settings.bind('lanzador-isla', launcherKey, 'sensitive', Gio.SettingsBindFlags.GET);
+        extras.add(launcherKey);
+        for (const row of [
+            switchRow(settings, 'lanzador-hora', _('Lanzador: hora y fecha arriba')),
+            switchRow(settings, 'lanzador-sesion', _('Lanzador: botones Bloquear, Suspender y Apagar')),
+        ]) {
+            settings.bind('lanzador-isla', row, 'sensitive', Gio.SettingsBindFlags.GET);
+            extras.add(row);
+        }
         extras.add(switchRow(settings, 'mostrar-portapapeles', _('Portapapeles'),
             _('Historial de lo copiado (texto, enlaces, colores e imágenes). Super+V lo abre desde cualquier lugar; ') +
             _('mientras esté activo, Super+V deja de abrir las notificaciones (sigue Super+M)')));
@@ -643,6 +652,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         dock.add(this._stackGroup(window, settings));
         dock.add(this._foldersGroup(window, settings));
 
+        window.add(this._topPage(settings));
         window.add(this._desktopPage(settings));
         window.add(this._aboutPage(window, settings));
     }
@@ -670,47 +680,62 @@ export default class IslaDockPreferences extends ExtensionPreferences {
     }
 
     // ---------- Escritorio: the desktop clock ----------
+    // Isla superior: a second island at the top center (isla/notch).
+    _topPage(settings) {
+        const page = new Adw.PreferencesPage({title: _('Arriba'), icon_name: 'go-top-symbolic'});
+        const main = new Adw.PreferencesGroup({
+            title: _('Isla superior'),
+            description: _('Una isla arriba al centro, con los colores de tu piel. Muestra la hora; al pasar el mouse se abre con sus páginas (cámbialas con los puntos o la rueda). Clic en la fecha: calendario.'),
+        });
+        main.add(switchRow(settings, 'isla-superior', _('Isla superior')));
+        const strip = Adw.SpinRow.new_with_range(0, 8, 1);
+        strip.set({title: _('Franja del borde superior'),
+            subtitle: _('Píxeles de alto de la línea de la que cuelga la isla, como el notch de un MacBook. 0 = sin línea (las curvas se quedan)')});
+        settings.bind('isla-superior-franja', strip, 'value', Gio.SettingsBindFlags.DEFAULT);
+        main.add(strip);
+        const notices = switchRow(settings, 'isla-superior-avisos', _('Notificaciones en la isla'),
+            _('Llega una: la isla se alarga con el ícono y el nombre de la app, sin mostrar el mensaje. Al pasar el mouse o con un clic, la tarjeta con Abrir y Descartar'));
+        main.add(notices);
+        const hide = comboRow(settings, 'isla-superior-ocultar', _('Esconder la isla superior'), [
+            ['maximizada', _('Con una ventana maximizada')],
+            ['nunca', _('Nunca')],
+        ], _('Sube y se esconde; vuelve al llevar el mouse al borde de arriba o cuando llega una notificación'));
+        main.add(hide);
+        page.add(main);
+
+        const where = [['arriba', _('Solo arriba')], ['ambos', _('Arriba y en el dock')], ['dock', _('Solo en el dock')]];
+        const pages = new Adw.PreferencesGroup({
+            title: _('Páginas'),
+            description: _('La música y el temporizador pueden salir del dock y quedar solo arriba.'),
+        });
+        const music = comboRow(settings, 'musica-lugar', _('Música'), where, _('Carátula, barra de la canción y sus botones'));
+        const timer = comboRow(settings, 'temporizador-lugar', _('Temporizador'), where, _('Pomodoro, 5 o 15 minutos o el que quieras'));
+        const capture = switchRow(settings, 'isla-superior-captura', _('Captura'), _('Pantalla, región, ventana o grabar la pantalla'));
+        const tasks = switchRow(settings, 'isla-superior-tareas', _('Tareas'), _('Una lista corta de pendientes'));
+        for (const row of [music, timer, capture, tasks])
+            pages.add(row);
+        page.add(pages);
+
+        // Only what the top island uses is active while it is off.
+        const sync = () => {
+            const on = settings.get_boolean('isla-superior');
+            pages.sensitive = on;
+            strip.sensitive = on;
+            notices.sensitive = on;
+            hide.sensitive = on;
+            music.sensitive = settings.get_boolean('isla-musica');
+        };
+        const ids = ['isla-superior', 'isla-musica'].map(k => settings.connect(`changed::${k}`, sync));
+        page.connect('destroy', () => ids.forEach(id => settings.disconnect(id)));
+        sync();
+        return page;
+    }
+
     _desktopPage(settings) {
         const page = new Adw.PreferencesPage({title: _('Escritorio'), icon_name: 'preferences-desktop-wallpaper-symbolic'});
-        const group = new Adw.PreferencesGroup({
-            title: _('Reloj en el escritorio'),
-            description: _('La hora y la fecha sobre tu fondo de pantalla, detrás de las ventanas. Los clics lo atraviesan.'),
-        });
-        group.add(switchRow(settings, 'reloj-escritorio', _('Mostrar el reloj')));
-        group.add(comboRow(settings, 'reloj-estilo', _('Estilo'), [
-            ['linea-viva', _('Línea viva')],
-            ['lateral-acento', _('Lateral acento')],
-            ['semana-fluida', _('Semana fluida')],
-            ['arco-dia', _('Arco del día')],
-        ]));
-        group.add(this._sliderRow(settings, 'reloj-tamano', _('Tamaño'), _('Se ajusta solo a tu pantalla; esto lo agranda o achica'),
-            0.5, 2.0, 0.05, [[0.5, _('Pequeño')], [1.0, null], [2.0, _('Grande')]]));
-        group.add(comboRow(settings, 'reloj-posicion', _('Posición'), [
-            ['arriba', _('Arriba')],
-            ['centro', _('En el centro de la pantalla')],
-            ['abajo', _('Abajo')],
-        ]));
-        group.add(this._sliderRow(settings, 'reloj-desplazamiento', _('Subir o bajar'), _('Ajuste fino desde la posición elegida'),
-            -20, 20, 0.5, [[-20, _('Arriba')], [0, null], [20, _('Abajo')]]));
-
-        const monitors = Gdk.Display.get_default().get_monitors();
-        const options = [[-1, _('El principal')]];
-        for (let i = 0; i < monitors.get_n_items(); i++) {
-            const m = monitors.get_item(i);
-            options.push([i, `${fmt(_('Monitor {n}'), {n: i + 1})}${m.model ? `  (${m.model})` : ''}`]);
-        }
-        if (options.length > 2) {
-            const row = new Adw.ComboRow({title: _('Monitor'), model: Gtk.StringList.new(options.map(([, label]) => label))});
-            row.selected = Math.max(0, options.findIndex(([v]) => v === settings.get_int('reloj-monitor')));
-            row.connect('notify::selected', () => settings.set_int('reloj-monitor', options[row.selected]?.[0] ?? -1));
-            group.add(row);
-        }
-        page.add(group);
-
         const side = new Adw.PreferencesGroup({
             title: _('Reloj lateral'),
-            description: _('Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora. ') +
-                _('Sirve cuando las ventanas maximizadas tapan el reloj del escritorio.'),
+            description: _('Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora.'),
         });
         side.add(switchRow(settings, 'reloj-lateral', _('Mostrar el reloj lateral')));
         side.add(comboRow(settings, 'clock-style', _('Estilo del reloj'), [
@@ -727,6 +752,17 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             _('Con tus recordatorios')));
         page.add(side);
 
+        const tiling = new Adw.PreferencesGroup({
+            title: _('Acomodar ventanas'),
+            description: _('Arrastra una ventana a un borde para ponerla en media pantalla, a una esquina para un cuarto o arriba para maximizarla.'),
+        });
+        tiling.add(switchRow(settings, 'acomodar-ventanas', _('Acomodar al arrastrar')));
+        const fill = switchRow(settings, 'acomodar-ventanas-llenar', _('Llenar la otra mitad'),
+            _('Muestra las demás ventanas para elegir cuál va al otro lado'));
+        settings.bind('acomodar-ventanas', fill, 'sensitive', Gio.SettingsBindFlags.GET);
+        tiling.add(fill);
+        page.add(tiling);
+
         const hasInter = PangoCairo.FontMap.get_default().list_families().some(f => f.get_name() === 'Inter');
         if (!hasInter) {
             const font = new Adw.PreferencesGroup({
@@ -737,19 +773,6 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             page.add(font);
         }
         return page;
-    }
-
-    _sliderRow(settings, key, title, subtitle, min, max, step, marks) {
-        const row = new Adw.ActionRow({title, subtitle});
-        const scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, min, max, step);
-        scale.set_size_request(220, -1);
-        scale.valign = Gtk.Align.CENTER;
-        scale.draw_value = false;
-        for (const [value, label] of marks)
-            scale.add_mark(value, Gtk.PositionType.BOTTOM, label);
-        settings.bind(key, scale.adjustment, 'value', Gio.SettingsBindFlags.DEFAULT);
-        row.add_suffix(scale);
-        return row;
     }
 
     // ---------- About ----------

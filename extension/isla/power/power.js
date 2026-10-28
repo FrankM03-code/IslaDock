@@ -7,7 +7,8 @@
 //   tarjetas  toggles as tiles with their names (3 per row); actions with a caption under each
 //   finas     tiles with name and state; sliders with their percentage in a soft card; a short
 //             bottom row whose Apagar opens Suspender · Reiniciar · Cerrar sesión · Apagar
-//   lineas    no backgrounds: bare icons, an accent dot under what is on
+//   anillos   brightness, volume and microphone as rings with their percentage inside; the toggles
+//             as capsules in one row; the actions with a caption under each
 // The toggles: red · bluetooth · modo de energía · luz nocturna · estilo oscuro · modo activo; then
 // the brightness (brightness.js), the volume (and the sound output: speakers, headphones, HDMI…) and
 // the microphone, each while there is one.
@@ -71,7 +72,7 @@ const ACTIONS = {
     apagar: ['power', N_('Apagar'), N_('Apagar'), a => a.activatePowerOff(), 'can-power-off'],
 };
 
-export const PANEL_STYLES = ['agrupada', 'tarjetas', 'finas', 'lineas'];
+export const PANEL_STYLES = ['agrupada', 'tarjetas', 'finas', 'anillos'];
 
 export class Power {
     constructor({state, settings, capsule, dir}) {
@@ -288,13 +289,13 @@ export class Power {
     }
 
     // One of the six toggles, dressed for the style: a square, a tile with its name,
-    // a tile with name and state, or a bare icon with a dot.
+    // a tile with name and state, or a capsule.
     _toggle(toggle, meta, style) {
         const tile = style === 'tarjetas' || style === 'finas';
         const button = new St.Button({style_class: tile ? 'isla-q-tile' : 'isla-q-toggle', can_focus: true, track_hover: true,
             reactive: true, button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE});
         const icon = this._icon(meta.icon[0]);
-        let state = null, dot = null;
+        let state = null;
         if (style === 'tarjetas') {
             const box = new St.BoxLayout({style_class: 'isla-q-tile-caja', x_expand: true});
             box.add_child(icon);
@@ -309,13 +310,6 @@ export class Power {
             box.add_child(new St.Label({style_class: 'isla-q-tile-nombre', text: _(meta.name), x_align: Clutter.ActorAlign.START}));
             state = new St.Label({style_class: 'isla-q-tile-estado', x_align: Clutter.ActorAlign.START});
             box.add_child(state);
-            button.set_child(box);
-        } else if (style === 'lineas') {
-            const box = new St.BoxLayout({style_class: 'isla-q-toggle-caja', orientation: Clutter.Orientation.VERTICAL});
-            box.add_child(icon);
-            // Always there, so nothing jumps when it lights up.
-            dot = new St.Widget({style_class: 'isla-q-punto', x_align: Clutter.ActorAlign.CENTER});
-            box.add_child(dot);
             button.set_child(box);
         } else {
             button.set_child(icon);
@@ -349,11 +343,20 @@ export class Power {
         return button;
     }
 
-    // A system action (captura, ajustes, bloquear…); hidden when GNOME says it can't be done.
-    _action(id, cls) {
-        const [iconName, tip, , action, can] = ACTIONS[id];
+    // A system action (captura, ajustes, bloquear…), with its caption under the icon if asked;
+    // hidden when GNOME says it can't be done.
+    _action(id, cls, caption = false) {
+        const [iconName, tip, short, action, can] = ACTIONS[id];
+        let child = this._icon(iconName);
+        if (caption) {
+            const box = new St.BoxLayout({style_class: 'isla-q-accion-caja', orientation: Clutter.Orientation.VERTICAL});
+            child.x_align = Clutter.ActorAlign.CENTER;
+            box.add_child(child);
+            box.add_child(new St.Label({style_class: 'isla-q-pie', text: _(short), x_align: Clutter.ActorAlign.CENTER}));
+            child = box;
+        }
         const button = new St.Button({style_class: `${cls} ${id === 'apagar' ? 'power' : ''}`.trim(), can_focus: true,
-            track_hover: true, reactive: true, accessible_name: _(tip), child: this._icon(iconName)});
+            track_hover: true, reactive: true, accessible_name: _(tip), child});
         button.connect('clicked', () => {
             this.close(false);
             action(this._actions);
@@ -372,25 +375,33 @@ export class Power {
         sync();
     }
 
-    // Volume (with the sound output button) or microphone: mute button, slider and, if asked, its percentage.
-    _levelRow(kind, percent) {
+    // Volume (with the sound output button) or microphone: mute button, slider and, if asked, its
+    // percentage; or (ring) a ring that mutes when clicked, its name under it.
+    _levelRow(kind, percent, ring = false) {
         const mic = kind === 'mic';
-        const row = new St.BoxLayout({style_class: 'isla-q-nivel'});
         const control = Volume.getMixerControl();
-        const icon = this._icon(mic ? 'microphone' : 'volume', 'isla-q-nivel-icono');
-        const mute = new St.Button({style_class: 'isla-q-nivel-boton', can_focus: true, reactive: true, track_hover: true,
-            child: icon, accessible_name: mic ? _('Silenciar el micrófono') : _('Silenciar'), y_align: Clutter.ActorAlign.CENTER});
-        this._tooltipFor(mute, mic ? _('Silenciar el micrófono') : _('Silenciar'));
+        const icon = this._icon(mic ? 'microphone' : 'volume', ring ? 'isla-q-icono' : 'isla-q-nivel-icono');
         const slider = new Slider(0);
-        slider.add_style_class_name('isla-q-slider');
-        slider.x_expand = true;
-        slider.y_align = Clutter.ActorAlign.CENTER;
-        slider.accessible_name = mic ? _('Micrófono') : _('Volumen');
-        row.add_child(mute);
-        row.add_child(slider);
-        const value = percent ? new St.Label({style_class: 'isla-q-valor', y_align: Clutter.ActorAlign.CENTER}) : null;
-        if (value)
-            row.add_child(value);
+        let row, mute, value = null;
+        if (ring) {
+            mute = this._ring(slider, icon, mic ? _('Micrófono') : _('Volumen'));
+            this._tooltipFor(mute, mic ? _('Clic: silenciar el micrófono') : _('Clic: silenciar'));
+            row = this._dial(mute, mic ? _('Micrófono') : _('Volumen'));
+        } else {
+            row = new St.BoxLayout({style_class: 'isla-q-nivel'});
+            mute = new St.Button({style_class: 'isla-q-nivel-boton', can_focus: true, reactive: true, track_hover: true,
+                child: icon, accessible_name: mic ? _('Silenciar el micrófono') : _('Silenciar'), y_align: Clutter.ActorAlign.CENTER});
+            this._tooltipFor(mute, mic ? _('Silenciar el micrófono') : _('Silenciar'));
+            slider.add_style_class_name('isla-q-slider');
+            slider.x_expand = true;
+            slider.y_align = Clutter.ActorAlign.CENTER;
+            slider.accessible_name = mic ? _('Micrófono') : _('Volumen');
+            row.add_child(mute);
+            row.add_child(slider);
+            value = percent ? new St.Label({style_class: 'isla-q-valor', y_align: Clutter.ActorAlign.CENTER}) : null;
+            if (value)
+                row.add_child(value);
+        }
         if (!mic) {
             // The outputs, in a list that opens inside the panel (never a popup over it).
             const outputs = new St.BoxLayout({style_class: 'isla-pd-salidas', orientation: Clutter.Orientation.VERTICAL,
@@ -404,7 +415,7 @@ export class Power {
                     this._fillOutputs(outputs, control, outputButton);
                 this._place();
             });
-            row.add_child(outputButton);
+            (row._caption ?? row).add_child(outputButton);
             this._tooltipFor(outputButton, _('Salida de sonido'));
             row._outputs = outputs;
             const id = control.connect('default-sink-changed', () => {
@@ -434,6 +445,7 @@ export class Power {
                 mute.add_style_pseudo_class('checked');
             else
                 mute.remove_style_pseudo_class('checked');
+            mute._paint?.();
         };
         const follow = () => {
             streamIds.forEach(id => stream?.disconnect(id));
@@ -454,7 +466,11 @@ export class Power {
             }
             stream.push_volume();
         });
-        mute.connect('clicked', () => stream?.change_is_muted(!stream.is_muted));
+        const toggleMute = () => stream?.change_is_muted(!stream.is_muted);
+        if (ring)
+            mute._clicked = toggleMute;
+        else
+            mute.connect('clicked', toggleMute);
         const id = control.connect(mic ? 'default-source-changed' : 'default-sink-changed', follow);
         follow();
         this._unwatch.push(() => {
@@ -464,20 +480,25 @@ export class Power {
         return row;
     }
 
-    // Brillo (brightness.js): its icon, slider and, if asked, its percentage; only while there is one.
-    _brightnessRow(percent) {
-        const row = new St.BoxLayout({style_class: 'isla-q-nivel'});
-        row.add_child(new St.Bin({style_class: 'isla-q-nivel-boton', y_align: Clutter.ActorAlign.CENTER,
-            child: this._icon('brightness', 'isla-q-nivel-icono')}));
+    // Brillo (brightness.js): its icon, slider and, if asked, its percentage, or its ring; only while there is one.
+    _brightnessRow(percent, ring = false) {
         const slider = new Slider(0);
-        slider.add_style_class_name('isla-q-slider');
-        slider.x_expand = true;
-        slider.y_align = Clutter.ActorAlign.CENTER;
-        slider.accessible_name = _('Brillo');
-        row.add_child(slider);
-        const value = percent ? new St.Label({style_class: 'isla-q-valor', y_align: Clutter.ActorAlign.CENTER}) : null;
-        if (value)
-            row.add_child(value);
+        let row, value = null;
+        if (ring) {
+            row = this._dial(this._ring(slider, this._icon('brightness'), _('Brillo')), _('Brillo'));
+        } else {
+            row = new St.BoxLayout({style_class: 'isla-q-nivel'});
+            row.add_child(new St.Bin({style_class: 'isla-q-nivel-boton', y_align: Clutter.ActorAlign.CENTER,
+                child: this._icon('brightness', 'isla-q-nivel-icono')}));
+            slider.add_style_class_name('isla-q-slider');
+            slider.x_expand = true;
+            slider.y_align = Clutter.ActorAlign.CENTER;
+            slider.accessible_name = _('Brillo');
+            row.add_child(slider);
+            value = percent ? new St.Label({style_class: 'isla-q-valor', y_align: Clutter.ActorAlign.CENTER}) : null;
+            if (value)
+                row.add_child(value);
+        }
         const brightness = this._brightness;
         let syncing = false;
         const showValue = () => value && (value.text = `${Math.round(slider.value * 100)} %`);
@@ -507,6 +528,132 @@ export class Power {
         return new St.Widget({style_class: 'isla-q-separador'});
     }
 
+    // Anillos: a ring that fills in the accent color with the slider's value (the slider is only the
+    // model, never shown), its icon and percentage inside. The wheel, dragging up or down, or ← →
+    // change it; a click without dragging (or Space / Enter) calls its `_clicked` (the mute).
+    _ring(slider, icon, name) {
+        const ring = new St.Widget({style_class: 'isla-q-anillo', layout_manager: new Clutter.BinLayout(),
+            reactive: true, can_focus: true, track_hover: true, accessible_name: name, x_align: Clutter.ActorAlign.CENTER});
+        const area = new St.DrawingArea({style_class: 'isla-q-anillo-arco', x_expand: true, y_expand: true});
+        const inside = new St.BoxLayout({style_class: 'isla-q-anillo-centro', orientation: Clutter.Orientation.VERTICAL,
+            x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
+        icon.x_align = Clutter.ActorAlign.CENTER;
+        const percent = new St.Label({style_class: 'isla-q-anillo-valor', x_align: Clutter.ActorAlign.CENTER});
+        inside.add_child(icon);
+        inside.add_child(percent);
+        ring.add_child(area);
+        ring.add_child(inside);
+        // Read while painting: the slider is gone once the panel starts closing.
+        let level = 0;
+        const sync = () => {
+            level = Math.max(0, Math.min(1, slider.value));
+            percent.text = `${Math.round(level * 100)}%`;
+            area.queue_repaint();
+        };
+        ring._paint = () => area.queue_repaint();
+        area.connect('repaint', () => {
+            const cr = area.get_context();
+            const [w, h] = area.get_surface_size();
+            const node = area.get_theme_node();
+            const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+            const lw = 6 * sf;
+            const r = Math.min(w, h) / 2 - lw / 2 - 3 * sf;
+            const [, track] = node.lookup_color('-isla-pista', false);
+            const fg = node.get_foreground_color();
+            cr.setLineWidth(lw);
+            cr.setSourceRGBA(track.red / 255, track.green / 255, track.blue / 255, track.alpha / 255);
+            cr.arc(w / 2, h / 2, r, 0, 2 * Math.PI);
+            cr.stroke();
+            if (level > 0) {
+                cr.setSourceRGBA(fg.red / 255, fg.green / 255, fg.blue / 255, fg.alpha / 255);
+                cr.setLineCap(1 /* ROUND */);
+                cr.arc(w / 2, h / 2, r, -Math.PI / 2, -Math.PI / 2 + level * 2 * Math.PI);
+                cr.stroke();
+            }
+            cr.$dispose();
+        });
+        const set = v => (slider.value = Math.max(0, Math.min(1, v)));
+        // The tests (and anyone looking for "Brillo") read and set it like a slider.
+        Object.defineProperty(ring, 'value', {get: () => slider.value, set});
+        const id = slider.connect('notify::value', sync);
+        this._unwatch.push(() => {
+            slider.disconnect(id);
+            slider.destroy();
+        });
+        sync();
+
+        let press = null, grab = null;
+        const endPress = () => {
+            press = null;
+            grab?.dismiss();
+            grab = null;
+            ring.remove_style_pseudo_class('active');
+        };
+        ring.connect('destroy', endPress);
+        ring.connect('scroll-event', (_a, event) => {
+            const dir = event.get_scroll_direction();
+            if (dir === Clutter.ScrollDirection.UP)
+                set(slider.value + 0.05);
+            else if (dir === Clutter.ScrollDirection.DOWN)
+                set(slider.value - 0.05);
+            else if (dir === Clutter.ScrollDirection.SMOOTH)
+                set(slider.value - event.get_scroll_delta()[1] * 0.05);
+            return Clutter.EVENT_STOP;
+        });
+        ring.connect('button-press-event', (_a, event) => {
+            if (event.get_button() !== Clutter.BUTTON_PRIMARY)
+                return Clutter.EVENT_PROPAGATE;
+            press = {y: event.get_coords()[1], value: slider.value, moved: false};
+            // Keep following the pointer when it leaves the ring while dragging.
+            grab = global.stage.grab(ring);
+            ring.add_style_pseudo_class('active');
+            return Clutter.EVENT_STOP;
+        });
+        ring.connect('motion-event', (_a, event) => {
+            if (!press)
+                return Clutter.EVENT_PROPAGATE;
+            const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+            const dy = press.y - event.get_coords()[1];
+            if (!press.moved && Math.abs(dy) < 4 * sf)
+                return Clutter.EVENT_STOP;
+            press.moved = true;
+            set(press.value + dy * 0.006 / sf);
+            return Clutter.EVENT_STOP;
+        });
+        ring.connect('button-release-event', (_a, event) => {
+            if (!press || event.get_button() !== Clutter.BUTTON_PRIMARY)
+                return Clutter.EVENT_PROPAGATE;
+            const click = !press.moved && ring.hover;
+            endPress();
+            if (click)
+                ring._clicked?.();
+            return Clutter.EVENT_STOP;
+        });
+        ring.connect('key-press-event', (_a, event) => {
+            const symbol = event.get_key_symbol();
+            if (symbol === Clutter.KEY_Right || symbol === Clutter.KEY_Left) {
+                set(slider.value + (symbol === Clutter.KEY_Right ? 0.05 : -0.05));
+                return Clutter.EVENT_STOP;
+            }
+            if (ring._clicked && (symbol === Clutter.KEY_space || symbol === Clutter.KEY_Return || symbol === Clutter.KEY_KP_Enter)) {
+                ring._clicked();
+                return Clutter.EVENT_STOP;
+            }
+            return Clutter.EVENT_PROPAGATE;
+        });
+        return ring;
+    }
+
+    // A ring with its name under it (and, for the volume, the sound output button beside the name).
+    _dial(ring, name) {
+        const dial = new St.BoxLayout({style_class: 'isla-q-dial', orientation: Clutter.Orientation.VERTICAL});
+        dial.add_child(ring);
+        dial._caption = new St.BoxLayout({style_class: 'isla-q-dial-pie', x_align: Clutter.ActorAlign.CENTER});
+        dial._caption.add_child(new St.Label({style_class: 'isla-q-pie', text: name, y_align: Clutter.ActorAlign.CENTER}));
+        dial.add_child(dial._caption);
+        return dial;
+    }
+
     // Brightness, volume, its outputs and the microphone, one under the other (in a soft card for
     // Tarjetas finas).
     _levels(box, percent) {
@@ -528,7 +675,7 @@ export class Power {
         panel.add_child(this._batteryRow());
         const toggles = this._toggles.map((t, i) => this._toggle(t, TOGGLES[i], style));
         ({agrupada: this._buildAgrupada, tarjetas: this._buildTarjetas, finas: this._buildFinas,
-            lineas: this._buildLineas})[style].call(this, panel, toggles);
+            anillos: this._buildAnillos})[style].call(this, panel, toggles);
         return panel;
     }
 
@@ -611,14 +758,30 @@ export class Power {
         this._step = 3;
     }
 
-    // No backgrounds: bare icons, an accent dot under what is on, thin lines between the parts.
-    _buildLineas(panel, toggles) {
-        panel.add_child(this._spread(toggles));
+    // Brightness, volume and microphone as rings; the toggles as capsules sharing one row; a line;
+    // the actions with a caption under each (estilo-anillos.html).
+    _buildAnillos(panel, toggles) {
+        const volume = this._levelRow('volume', false, true);
+        panel.add_child(this._spread([this._brightnessRow(false, true), volume, this._levelRow('mic', false, true)],
+            'isla-q-anillos'));
+        panel.add_child(volume._outputs);
+        // Equal widths, filling the row; a hidden one leaves no gap.
+        const row = (children, cls) => {
+            const box = new St.BoxLayout({style_class: cls, x_expand: true});
+            box.layout_manager.homogeneous = true;
+            for (const child of children) {
+                child.x_expand = true;
+                box.add_child(child);
+            }
+            return box;
+        };
+        panel.add_child(row(toggles.map(t => {
+            t.style_class = 'isla-q-chip';
+            return t;
+        }), 'isla-q-chips'));
         panel.add_child(this._separator());
-        this._levels(panel, false);
-        panel.add_child(this._separator());
-        panel.add_child(this._spread(['captura', 'ajustes', 'bloquear', 'salir', 'suspender', 'apagar']
-            .map(id => this._action(id, 'isla-q-herramienta'))));
+        panel.add_child(row(['captura', 'ajustes', 'bloquear', 'salir', 'suspender', 'apagar']
+            .map(id => this._action(id, 'isla-q-accion', true)), 'isla-q-acciones'));
         this._step = toggles.length;
     }
 

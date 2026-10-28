@@ -16,11 +16,12 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import {FilePreview, previewable} from './filePreview.js';
 import {Mode} from './state.js';
 import {_, fmt, ngettext} from './i18n.js';
 import {accentRGB} from './accent.js';
-import {Thumbnails, absoluteDate, badge, fileInfo, folderChildren, folderLabel, highlight, isImage, isPdf, isText,
-    pdfPages, rank, relativeDate, shortPath, textHead} from './searchFiles.js';
+import {Thumbnails, badge, candidates, fileInfo, folderChildren, folderLabel, highlight, isImage, rank, recentFiles,
+    relativeDate} from './searchFiles.js';
 
 const MAX_APPS = 3;
 const MAX_GROUP = 6;
@@ -96,54 +97,11 @@ function formatNumber(v) {
     return String(+v.toPrecision(12)).replace('.', ',');
 }
 
-// Recent files from GTK's history (~/.local/share/recently-used.xbel), newest
-// first. Read without blocking the Shell: done(files) is called when ready.
-function recentFiles(cancellable, done) {
-    const file = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), 'recently-used.xbel']));
-    file.load_contents_async(cancellable, (f, res) => {
-        let bytes;
-        try {
-            [, bytes] = f.load_contents_finish(res);
-        } catch {
-            return;
-        }
-        done(parseRecent(new TextDecoder().decode(bytes)));
-    });
-}
-
-function parseRecent(xml) {
-    try {
-        const files = [];
-        for (const m of xml.matchAll(/<bookmark\s[^>]*href="([^"]+)"[^>]*modified="([^"]+)"/g)) {
-            const uri = m[1].replace(/&amp;/g, '&');
-            if (!uri.startsWith('file://'))
-                continue;
-            files.push({uri, modified: m[2]});
-        }
-        files.sort((a, b) => b.modified.localeCompare(a.modified));
-        return files.map(f => Gio.File.new_for_uri(f.uri).get_path()).filter(Boolean);
-    } catch {
-        return [];
-    }
-}
-
-// Every place the history knows: its entries and the folders that hold them.
-function candidates(paths) {
-    const home = GLib.get_home_dir();
-    const all = new Set(paths);
-    for (const path of paths) {
-        const dir = GLib.path_get_dirname(path);
-        if (dir !== home && dir !== '/' && dir.startsWith(`${home}/`))
-            all.add(dir);
-    }
-    return [...all];
-}
-
 const hex = ([r, g, b]) => `#${[r, g, b].map(c => c.toString(16).padStart(2, '0')).join('')}`;
 
 // What a row does when it is opened.
 const Kind = {CALC: 'calc', APP: 'app', FILE: 'file', FOLDER: 'folder', MORE: 'more', WEB: 'web'};
-const hasPreview = item => [Kind.APP, Kind.FILE, Kind.FOLDER].includes(item?.kind);
+const hasPreview = previewable;
 
 export class Search {
     constructor({state, settings}) {
@@ -158,9 +116,25 @@ export class Search {
         this._timers = new Map();
         this._thumbs = new Thumbnails();
         this._buildActors();
+        // When the shell shuts down the stage goes first: no timer may touch the actors after that.
+        this._actor.connect('destroy', () => {
+            this._timers.forEach(id => GLib.source_remove(id));
+            this._timers.clear();
+        });
         state.command('search-content', this._actor);
         Main.wm.addKeybinding('atajo-busqueda', settings, Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW, () => this.open());
+        // The search field of the desktop bar (restBar.js), or the launcher handing over its text.
+        this._commandId = state.connect('command', (_s, name, text) => {
+            if (name !== 'search-open')
+                return;
+            if (this._state.mode !== Mode.SEARCH)
+                this.open();
+            if (text && this._state.mode === Mode.SEARCH) {
+                this._entry.text = text;
+                this._entry.clutter_text.set_cursor_position(-1);
+            }
+        });
         this._modeId = state.connect('mode-changed', (_s, mode, old) => {
             if (old === Mode.SEARCH && mode !== Mode.SEARCH)
                 this._release();
@@ -178,7 +152,8 @@ export class Search {
             accessible_role: Atk.Role.LIST, accessible_name: _('Resultados')});
         this._scroll.set_child(this._list);
         this._top.add_child(this._scroll);
-        this._buildPreview();
+        this._vp = new FilePreview({onOpen: () => this._activate(this._selected)});
+        this._preview = this._vp.actor;
         this._top.add_child(this._preview);
 
         const bar = new St.BoxLayout({style_class: 'isla-busqueda-barra'});
@@ -211,34 +186,6 @@ export class Search {
             }
             return Clutter.EVENT_PROPAGATE;
         });
-    }
-
-    _buildPreview() {
-        this._preview = new St.BoxLayout({style_class: 'isla-vp', orientation: Clutter.Orientation.VERTICAL});
-        this._previewBody = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, y_expand: true});
-        this._frame = new St.Bin({style_class: 'isla-vp-marco', x_align: Clutter.ActorAlign.CENTER, clip_to_allocation: true});
-        this._vpName = new St.Label({style_class: 'isla-vp-nombre'});
-        this._vpPath = new St.Label({style_class: 'isla-vp-ruta'});
-        this._vpName.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-        this._vpMeta = new St.BoxLayout({style_class: 'isla-vp-datos', orientation: Clutter.Orientation.VERTICAL});
-        const metaRow = label => {
-            const row = new St.BoxLayout({style_class: 'isla-vp-dato'});
-            const key = new St.Label({style_class: 'isla-vp-etiqueta', text: label});
-            const value = new St.Label({style_class: 'isla-vp-valor', x_expand: true});
-            value.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-            row.add_child(key);
-            row.add_child(value);
-            this._vpMeta.add_child(row);
-            return {key, value};
-        };
-        this._vpSize = metaRow(_('Tamaño'));
-        this._vpDate = metaRow(_('Modificado'));
-        this._vpOpen = new St.Button({style_class: 'isla-vp-abrir', label: _('Abrir ↵'), can_focus: false, x_expand: true,
-            y_align: Clutter.ActorAlign.END, y_expand: true});
-        this._vpOpen.connect('clicked', () => this._activate(this._selected));
-        for (const actor of [this._frame, this._vpName, this._vpPath, this._vpMeta, this._vpOpen])
-            this._previewBody.add_child(actor);
-        this._preview.add_child(this._previewBody);
     }
 
     open() {
@@ -302,9 +249,8 @@ export class Search {
     _cancelWork() {
         this._gen++;
         this._cancel('search');
-        this._cancel('preview');
+        this._vp.cancel();
         this._searchCancel?.cancel();
-        this._previewCancel?.cancel();
     }
 
     // ---------- results ----------
@@ -603,61 +549,7 @@ export class Search {
 
     // ---------- preview ----------
     _schedulePreview() {
-        this._previewCancel?.cancel();
-        this._later('preview', 80, () => this._fillPreview(this._results[this._selected]));
-    }
-
-    async _fillPreview(item) {
-        if (!this._preview.visible)
-            return;
-        this._previewBody.opacity = hasPreview(item) ? 255 : 0;
-        if (!hasPreview(item))
-            return;
-        const cancellable = this._previewCancel = new Gio.Cancellable();
-        const live = () => !cancellable.is_cancelled() && this._results[this._selected] === item;
-        this._vpName.text = item.title;
-        const path = this._vpPath.clutter_text;
-        path.line_wrap = item.kind === Kind.APP;
-        path.ellipsize = item.kind === Kind.APP ? Pango.EllipsizeMode.END : Pango.EllipsizeMode.MIDDLE;
-        this._vpPath.text = item.kind === Kind.APP ? item.subtitle : shortPath(item.path);
-        this._vpMeta.visible = item.kind !== Kind.APP;
-        this._vpSize.key.text = item.kind === Kind.FOLDER ? _('Contenido') : _('Tamaño');
-        this._vpSize.value.text = item.kind === Kind.FOLDER ? '…' : GLib.format_size(item.size);
-        this._vpDate.value.text = absoluteDate(item.mtime);
-        this._frame.set_child(new St.Widget({style_class: 'isla-vp-esqueleto', x_expand: true, y_expand: true}));
-
-        if (item.kind === Kind.APP) {
-            this._frame.set_child(this._bigIcon(item.gicon));
-            return;
-        }
-        if (item.kind === Kind.FOLDER) {
-            const children = await folderChildren(item.path, 1000, cancellable);
-            if (!live())
-                return;
-            this._vpSize.value.text = children ? fmt(ngettext('{n} elemento', '{n} elementos', children.length), {n: children.length}) : '—';
-            this._frame.set_child(children?.length ? this._grid(children.slice(0, 6)) : this._bigIcon(null, 'folder-symbolic'));
-            return;
-        }
-        if (isPdf(item.type) && item.readable) {
-            pdfPages(item.path, cancellable).then(pages => {
-                if (pages && live())
-                    this._vpSize.value.text = `${GLib.format_size(item.size)} · ${fmt(ngettext('{n} página', '{n} páginas', pages), {n: pages})}`;
-            });
-        }
-        if (isText(item.type) && item.readable) {
-            const head = await textHead(item.path, 15, cancellable);
-            if (!live())
-                return;
-            if (head !== null) {
-                const label = new St.Label({style_class: 'isla-vp-texto', text: head, x_expand: true, y_expand: true});
-                this._frame.set_child(label);
-                return;
-            }
-        }
-        const thumb = await this._thumbs.get(item, cancellable);
-        if (!live())
-            return;
-        this._frame.set_child(thumb ? this._texture(thumb, 170, 210) : this._bigIcon(item.gicon));
+        this._vp.show(this._results[this._selected]);
     }
 
     // A picture loaded and scaled by the Shell's texture cache, off the main loop.
@@ -668,28 +560,6 @@ export class Search {
         const bin = new St.Bin({x_expand: true, y_expand: true, x_align: Clutter.ActorAlign.CENTER,
             y_align: Clutter.ActorAlign.CENTER, child: actor});
         return bin;
-    }
-
-    _bigIcon(gicon, name = 'text-x-generic') {
-        const icon = new St.Icon({style_class: 'isla-vp-icono', x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER,
-            fallback_icon_name: 'text-x-generic', x_expand: true, y_expand: true});
-        if (gicon)
-            icon.gicon = gicon;
-        else
-            icon.icon_name = name;
-        return icon;
-    }
-
-    _grid(children) {
-        const grid = new St.BoxLayout({style_class: 'isla-vp-rejilla', orientation: Clutter.Orientation.VERTICAL,
-            x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
-        for (let k = 0; k < children.length; k += 3) {
-            const line = new St.BoxLayout({style_class: 'isla-vp-rejilla-fila'});
-            for (const child of children.slice(k, k + 3))
-                line.add_child(new St.Icon({gicon: child.gicon, style_class: 'isla-vp-rejilla-icono'}));
-            grid.add_child(line);
-        }
-        return grid;
     }
 
     _togglePreview() {

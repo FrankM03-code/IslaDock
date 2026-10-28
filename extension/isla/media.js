@@ -6,6 +6,8 @@
 // (Spotify, browsers) are downloaded once into the cache. With several
 // players, a right click on the music lists them to choose which one the
 // island follows; with one, the right click stays the timer's.
+// With the top island on, 'musica-lugar' can take it out of the dock; the top
+// island draws its own from state.music (published here) and plays through 'media' commands.
 import Clutter from 'gi://Clutter';
 import GdkPixbuf from 'gi://GdkPixbuf';
 import Gio from 'gi://Gio';
@@ -19,7 +21,7 @@ import * as BoxPointer from 'resource:///org/gnome/shell/ui/boxpointer.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-import {averageColor} from './dots.js';
+import {PLACE_KEYS, inDock} from './notch/place.js';
 import {pillSizes, pillStyle, roundButton} from './pill.js';
 import {Priority} from './state.js';
 
@@ -44,6 +46,31 @@ const RootProxy = Gio.DBusProxy.makeProxyWrapper(`
 
 const BARS = 4;
 const BAR_REST = 4 / 14;
+
+// Average color of an image, leaving out transparent, almost white and almost
+// black pixels; colorful pixels count more than grey ones. null if none is left.
+// plain: a true average of every pixel (the light of a wallpaper).
+function averageColor(pixbuf, plain = false) {
+    const px = pixbuf.get_pixels();
+    const n = pixbuf.get_n_channels(), stride = pixbuf.get_rowstride();
+    const alpha = pixbuf.get_has_alpha();
+    let r = 0, g = 0, b = 0, w = 0;
+    for (let y = 0; y < pixbuf.get_height(); y++) {
+        for (let x = 0; x < pixbuf.get_width(); x++) {
+            const i = y * stride + x * n;
+            const a = alpha ? px[i + 3] / 255 : 1;
+            const max = Math.max(px[i], px[i + 1], px[i + 2]), min = Math.min(px[i], px[i + 1], px[i + 2]);
+            if (!plain && (a < 0.5 || max < 28 || min > 232))
+                continue;
+            const weight = plain ? a : a * (0.2 + (max - min) / 255);
+            r += px[i] * weight;
+            g += px[i + 1] * weight;
+            b += px[i + 2] * weight;
+            w += weight;
+        }
+    }
+    return w ? [r / w, g / w, b / w].map(Math.round) : null;
+}
 
 export class Media {
     constructor({state, settings}) {
@@ -84,6 +111,7 @@ export class Media {
             this._applySize();
             state.command('resize');
         });
+        this._placeIds = PLACE_KEYS.map(key => settings.connect(`changed::${key}`, () => this._update()));
     }
 
     // ---------- actors ----------
@@ -280,6 +308,7 @@ export class Media {
         if (!entry || !title) {
             this._setWave(false);
             this._state.removeActivity('music');
+            this._publish(null);
             if (this._state.musicTitle) {
                 this._state.musicTitle = null;
                 this._state.emit('music-info');
@@ -298,7 +327,13 @@ export class Media {
         this._playButton.child.icon_name = playing ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic';
         this._setCover(meta['mpris:artUrl']);
         this._setWave(playing);
-        this._state.setActivity('music', {priority: Priority.MUSIC, mini: this._mini, panel: this._panel});
+        if (inDock(this._settings, 'musica-lugar'))
+            this._state.setActivity('music', {priority: Priority.MUSIC, mini: this._mini, panel: this._panel});
+        else
+            this._state.removeActivity('music');
+        this._publish({title, artist, by, playing, bus: entry.name, cover: this._coverImage ? this._coverUri : null,
+            color: this._coverColor, length: Number(meta['mpris:length'] ?? 0) / 1e6,
+            trackId: typeof meta['mpris:trackid'] === 'string' ? meta['mpris:trackid'] : null});
         if (this._state.musicPlaying !== playing) {
             this._state.musicPlaying = playing;
             this._state.emit('music-changed', playing);
@@ -308,7 +343,16 @@ export class Media {
             this._state.musicTitle = title;
             this._state.emit('music-info');
         }
+    }
 
+    // The whole song for the top island: state.music, 'music-info' only when something changed.
+    _publish(music) {
+        const key = JSON.stringify(music);
+        if (key === this._published)
+            return;
+        this._published = key;
+        this._state.music = music;
+        this._state.emit('music-info');
     }
 
     _setCover(url = null) {
@@ -330,6 +374,7 @@ export class Media {
         if (local) {
             this._cover.set_child(null);
             this._coverImage = `background-image: url("${local}");`;
+            this._coverUri = local;
             this._cover.style = `${this._coverBox}${this._coverImage}`;
         } else {
             this._coverImage = null;
@@ -375,9 +420,10 @@ export class Media {
                     console.warn(`isla-dock: carátula: ${e.message}`);
                 return;
             }
+            // Through _update: the top island gets the cover too.
             if (this._coverUrl === url) {
                 this._coverShown = false;
-                this._setCover(url);
+                this._update();
             }
         });
     }
@@ -447,6 +493,8 @@ export class Media {
             player.NextRemote();
         else if (what === 'previous')
             player.PreviousRemote();
+        else if (what === 'raise')
+            this._raise();
     }
 
     _raise() {
@@ -469,11 +517,13 @@ export class Media {
         this._state.disconnect(this._skinId);
         this._state.disconnect(this._compactId);
         this._settings.disconnect(this._sizeId);
+        this._placeIds.forEach(id => this._settings.disconnect(id));
         for (const name of [...this._players.keys()])
             this._remove(name);
         this._state.removeActivity('music');
         this._state.musicPlaying = false;
         this._state.musicTitle = null;
+        this._state.music = null;
         this._state.emit('music-info');
         this._state.release('musica');
         this._menu?.destroy();

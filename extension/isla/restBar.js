@@ -1,17 +1,28 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// The desktop bar (dock-minimizado-isla-dock.md, 2026-10-24): what the folded
-// island becomes while no window is in sight (all minimized, or none open):
-//   [Papelera] | [ music or date and time | minimized apps ] | [Notificaciones Portapapeles Ajustes]
-// The left part of the middle piece plays the song (title and previous / pause /
-// next) while a player plays, and goes back to the date and time 3 s after it
-// stops; a click on the time opens IslaDock's calendar. The right part has one
-// icon per minimized window (5 at most, then "+N" with the rest in a menu); a
+// The bar (dock-minimizado-isla-dock.md, 2026-10-24): the folded island, always (since
+// 2026-10-26 also with windows in sight, in the app grid and in do not disturb):
+//   [Papelera] | [ date and time | minimized apps ] | [Notificaciones Portapapeles Ajustes] | [music]
+// While a player plays the song (title and previous / pause / next) comes in at the
+// very end, after Ajustes (Frank: not right after the search field), and leaves 3 s
+// after it stops. The date and time are not there with the top island on (it shows
+// them already); a click on the time opens IslaDock's calendar.
+// With the top island on and 'musica-lugar' = 'arriba' (the default) the song plays up there, not here.
+// The middle piece's right part has one icon per minimized window (5 at most, then "+N" with the rest in a menu); a
 // click brings it back. The buttons at the ends are copies of the dock's (they
 // count and look alike); a click opens the real one over the open dock.
+// With the top island on (dock-opcion-a.html, 2026-10-26) the minimized windows go by
+// app: a bigger icon, a small dot under it, and how many when there are several
+// (a click on those lists them). After it (dock-opcion-a(1).html) a few pinned
+// icons: today's page (the calendar) and the first dock favorites that are not open
+// (an open one is already in sight: the next favorite takes its place); and, when more
+// than one workspace is in use, a column of dots for them (the active one taller).
+// Before the middle piece, the quick search field (2026-10-26, Frank's style B "vidrio
+// con teclas"): a click on it opens the same search as Ctrl+Espacio, right there in the dock.
 // Hovering leaves it as it is (it is meant to be used); the wheel over it opens
 // the whole dock (isla.js).
 import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
 import Pango from 'gi://Pango';
@@ -21,15 +32,20 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as BoxPointer from 'resource:///org/gnome/shell/ui/boxpointer.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as AppFavorites from 'resource:///org/gnome/shell/ui/appFavorites.js';
 
 import {_, fmt} from './i18n.js';
+import {shortcutLabel} from './clipboard/panel.js';
 import {dayName, monthName, monthShort} from './dates.js';
 import {dockMonitorIndex} from './monitor.js';
+import {inDock} from './notch/place.js';
 import {ms} from './timing.js';
+import {workspacesInUse} from './workspaces.js';
 
 const TILE = 36;
 const APP_ICON = 26;
-const MAX_MINIMIZED = 5;
+const GROUP_ICON = 32;
+const PINNED = 2;            // dock favorites after today's page
 const STOP_GRACE = 3000;     // paused for this long: back to the clock
 const SWAP_TIME = 220;
 // What a person would call "a window" (the window bar counts the same ones).
@@ -44,45 +60,47 @@ function counts(w) {
         w.located_on_workspace(global.workspace_manager.get_active_workspace()) && w.get_monitor() === dockMonitorIndex();
 }
 
-// No window in sight: every one minimized, or none at all.
-export function desktopShown() {
-    return !global.get_window_actors().some(a => {
-        const w = a.meta_window;
-        return counts(w) && !w.minimized && w.showing_on_its_workspace();
-    });
-}
-
 export class RestBar {
+    // extras: the island's actors that live in the bar too (the main activity, the status items).
     // onChange(): the bar changed size (the island animates to it).
-    constructor({state, settings, apps, onChange}) {
+    constructor({state, settings, apps, extras = [], onChange}) {
         this._state = state;
         this._settings = settings;
-        this._apps = apps;
         this._onChange = onChange;
         this._signals = [];
         this._windows = new Map();
         this.actor = new St.BoxLayout({style_class: 'isla-barra', y_align: Clutter.ActorAlign.CENTER});
+        // When the shell shuts down the stage goes first: nothing queued may touch the bar after that.
+        this.actor.connect('destroy', () => this._dropTimers());
 
         this._mirrors = {};
         for (const kind of ['trash', 'notifications', 'clipboard', 'power'])
             this._mirrors[kind] = apps.mirror(kind, TILE);
         this._sepStart = this._sep('isla-barra-sep');
         this._sepEnd = this._sep('isla-barra-sep');
+        this._sepPinned = this._sep('isla-barra-sep');
+        this._pinned = new St.BoxLayout({style_class: 'isla-barra-fijas', y_align: Clutter.ActorAlign.CENTER});
+        this._spaces = new St.BoxLayout({style_class: 'isla-barra-espacios', orientation: Clutter.Orientation.VERTICAL,
+            y_align: Clutter.ActorAlign.CENTER, reactive: true});
+        this._spaces.connect('scroll-event', (_a, event) => this._scrollSpaces(event));
+        this._mutter = new Gio.Settings({schema_id: 'org.gnome.mutter'});
+        this._find = this._buildSearch();
 
-        // The middle piece: music or clock | minimized apps.
+        // The middle piece: clock | minimized apps. The music goes at the end.
         this._piece = new St.BoxLayout({style_class: 'isla-barra-pieza', y_align: Clutter.ActorAlign.CENTER});
         this._left = new St.Widget({layout_manager: new Clutter.BinLayout(), y_align: Clutter.ActorAlign.CENTER});
         this._clock = this._buildClock();
         this._music = this._buildMusic();
         this._left.add_child(this._clock);
-        this._left.add_child(this._music);
+        this._sepMusic = this._sep('isla-barra-sep');
         this._innerSep = this._sep('isla-barra-sep-interno');
         this._minimized = new St.BoxLayout({style_class: 'isla-barra-minimizadas', y_align: Clutter.ActorAlign.CENTER});
         for (const actor of [this._left, this._innerSep, this._minimized])
             this._piece.add_child(actor);
 
-        for (const actor of [this._mirrors.trash, this._sepStart, this._piece, this._sepEnd,
-            this._mirrors.notifications, this._mirrors.clipboard, this._mirrors.power])
+        this._extras = extras;
+        for (const actor of [this._mirrors.trash, this._sepStart, this._find, this._piece, ...extras, this._sepPinned, this._pinned, this._sepEnd,
+            this._spaces, this._mirrors.notifications, this._mirrors.clipboard, this._mirrors.power, this._sepMusic, this._music])
             this.actor.add_child(actor);
 
         this._tip = new St.Label({style_class: 'isla-tooltip', visible: false});
@@ -93,12 +111,27 @@ export class RestBar {
         this._on(state, 'music-changed', () => this._updateMusic());
         for (const key of Object.values(KEYS))
             this._on(settings, `changed::${key}`, () => this._updateEnds());
+        this._on(settings, 'changed::atajo-busqueda', () => this._updateSearchKey());
+        for (const key of ['isla-superior', 'musica-lugar'])
+            this._on(settings, `changed::${key}`, () => this._updateMusic());
+        this._on(settings, 'changed::isla-superior', () => {
+            this._minKey = null;
+            this._updateMinimized();
+        });
         this._on(global.display, 'window-created', (_d, w) => {
             this._watch(w);
             this._queueMinimized();
         });
-        this._on(global.workspace_manager, 'active-workspace-changed', () => this._queueMinimized());
+        this._on(global.workspace_manager, 'active-workspace-changed', () => {
+            this._queueMinimized();
+            this._syncPiece();
+        });
+        this._on(global.workspace_manager, 'notify::n-workspaces', () => this._syncPiece());
+        this._on(this._mutter, 'changed::dynamic-workspaces', () => this._syncPiece());
+        this._on(AppFavorites.getAppFavorites(), 'changed', () => this._buildPinned());
+        this._on(Shell.AppSystem.get_default(), 'app-state-changed', () => this._queuePinned());
         global.get_window_actors().forEach(a => a.meta_window && this._watch(a.meta_window));
+        this._buildPinned();
         this._updateEnds();
         this._showMusic(false, false);
         this._updateMusic();
@@ -117,9 +150,145 @@ export class RestBar {
     _updateEnds() {
         for (const [kind, key] of Object.entries(KEYS))
             this._mirrors[kind].visible = this._settings.get_boolean(key);
+        this._syncPiece();
+    }
+
+    // With the top island on, the date and time stay up there: the middle piece keeps only
+    // the music and the minimized apps, and goes away when it has neither.
+    _syncPiece() {
+        const top = this._settings.get_boolean('isla-superior');
+        const clock = !top;
+        const any = this._minimized.get_n_children() > 0;
+        this._clock.visible = clock;
+        this._left.visible = clock;
+        this._music.visible = this._sepMusic.visible = !!this._musicShown;
+        this._innerSep.visible = any && this._left.visible;
+        this._piece.visible = this._left.visible || any;
+        this._pinned.visible = top && this._pinned.get_n_children() > 0;
+        this._syncSpaces(top);
+        const right = ['notifications', 'clipboard', 'power'].some(k => this._mirrors[k].visible) || this._spaces.visible;
+        // The search field is always in the middle.
         this._sepStart.visible = this._mirrors.trash.visible;
-        this._sepEnd.visible = ['notifications', 'clipboard', 'power'].some(k => this._mirrors[k].visible);
+        this._sepPinned.visible = this._pinned.visible;
+        this._sepEnd.visible = right;
         this._onChange();
+    }
+
+    // The main activity or a status item came or went.
+    syncExtras() {
+        this._onChange();
+    }
+
+    // ---------- search field ----------
+    _buildSearch() {
+        const button = new St.Button({style_class: 'isla-barra-buscar', can_focus: true, accessible_name: _('Buscar'),
+            track_hover: true, y_align: Clutter.ActorAlign.CENTER});
+        const box = new St.BoxLayout({style_class: 'isla-barra-buscar-caja', x_expand: true});
+        box.add_child(new St.Icon({icon_name: 'system-search-symbolic', style_class: 'isla-barra-buscar-lupa',
+            y_align: Clutter.ActorAlign.CENTER}));
+        box.add_child(new St.Label({style_class: 'isla-barra-buscar-texto', text: _('Buscar'), x_expand: true,
+            y_align: Clutter.ActorAlign.CENTER}));
+        // The shortcut drawn as little keys (Frank's style B, "vidrio con teclas").
+        this._searchKey = new St.BoxLayout({style_class: 'isla-barra-buscar-teclas', y_align: Clutter.ActorAlign.CENTER});
+        box.add_child(this._searchKey);
+        button.set_child(box);
+        button.connect('clicked', () => this._state.command('search-open'));
+        this._updateSearchKey();
+        return button;
+    }
+
+    _updateSearchKey() {
+        const accel = this._settings.get_strv('atajo-busqueda')[0] ?? '';
+        this._searchKey.destroy_all_children();
+        for (const key of shortcutLabel(accel).split('+').filter(Boolean)) {
+            const space = /^space$/i.test(key);
+            this._searchKey.add_child(new St.Label({style_class: `isla-barra-tecla${space ? ' espacio' : ''}`,
+                text: space ? '␣' : key, y_align: Clutter.ActorAlign.CENTER}));
+        }
+        this._searchKey.visible = !!accel;
+    }
+
+    // ---------- pinned: today's page and the first favorites ----------
+    _buildPinned() {
+        this._hideTip();
+        this._pinned.destroy_all_children();
+        const page = new St.BoxLayout({style_class: 'isla-barra-hoja isla-barra-hoja-fija', orientation: Clutter.Orientation.VERTICAL,
+            y_align: Clutter.ActorAlign.CENTER});
+        this._pinMonth = new St.Label({style_class: 'isla-barra-hoja-mes', x_align: Clutter.ActorAlign.CENTER});
+        this._pinDay = new St.Label({style_class: 'isla-barra-hoja-dia', x_align: Clutter.ActorAlign.CENTER});
+        page.add_child(this._pinMonth);
+        page.add_child(this._pinDay);
+        const today = this._pinnedTile(page, _('Calendario'));
+        today.connect('clicked', () => this._state.command('calendar-toggle', today));
+        const closed = AppFavorites.getAppFavorites().getFavorites().filter(app => app.get_n_windows() === 0);
+        for (const app of closed.slice(0, PINNED)) {
+            const tile = this._pinnedTile(app.create_icon_texture(GROUP_ICON), app.get_name());
+            tile.connect('clicked', () => app.activate());
+        }
+        if (this._month)
+            this._updateClock();
+        this._syncPiece();
+    }
+
+    // Apps open and close in bursts (a window, its dialogs): once per burst.
+    _queuePinned() {
+        if (this._pinId)
+            return;
+        this._pinId = GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+            this._pinId = 0;
+            this._buildPinned();
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    // Like a minimized app's tile, with room for the dot but no dot: they sit level.
+    _pinnedTile(face, name) {
+        const tile = new St.Button({style_class: 'isla-barra-grupo', can_focus: true, accessible_name: name, track_hover: true,
+            y_align: Clutter.ActorAlign.CENTER});
+        const column = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-barra-grupo-caja'});
+        column.add_child(face);
+        column.add_child(new St.Widget({style_class: 'isla-barra-grupo-linea sin-linea', x_align: Clutter.ActorAlign.CENTER}));
+        tile.set_child(column);
+        tile.connect('notify::hover', () => {
+            face.ease({translation_y: tile.hover ? -2 : 0, duration: ms(150), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+            if (tile.hover)
+                this._showTip(tile, name);
+            else
+                this._hideTip();
+        });
+        this._pinned.add_child(tile);
+        return tile;
+    }
+
+    // ---------- workspaces: a dot each, the active one taller ----------
+    _syncSpaces(top) {
+        const n = top ? workspacesInUse(this._mutter) : 0;
+        this._spaces.visible = n > 1;
+        if (n < 2)
+            return;
+        const box = this._spaces;
+        while (box.get_n_children() > n)
+            box.get_last_child().destroy();
+        while (box.get_n_children() < n) {
+            const i = box.get_n_children();
+            const b = new St.Button({style_class: 'isla-barra-espacio-boton', can_focus: true, x_align: Clutter.ActorAlign.CENTER,
+                accessible_name: fmt(_('Espacio de trabajo {n}'), {n: i + 1}),
+                child: new St.Widget({style_class: 'isla-barra-espacio'})});
+            b.connect('clicked', () => global.workspace_manager.get_workspace_by_index(i)?.activate(global.get_current_time()));
+            box.add_child(b);
+        }
+        const active = global.workspace_manager.get_active_workspace_index();
+        box.get_children().forEach((b, i) => b.child[i === active ? 'add_style_class_name' : 'remove_style_class_name']('activo'));
+    }
+
+    _scrollSpaces(event) {
+        const dir = event.get_scroll_direction();
+        const step = dir === Clutter.ScrollDirection.UP ? -1 : dir === Clutter.ScrollDirection.DOWN ? 1 : 0;
+        const at = global.workspace_manager.get_active_workspace_index();
+        const to = Math.max(0, Math.min(workspacesInUse(this._mutter) - 1, at + step));
+        if (to !== at)
+            global.workspace_manager.get_workspace_by_index(to)?.activate(global.get_current_time());
+        return Clutter.EVENT_STOP;
     }
 
     // ---------- date and time ----------
@@ -147,6 +316,10 @@ export class RestBar {
         const now = GLib.DateTime.new_now_local();
         this._month.text = monthShort(now).toUpperCase();
         this._day.text = String(now.get_day_of_month());
+        if (this._pinMonth) {
+            this._pinMonth.text = this._month.text;
+            this._pinDay.text = this._day.text;
+        }
         this._time.text = now.format('%H:%M');
         this._date.text = fmt(_('{dia}, {n} de {mes}'), {dia: dayName(now), n: now.get_day_of_month(), mes: monthName(now)});
         if (this._clockId)
@@ -183,7 +356,8 @@ export class RestBar {
 
     _updateMusic() {
         const title = this._state.musicTitle;
-        const playing = !!title && !!this._state.musicPlaying;
+        // With the top island on, the song may live only up there ('musica-lugar').
+        const playing = !!title && !!this._state.musicPlaying && inDock(this._settings, 'musica-lugar');
         if (title)
             this._song.text = title.toUpperCase();
         this._play.child.icon_name = playing ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic';
@@ -207,23 +381,19 @@ export class RestBar {
         this._stopId = 0;
     }
 
-    // Cross-fade between the clock and the music; the island animates the width.
+    // The music at the end comes in fading; the island animates the width.
     _showMusic(on, animate) {
         if (on === this._musicShown)
             return;
         this._musicShown = on;
-        const [show, hide] = on ? [this._music, this._clock] : [this._clock, this._music];
-        for (const actor of [show, hide])
-            actor.remove_all_transitions();
-        show.show();
-        hide.hide();
-        if (animate && this.actor.mapped) {
-            show.opacity = 0;
-            show.ease({opacity: 255, duration: ms(SWAP_TIME), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+        this._music.remove_all_transitions();
+        if (on && animate && this.actor.mapped) {
+            this._music.opacity = 0;
+            this._music.ease({opacity: 255, duration: ms(SWAP_TIME), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
         } else {
-            show.opacity = 255;
+            this._music.opacity = 255;
         }
-        this._onChange();
+        this._syncPiece();
     }
 
     // ---------- minimized apps ----------
@@ -266,37 +436,69 @@ export class RestBar {
         this._hideTip();
         this._minimized.destroy_all_children();
         const tracker = Shell.WindowTracker.get_default();
-        const shown = windows.length > MAX_MINIMIZED ? windows.slice(0, MAX_MINIMIZED - 1) : windows;
-        for (const w of shown) {
+        const byApp = this._settings.get_boolean('isla-superior');
+        this._minimized[byApp ? 'add_style_class_name' : 'remove_style_class_name']('por-app');
+        this._piece[byApp ? 'add_style_class_name' : 'remove_style_class_name']('por-app');
+        // One entry per window, or per app (its windows, newest first) with the top island on.
+        const entries = [];
+        for (const w of windows) {
             const app = tracker.get_window_app(w);
+            const same = byApp && app && entries.find(e => e.app === app);
+            if (same)
+                same.windows.push(w);
+            else
+                entries.push({app, windows: [w]});
+        }
+        // All of them, never a "+N" (Frank, 2026-10-26).
+        for (const {app, windows: mine} of entries) {
+            const w = mine[0];
             const name = app?.get_name() ?? w.get_title() ?? '';
-            // Just the icon, no tile behind it; it grows a little under the mouse.
-            const tile = new St.Button({style_class: 'isla-barra-app', can_focus: true, accessible_name: name,
-                child: app?.create_icon_texture(APP_ICON) ?? new St.Icon({icon_name: 'application-x-executable-symbolic',
-                    icon_size: APP_ICON}), track_hover: true, y_align: Clutter.ActorAlign.CENTER});
+            const icon = size => app?.create_icon_texture(size) ?? new St.Icon({icon_name: 'application-x-executable-symbolic',
+                icon_size: size});
+            const tile = new St.Button({style_class: byApp ? 'isla-barra-grupo' : 'isla-barra-app', can_focus: true,
+                accessible_name: name, track_hover: true, y_align: Clutter.ActorAlign.CENTER});
+            let lift = null;
+            if (byApp) {
+                // The icon over a small dot; the count on its corner.
+                const column = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-barra-grupo-caja'});
+                lift = icon(GROUP_ICON);
+                column.add_child(lift);
+                column.add_child(new St.Widget({style_class: 'isla-barra-grupo-linea', x_align: Clutter.ActorAlign.CENTER}));
+                const box = new St.Widget();
+                box.add_child(column);
+                if (mine.length > 1) {
+                    // Over the icon's top right corner, a little outside it.
+                    const count = new St.Label({style_class: 'isla-barra-grupo-cuenta', text: String(mine.length)});
+                    box.add_child(count);
+                    const place = () => count.set_position(Math.round(column.width - count.width + 4), -3);
+                    column.connect('notify::width', place);
+                    count.connect('notify::width', place);
+                }
+                tile.set_child(box);
+            } else {
+                // Just the icon, no tile behind it; it grows a little under the mouse.
+                tile.set_child(icon(APP_ICON));
+            }
             tile.set_pivot_point(0.5, 0.5);
-            tile.connect('clicked', () => Main.activateWindow(w));
+            tile.connect('clicked', () => mine.length > 1 ? this._openRest(tile, mine) : Main.activateWindow(w));
             tile.connect('notify::hover', () => {
-                const scale = tile.hover ? 1.12 : 1;
-                tile.ease({scale_x: scale, scale_y: scale, duration: ms(120), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+                if (lift) {
+                    lift.ease({translation_y: tile.hover ? -2 : 0, duration: ms(150), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+                } else {
+                    const scale = tile.hover ? 1.12 : 1;
+                    tile.ease({scale_x: scale, scale_y: scale, duration: ms(120), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
+                }
                 if (tile.hover)
-                    this._showTip(tile, name);
+                    this._showTip(tile, mine.length > 1 ? fmt(_('{app} ({n} ventanas)'), {app: name, n: mine.length}) : name);
                 else
                     this._hideTip();
             });
             this._minimized.add_child(tile);
         }
-        const rest = windows.slice(shown.length);
-        if (rest.length) {
-            const more = new St.Button({style_class: 'isla-barra-cuadro isla-barra-mas', label: `+${rest.length}`, can_focus: true,
-                accessible_name: fmt(_('{n} ventanas más'), {n: rest.length})});
-            more.connect('clicked', () => this._openRest(more, rest));
-            this._minimized.add_child(more);
-        }
         const any = windows.length > 0;
-        this._minimized.visible = this._innerSep.visible = any;
+        this._minimized.visible = any;
         this._piece[any ? 'remove_style_class_name' : 'add_style_class_name']('sin-minimizadas');
-        this._onChange();
+        this._syncPiece();
     }
 
     _openRest(anchor, windows) {
@@ -334,18 +536,22 @@ export class RestBar {
         this._tip.hide();
     }
 
-    // The island's skin: light (the design's pink) or dark.
+    // The island's skin: light (the dock's white) or dark.
     setDark(dark, skinClass) {
         this._tip.style_class = `isla-tooltip ${skinClass ?? ''}${dark ? ' oscura' : ''}`;
     }
 
-    destroy() {
+    _dropTimers() {
         this._cancelStop();
-        for (const id of [this._clockId, this._minId]) {
+        for (const id of [this._clockId, this._minId, this._pinId]) {
             if (id)
                 GLib.source_remove(id);
         }
-        this._clockId = this._minId = 0;
+        this._clockId = this._minId = this._pinId = 0;
+    }
+
+    destroy() {
+        this._dropTimers();
         this._signals.forEach(([obj, id]) => obj.disconnect(id));
         this._signals = [];
         for (const [w, ids] of this._windows)

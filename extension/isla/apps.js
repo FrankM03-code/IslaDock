@@ -22,7 +22,6 @@ import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
 import {DockItem, DockSeparator} from '../dockItem.js';
 import {RowLayout} from './row.js';
-import {watchAccent} from './accent.js';
 import {trashIcon} from './trashIcon.js';
 import {dockMonitor} from './monitor.js';
 import {downloadsDir} from './stack/downloadsModel.js';
@@ -95,8 +94,6 @@ export class AppsRow extends Signals.EventEmitter {
             this._on(Main.overview.dash.showAppsButton, 'notify::checked', () => this._updateButtons());
         this._watchTrash();
         this._watchFileManager();
-        // A new accent color: the bin's lid follows.
-        this._unwatchAccent = watchAccent(() => this._both('trash').forEach(i => i.setGIcon(this._trashIcon())));
     }
 
     // ---------- helpers ----------
@@ -153,7 +150,7 @@ export class AppsRow extends Signals.EventEmitter {
     // Portapapeles and Ajustes while their panel is.
     _updateButtons() {
         const showApps = Main.overview.dash?.showAppsButton;
-        const open = {apps: Main.overview.visible && !!showApps?.checked, ...this._panelsOpen};
+        const open = {...this._panelsOpen, apps: (Main.overview.visible && !!showApps?.checked) || !!this._panelsOpen?.apps};
         const palette = this._settings.get_string('accent-palette');
         const dark = palette === 'oscuro' || (palette === 'auto' && this._interface.get_string('color-scheme') === 'prefer-dark');
         for (const kind of ['apps', 'notifications', 'clipboard', 'power']) {
@@ -361,12 +358,25 @@ export class AppsRow extends Signals.EventEmitter {
             item.connect('scroll-event', (_i, event) => this._onItemScroll(item, event));
         item.connect('drag-started', () => {
             this._dragging = item;
+            if (item.kind === 'app') {
+                this._dragMonitor = {
+                    dragMotion: event => {
+                        this._setTrashDrop(this._overTrash(event.targetActor));
+                        return DND.DragMotionResult.CONTINUE;
+                    },
+                };
+                DND.addDragMonitor(this._dragMonitor);
+            }
             this.resetZoom();
             this._hideTooltip();
             this.emit('busy-changed');
         });
         const dragEnded = () => {
             this._dragging = null;
+            if (this._dragMonitor)
+                DND.removeDragMonitor(this._dragMonitor);
+            this._dragMonitor = null;
+            this._setTrashDrop(false);
             // Back to the real order (a drop already changed the favorites).
             this._later('apps', 50, () => this._rebuild());
             this.emit('busy-changed');
@@ -438,9 +448,26 @@ export class AppsRow extends Signals.EventEmitter {
         }
     }
 
-    // IslaDock's own bin, in GNOME's accent color, whatever the icon theme.
+    // IslaDock's own bin, whatever the icon theme: red while an app is held over it.
     _trashIcon() {
-        return trashIcon(this._trashFull);
+        return trashIcon(this._trashDrop ? 'soltar' : this._trashFull ? 'llena' : 'vacia', !!this._darkDock);
+    }
+
+    _updateTrash() {
+        this._both('trash').forEach(i => i.setGIcon(this._trashIcon()));
+    }
+
+    // An app of the dock held over the bin: letting go there takes it off the dock.
+    _setTrashDrop(on) {
+        if (on === !!this._trashDrop)
+            return;
+        this._trashDrop = on;
+        this._updateTrash();
+    }
+
+    _overTrash(target) {
+        const trash = this._items?.get('trash');
+        return !!trash && !!target && (trash === target || trash.contains(target));
     }
 
     _refreshState() {
@@ -495,16 +522,23 @@ export class AppsRow extends Signals.EventEmitter {
     // ---------- clicks ----------
     // The app that opens folders (Archivos, or the one chosen for them).
     _isFolderApp(item) {
-        if (item.kind !== 'app' || !item.app || !this._settings.get_boolean('carpetas-archivos'))
+        return item.kind === 'app' && this.isFolderApp(item.app);
+    }
+
+    // Also for the desktop bar (restBar.js): its Archivos shows the same folders.
+    isFolderApp(app) {
+        if (!app || !this._settings.get_boolean('carpetas-archivos'))
             return false;
         const id = Gio.AppInfo.get_default_for_type('inode/directory', false)?.get_id() ?? 'org.gnome.Nautilus.desktop';
-        return item.app.get_id() === id;
+        return app.get_id() === id;
     }
 
     _onActivate(item, button) {
-        // All installed apps, with GNOME's own search on top.
+        // All installed apps: the Lanzador Isla (launcher.js), or GNOME's grid with its search on top.
         if (item.kind === 'apps') {
-            if (Main.overview.visible)
+            if (this._settings.get_boolean('lanzador-isla') && !Main.overview.visible)
+                this._state.command('launcher-toggle');
+            else if (Main.overview.visible)
                 Main.overview.hide();
             else
                 Main.overview.showApps();
@@ -726,8 +760,14 @@ export class AppsRow extends Signals.EventEmitter {
     // ---------- drag to reorder ----------
     // Dropping before the first separator pins the app at that place, after it unpins it.
     handleDragOver(source, _actor, x, _y, _time) {
+        // An app dragged from the Lanzador Isla: dropping it pins it there.
+        if (source?.launcherApp && this._items)
+            return this._trashDrop ? DND.DragMotionResult.NO_DROP : DND.DragMotionResult.COPY_DROP;
         if (!(source instanceof DockItem) || source.kind !== 'app' || !this._items || !this._appItems.includes(source))
             return DND.DragMotionResult.CONTINUE;
+        // Over the bin the order stays: a drop there unpins it.
+        if (this._trashDrop)
+            return DND.DragMotionResult.MOVE_DROP;
         const children = this.actor.get_children();
         const end = children.findIndex(a => ['downloads', 'trash', 'power', 'clipboard', 'notifications'].includes(a.kind) ||
             a.key === 'sep-2' || a.key === 'sep-3');
@@ -745,9 +785,18 @@ export class AppsRow extends Signals.EventEmitter {
         return DND.DragMotionResult.MOVE_DROP;
     }
 
-    acceptDrop(source, _actor, _x, _y, _time) {
+    acceptDrop(source, _actor, x, _y, _time) {
+        if (source?.launcherApp && this._items && !this._trashDrop)
+            return this._pinFromLauncher(source.launcherApp, x);
         if (!(source instanceof DockItem) || source.kind !== 'app' || !this._items)
             return false;
+        if (this._trashDrop) {
+            const favorites = AppFavorites.getAppFavorites();
+            if (!favorites.isFavorite(source.app.get_id()))
+                return false;
+            favorites.removeFavorite(source.app.get_id());
+            return true;
+        }
         const children = this.actor.get_children();
         const sep = children.findIndex(a => a.key === 'sep-1');
         const at = children.indexOf(source);
@@ -764,6 +813,24 @@ export class AppsRow extends Signals.EventEmitter {
         } else if (wasFavorite) {
             favorites.removeFavorite(id);
         }
+        return true;
+    }
+
+    // Pinned at the place of the drop, among the pinned apps (already pinned: moved there).
+    _pinFromLauncher(app, x) {
+        const favorites = AppFavorites.getAppFavorites();
+        const id = app.get_id();
+        if (!app.get_app_info())
+            return false;
+        const children = this.actor.get_children();
+        const sep = children.findIndex(a => a.key === 'sep-1');
+        const pinned = children.slice(0, sep >= 0 ? sep : children.length)
+            .filter(a => a.kind === 'app' && favorites.isFavorite(a.app.get_id()));
+        const pos = pinned.filter(a => a.app.get_id() !== id && x > a.x + a.width / 2).length;
+        if (favorites.isFavorite(id))
+            favorites.moveFavoriteToPos(id, pos);
+        else
+            favorites.addFavoriteAtPos(id, pos);
         return true;
     }
 
@@ -807,6 +874,10 @@ export class AppsRow extends Signals.EventEmitter {
     }
 
     setDark(dark, skinClass = '') {
+        if (dark !== !!this._darkDock) {
+            this._darkDock = dark;
+            this._updateTrash();
+        }
         this._tooltip.style_class = `isla-tooltip ${skinClass}${dark ? ' oscura' : ''}`;
     }
 
@@ -895,7 +966,7 @@ export class AppsRow extends Signals.EventEmitter {
             if (!this._items || full === this._trashFull)
                 return;
             this._trashFull = full;
-            this._both('trash').forEach(i => i.setGIcon(this._trashIcon()));
+            this._updateTrash();
         });
     }
 
@@ -910,8 +981,9 @@ export class AppsRow extends Signals.EventEmitter {
 
     destroy() {
         this._dragging = null;
+        if (this._dragMonitor)
+            DND.removeDragMonitor(this._dragMonitor);
         this._dropSources();
-        this._unwatchAccent?.();
         this._fmCancel?.cancel();
         if (this._fileManagerId)
             this._fileManager.disconnect(this._fileManagerId);

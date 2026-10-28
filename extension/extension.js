@@ -24,16 +24,20 @@ import {Power} from './isla/power/power.js';
 import {FloatingNotices} from './isla/floating.js';
 import {TopBar} from './isla/topbar.js';
 import {OverviewBlur} from './isla/overviewBlur.js';
+import {Launcher} from './isla/launcher.js';
+import {SuperKey} from './isla/superKey.js';
 import {CapsLock} from './isla/capslock.js';
 import {VolumeOsd} from './isla/volumeOsd.js';
-import {DesktopClock} from './isla/clock.js';
 import {BatteryStatus} from './isla/battery.js';
 import {KeyboardStatus} from './isla/keyboard.js';
 import {WorkspacesStatus} from './isla/workspaces.js';
 import {SideClock} from './isla/sideClock.js';
 import {PrivacyStatus} from './isla/privacy.js';
 import {CalendarPanel} from './isla/calendar.js';
+import {Tiling} from './isla/tiling.js';
 import {Notifications} from './isla/notifications/notifications.js';
+import {TopIsland} from './isla/notch/notch.js';
+import {notchNotices} from './isla/notch/place.js';
 import {dockMonitorIndex, setDockSettings} from './isla/monitor.js';
 import {Calm} from './isla/calm.js';
 import {IslaState} from './isla/state.js';
@@ -55,21 +59,26 @@ const MODULES = {
     topbar: ['ocultar-barra-superior', () => new TopBar()],
     clipboard: ['mostrar-portapapeles', ctx => new Clipboard(ctx)],
     power: [null, ctx => new Power(ctx)],
-    // The notification center's popups take the place of the floating notices.
-    floating: ['avisos-flotantes', ctx => new FloatingNotices(ctx), s => !s.get_boolean('centro-notificaciones'),
-        ['centro-notificaciones']],
+    // The notification center's popups take the place of the floating notices. With the top
+    // island showing the notifications, this one still runs (cards off) to keep GNOME's banners back.
+    floating: [null, ctx => new FloatingNotices(ctx),
+        s => !s.get_boolean('centro-notificaciones') && (s.get_boolean('avisos-flotantes') || notchNotices(s)),
+        ['avisos-flotantes', 'centro-notificaciones', 'isla-superior', 'isla-superior-avisos']],
     notifications: ['centro-notificaciones', ctx => new Notifications(ctx)],
     prefsWindow: [null, ctx => new PrefsWindow(ctx)],
     overviewBlur: ['desenfoque-cajon', () => new OverviewBlur()],
+    launcher: ['lanzador-isla', ctx => new Launcher(ctx)],
+    superKey: ['super-abre-cajon', ctx => new SuperKey(ctx)],
     capsLock: [null, ctx => new CapsLock(ctx)],
     volumeOsd: [null, ctx => new VolumeOsd(ctx)],
-    clock: ['reloj-escritorio', ctx => new DesktopClock(ctx)],
     battery: [null, ctx => new BatteryStatus(ctx)],
     keyboard: [null, ctx => new KeyboardStatus(ctx)],
     workspaces: ['espacios-trabajo', ctx => new WorkspacesStatus(ctx)],
     sideClock: ['reloj-lateral', ctx => new SideClock(ctx)],
     privacy: [null, ctx => new PrivacyStatus(ctx)],
     calendar: [null, ctx => new CalendarPanel(ctx)],
+    notch: ['isla-superior', ctx => new TopIsland(ctx)],
+    tiling: ['acomodar-ventanas', ctx => new Tiling(ctx)],
 };
 
 export default class IslaDockExtension extends Extension {
@@ -80,11 +89,7 @@ export default class IslaDockExtension extends Extension {
             this._settings.set_string('isla-piel', 'clasica');
             this._settings.set_boolean('isla-oscura', true);
         }
-        // The desktop clock's looks were redone (2026-10-23): an older one becomes its new counterpart.
-        const DESK = {linea: 'linea-viva', lateral: 'lateral-acento', semana: 'semana-fluida', anillo: 'arco-dia'};
-        const desk = this._settings.get_string('reloj-estilo');
-        if (!['linea-viva', 'lateral-acento', 'semana-fluida', 'arco-dia'].includes(desk))
-            this._settings.set_string('reloj-estilo', DESK[desk] ?? 'linea-viva');
+        // The desktop clock was removed (2026-10-25): the side clock stays.
         this._resolver = new IconResolver(this.dir, this._settings);
         setDockSettings(this._settings);
         this._modules = new Map();

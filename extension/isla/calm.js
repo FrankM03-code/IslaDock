@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // When the island must be calmer, in one place:
 //  · "Reducir animaciones" (GNOME's Accesibilidad switches animations off):
-//    no Aurora halo moving, no breathing, no magnified icons. GNOME already
+//    no Aurora halo moving, no magnified icons. GNOME already
 //    makes every slide instant then.
 //  · Ahorro de energía ('ahorro-energia', on by default): running on battery
-//    or in the "Ahorro" power mode, no blur, no Aurora halo moving and no
-//    breathing.
+//    or in the "Ahorro" power mode, no blur and no Aurora halo moving.
 // Readers ask its getters and listen to 'changed'.
 import Gio from 'gi://Gio';
 import St from 'gi://St';
@@ -58,7 +57,7 @@ export class Calm extends Signals.EventEmitter {
         return !!this._settings?.get_boolean('ahorro-energia') && (this._onBattery || this._powerSaver);
     }
 
-    // Aurora's moving halo and the breathing.
+    // Aurora's moving halo.
     get motionOff() {
         return this.reduced || this.saving;
     }

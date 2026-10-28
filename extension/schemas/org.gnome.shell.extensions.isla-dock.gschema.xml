@@ -46,7 +46,7 @@
         <choice value="agrupada"/>
         <choice value="tarjetas"/>
         <choice value="finas"/>
-        <choice value="lineas"/>
+        <choice value="anillos"/>
       </choices>
       <default>'agrupada'</default>
       <summary>Estilo del panel de ajustes rápidos</summary>
@@ -101,14 +101,6 @@
       <default>false</default>
       <summary>Isla oscura</summary>
     </key>
-    <key name="barra-escritorio" type="b">
-      <default>true</default>
-      <summary>Sin ventanas a la vista, la isla en reposo es una barra: papelera, música o fecha y hora, apps minimizadas, campana, Portapapeles y Ajustes</summary>
-    </key>
-    <key name="barra-ventanas" type="b">
-      <default>true</default>
-      <summary>Con ventanas a la vista, la isla en reposo muestra la app activa (ícono y nombre), cuántas ventanas más hay, la música y la campana</summary>
-    </key>
     <key name="centro-notificaciones" type="b">
       <default>true</default>
       <summary>Centro de notificaciones propio: campana en el dock, panel y avisos que salen desde el dock</summary>
@@ -123,10 +115,6 @@
       </choices>
       <default>'siempre'</default>
       <summary>Duración elegida de No molestar</summary>
-    </key>
-    <key name="isla-respiracion" type="b">
-      <default>true</default>
-      <summary>Respiración en reposo</summary>
     </key>
     <key name="isla-musica" type="b">
       <default>true</default>
@@ -159,6 +147,30 @@
     <key name="atajo-busqueda" type="as">
       <default><![CDATA[['<Control>space']]]></default>
       <summary>Atajo de la búsqueda rápida</summary>
+    </key>
+    <key name="lanzador-isla" type="b">
+      <default>true</default>
+      <summary>El botón Aplicaciones abre el Lanzador Isla (apagado: la cuadrícula de GNOME)</summary>
+    </key>
+    <key name="lanzador-hora" type="b">
+      <default>true</default>
+      <summary>Lanzador Isla: la hora y la fecha arriba</summary>
+    </key>
+    <key name="lanzador-sesion" type="b">
+      <default>true</default>
+      <summary>Lanzador Isla: botones Bloquear, Suspender y Apagar</summary>
+    </key>
+    <key name="super-abre-cajon" type="b">
+      <default>true</default>
+      <summary>La tecla Super (Windows) sola abre el cajón de aplicaciones en vez de Actividades</summary>
+    </key>
+    <key name="atajo-lanzador" type="as">
+      <default><![CDATA[['<Super>space']]]></default>
+      <summary>Atajo del Lanzador Isla</summary>
+    </key>
+    <key name="lanzador-liberado" type="as">
+      <default>[]</default>
+      <summary>Atajos quitados a "switch-input-source" de GNOME para el lanzador (se devuelven al apagarlo)</summary>
     </key>
     <key name="no-molestar" type="b">
       <default>false</default>
@@ -236,33 +248,6 @@
       <default>true</default>
       <summary>Notificación arriba cuando termina una descarga</summary>
     </key>
-    <key name="reloj-escritorio" type="b">
-      <default>false</default>
-      <summary>Reloj de escritorio: hora y fecha sobre el fondo de pantalla</summary>
-    </key>
-    <key name="reloj-estilo" type="s">
-      <!-- Older values (fino, lateral, linea, esquina, semana, anillo) are moved on enable (extension.js). -->
-      <default>'linea-viva'</default>
-      <summary>Estilo del reloj de escritorio: linea-viva, lateral-acento, semana-fluida o arco-dia</summary>
-    </key>
-    <key name="reloj-tamano" type="d">
-      <range min="0.5" max="2.0"/>
-      <default>1.0</default>
-      <summary>Reloj de escritorio: multiplicador de tamaño</summary>
-    </key>
-    <key name="reloj-monitor" type="i">
-      <default>-1</default>
-      <summary>Reloj de escritorio: monitor (-1 = el principal)</summary>
-    </key>
-    <key name="reloj-desplazamiento" type="d">
-      <range min="-20" max="20"/>
-      <default>0.0</default>
-      <summary>Reloj de escritorio: ajuste vertical (% de la altura)</summary>
-    </key>
-    <key name="reloj-posicion" type="s">
-      <default>'arriba'</default>
-      <summary>Reloj de escritorio: posición vertical (arriba, centro o abajo)</summary>
-    </key>
     <key name="bateria-porcentaje" type="b">
       <default>true</default>
       <summary>Batería: mostrar el porcentaje con número junto al ícono</summary>
@@ -276,7 +261,7 @@
       <summary>Indicador de espacios de trabajo en la isla</summary>
     </key>
     <key name="reloj-lateral" type="b">
-      <default>true</default>
+      <default>false</default>
       <summary>Reloj lateral en burbuja, escondido en el borde</summary>
     </key>
     <key name="clock-style" type="s">
@@ -325,11 +310,67 @@
     </key>
     <key name="ahorro-energia" type="b">
       <default>true</default>
-      <summary>Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento y sin respiración</summary>
+      <summary>Con batería o en modo Ahorro: sin desenfoque y sin halo de Aurora en movimiento</summary>
     </key>
     <key name="preferencias-abrir" type="s">
       <default>''</default>
       <summary>Parte de las preferencias que se abre la próxima vez (clima = grupo Clima); se borra al usarla</summary>
+    </key>
+    <key name="acomodar-ventanas" type="b">
+      <default>true</default>
+      <summary>Acomodar ventanas: arrastrarlas a un borde (mitad), una esquina (cuarto) o arriba (maximizar)</summary>
+    </key>
+    <key name="acomodar-ventanas-llenar" type="b">
+      <default>true</default>
+      <summary>Tras poner una ventana en una mitad, ofrecer las demás para llenar la otra mitad</summary>
+    </key>
+    <key name="acomodo-liberado" type="b">
+      <default>false</default>
+      <summary>Interno: IslaDock apagó el acomodo de bordes de GNOME (edge-tiling) y lo devuelve al apagarse</summary>
+    </key>
+    <key name="isla-superior" type="b">
+      <default>false</default>
+      <summary>Isla superior: una isla arriba al centro con música, temporizador, captura y tareas</summary>
+    </key>
+    <key name="musica-lugar" type="s">
+      <choices><choice value="dock"/><choice value="arriba"/><choice value="ambos"/></choices>
+      <default>'arriba'</default>
+      <summary>Dónde va la música con la isla superior encendida: dock, arriba o ambos</summary>
+    </key>
+    <key name="temporizador-lugar" type="s">
+      <choices><choice value="dock"/><choice value="arriba"/><choice value="ambos"/></choices>
+      <default>'arriba'</default>
+      <summary>Dónde va el temporizador con la isla superior encendida: dock, arriba o ambos</summary>
+    </key>
+    <key name="isla-superior-franja" type="i">
+      <range min="0" max="8"/>
+      <default>5</default>
+      <summary>Grosor en px de la franja del borde superior de la que cuelga la isla superior (0 = sin franja)</summary>
+    </key>
+    <key name="isla-superior-ocultar" type="s">
+      <choices><choice value="nunca"/><choice value="maximizada"/></choices>
+      <default>'maximizada'</default>
+      <summary>Esconder la isla superior: nunca, o mientras haya una ventana maximizada (sale al llevar el mouse arriba)</summary>
+    </key>
+    <key name="isla-superior-avisos" type="b">
+      <default>true</default>
+      <summary>Las notificaciones salen en la isla superior (se alarga) en vez de los avisos flotantes</summary>
+    </key>
+    <key name="isla-superior-captura" type="b">
+      <default>true</default>
+      <summary>Página de captura y grabación de pantalla en la isla superior</summary>
+    </key>
+    <key name="isla-superior-tareas" type="b">
+      <default>true</default>
+      <summary>Página de tareas en la isla superior</summary>
+    </key>
+    <key name="isla-superior-pagina" type="s">
+      <default>''</default>
+      <summary>Uso interno: última página abierta de la isla superior</summary>
+    </key>
+    <key name="tareas" type="s">
+      <default>'[]'</default>
+      <summary>Tareas de la isla superior (JSON: texto, hecha)</summary>
     </key>
   </schema>
 </schemalist>

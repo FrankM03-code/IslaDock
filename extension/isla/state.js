@@ -10,7 +10,9 @@
 //   'dnd-changed' (on)
 //   'compact-changed' (on)      the open dock would not fit the screen: panels drop their text
 //   'status-changed'            a small status item (battery, keyboard…) came, went or moved
-//   'music-changed' (playing), 'music-info'   the song (state.musicTitle) or whether it plays changed
+//   'music-changed' (playing), 'music-info'   the song (state.musicTitle, state.music) or whether it plays changed
+//   'timer-info'                the timer (state.timer) started, ticked, paused or ended
+//   'top-inset-changed'         the top island's height changed (state.topInset): the notices go under it
 //   'command' (name, ...args)   e.g. 'media', 'playpause' | 'toggle-dnd' | 'volume-level', 0.4
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
@@ -47,6 +49,9 @@ export class IslaState extends Signals.EventEmitter {
         this._status = new Map();       // id -> {id, order, folded, open}
         this.calm = null;               // calm.js: reduced animations, power saving
         this.clipboardCount = 0;        // items Portapapeles keeps (its badge)
+        this.music = null;              // media.js: {title, artist, by, playing, bus, cover, color, length, trackId}
+        this.timer = null;              // timer.js: {kind, left, total, paused, done, phase, block, blocks}
+        this.topInset = 0;              // px the top island takes at the top of the primary monitor
     }
 
     get mode() {

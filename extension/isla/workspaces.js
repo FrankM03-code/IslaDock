@@ -13,6 +13,20 @@ import {_, fmt} from './i18n.js';
 
 const ORDER = 10;
 
+// Workspaces shown: all, but the trailing empty one of dynamic workspaces
+// (`mutter`: org.gnome.mutter's settings).
+export function workspacesInUse(mutter) {
+    const manager = global.workspace_manager;
+    let n = manager.n_workspaces;
+    const active = manager.get_active_workspace_index();
+    if (mutter.get_boolean('dynamic-workspaces') && n > 1 && active !== n - 1) {
+        const last = manager.get_workspace_by_index(n - 1);
+        if (!last.list_windows().some(w => !w.skip_taskbar))
+            n--;
+    }
+    return n;
+}
+
 export class WorkspacesStatus {
     constructor({state}) {
         this._state = state;
@@ -61,16 +75,8 @@ export class WorkspacesStatus {
         });
     }
 
-    // Workspaces shown: all, but the trailing empty one of dynamic workspaces.
     _count() {
-        let n = this._manager.n_workspaces;
-        const active = this._manager.get_active_workspace_index();
-        if (this._mutter.get_boolean('dynamic-workspaces') && n > 1 && active !== n - 1) {
-            const last = this._manager.get_workspace_by_index(n - 1);
-            if (!last.list_windows().some(w => !w.skip_taskbar))
-                n--;
-        }
-        return n;
+        return workspacesInUse(this._mutter);
     }
 
     _go(index) {

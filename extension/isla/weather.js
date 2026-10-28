@@ -20,7 +20,7 @@ const MIDDAY = 13;   // the hour whose sky stands for the whole day
 
 const capital = s => s.charAt(0).toLocaleUpperCase() + s.slice(1);
 
-function degrees(info) {
+export function degrees(info) {
     const [ok, value] = info.get_value_temp(GWeather.TemperatureUnit.DEFAULT);
     return ok ? Math.round(value) : null;
 }

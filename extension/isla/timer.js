@@ -1,11 +1,13 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Timer and Pomodoro (B1). Right click on the island: 5, 15, 25 minutes, a
-// custom time, a Pomodoro (25 min of work and 5 of rest, 4 blocks) or stop.
+// Timer and Pomodoro (B1): 5, 15, 25 minutes, a custom time or a Pomodoro (25 min
+// of work and 5 of rest, 4 blocks), started from the top island (no right-click menu on the dock).
 // Folded: a ring that closes and the time left; open: one row as tall as the
-// icons with the ring, the time, pause and stop (also in the right-click menu). When it ends: the theme's "complete" sound, a GNOME
+// icons with the ring, the time, pause and stop. When it ends: the theme's "complete" sound, a GNOME
 // notification, the island beats 3 times and stays first until touched.
 // The state lives in GSettings, so it survives a restart of the Shell.
+// The top island shows it from state.timer and drives it with the 'timer' command
+// ('start' seconds | 'pomodoro' | 'pause' | 'stop' | 'ask'); 'temporizador-lugar' can take it out of the dock.
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
@@ -13,10 +15,9 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Dialog from 'resource:///org/gnome/shell/ui/dialog.js';
 import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
+import {PLACE_KEYS, inDock} from './notch/place.js';
 import {pillSizes, pillStyle, roundButton} from './pill.js';
-import {onButton} from './press.js';
 import {Priority} from './state.js';
 import {_, fmt} from './i18n.js';
 
@@ -60,28 +61,23 @@ function ringArea(size, line) {
 }
 
 export class Timer {
-    constructor({state, settings, capsule}) {
+    constructor({state, settings}) {
         this._state = state;
         this._settings = settings;
-        this._capsule = capsule;
         this._buildActors();
-        this._buildMenu();
         this._ids = [
-            [capsule, capsule.connect('button-release-event', (_a, event) => {
-                if (event.get_button() !== Clutter.BUTTON_SECONDARY || onButton(event, capsule))
-                    return Clutter.EVENT_PROPAGATE;
-                this._openMenu();
-                return Clutter.EVENT_STOP;
-            })],
             [settings, settings.connect('changed::tamano-base', () => {
                 this._applySize();
                 state.command('resize');
             })],
             [state, state.connect('compact-changed', (_s, compact) => this._setCompact(compact))],
-            [state, state.connect('command', (_s, name) => {
+            [state, state.connect('command', (_s, name, what, seconds) => {
                 if (name === 'island-click' && this._data?.done)
                     this._acknowledge();
+                else if (name === 'timer')
+                    this._command(what, seconds);
             })],
+            ...PLACE_KEYS.map(key => [settings, settings.connect(`changed::${key}`, () => this._refresh())]),
         ];
         this._load();
     }
@@ -131,36 +127,17 @@ export class Timer {
         this._time.visible = !compact;
     }
 
-    _buildMenu() {
-        this._menuManager = new PopupMenu.PopupMenuManager(this._capsule);
-        this._menu = new PopupMenu.PopupMenu(this._capsule, 0.5, St.Side.BOTTOM);
-        this._menu.actor.add_style_class_name('isla-menu');
-        Main.uiGroup.add_child(this._menu.actor);
-        this._menu.actor.hide();
-        this._menuManager.addMenu(this._menu);
-        this._menu.connect('open-state-changed', (_m, open) => {
-            if (open)
-                this._state.hold('timer-menu');
-            else
-                this._state.release('timer-menu');
-        });
-    }
-
-    _openMenu() {
-        const menu = this._menu;
-        menu.removeAll();
-        const timers = new PopupMenu.PopupSubMenuMenuItem(_('Temporizador'));
-        for (const min of [5, 15, 25])
-            timers.menu.addAction(fmt(_('{n} minutos'), {n: min}), () => this.start(min * 60));
-        timers.menu.addAction(_('Personalizado…'), () => this._askMinutes());
-        menu.addMenuItem(timers);
-        menu.addAction(_('Pomodoro (25 + 5 min, 4 bloques)'), () => this.startPomodoro());
-        if (this._data && !this._data.done) {
-            menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            menu.addAction(this._data.paused !== null ? _('Reanudar') : _('Pausar'), () => this._togglePause());
-            menu.addAction(_('Detener'), () => this.stop());
-        }
-        menu.open(true);
+    _command(what, seconds) {
+        if (what === 'start' && seconds > 0)
+            this.start(seconds);
+        else if (what === 'pomodoro')
+            this.startPomodoro();
+        else if (what === 'pause')
+            this._togglePause();
+        else if (what === 'stop')
+            this.stop();
+        else if (what === 'ask')
+            this._askMinutes();
     }
 
     _askMinutes() {
@@ -304,6 +281,7 @@ export class Timer {
         }
         if (!d) {
             this._state.removeActivity('timer');
+            this._publish();
             return;
         }
         if (!d.done && d.paused === null) {
@@ -313,7 +291,18 @@ export class Timer {
             });
         }
         this._paint();
-        this._state.setActivity('timer', {priority: d.done ? Priority.TIMER_DONE : Priority.TIMER, mini: this._mini, panel: this._panel});
+        if (inDock(this._settings, 'temporizador-lugar'))
+            this._state.setActivity('timer', {priority: d.done ? Priority.TIMER_DONE : Priority.TIMER, mini: this._mini, panel: this._panel});
+        else
+            this._state.removeActivity('timer');
+    }
+
+    // For the top island: state.timer and 'timer-info'.
+    _publish() {
+        const d = this._data;
+        this._state.timer = d ? {kind: d.kind, left: d.done ? 0 : this._left(), total: d.total, paused: d.paused !== null,
+            done: d.done, phase: d.phase ?? null, block: d.block ?? 0, blocks: BLOCKS, caption: this._caption} : null;
+        this._state.emit('timer-info');
     }
 
     _paint() {
@@ -342,6 +331,7 @@ export class Timer {
         }
         this._mini.style_class = `isla-tempo-mini${d.done ? ' listo' : ''}`;
         this._panel.style_class = `isla-tempo isla-pildora${d.done ? ' listo' : ''}${d.paused !== null ? ' pausa' : ''}`;
+        this._publish();
     }
 
     destroy() {
@@ -350,9 +340,9 @@ export class Timer {
         this._tickId = 0;
         this._ids.forEach(([obj, id]) => obj.disconnect(id));
         this._ids = [];
-        this._state.release('timer-menu');
-        this._menu.destroy();
         this._state.removeActivity('timer');
+        this._state.timer = null;
+        this._state.emit('timer-info');
         this._mini.destroy();
         this._panel.destroy();
     }

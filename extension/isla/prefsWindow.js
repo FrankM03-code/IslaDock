@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // IslaDock's Preferences window, centered. Opened from Extension Manager on
 // X11 it becomes a child of that app's window and Mutter places it on the left
-// edge (partly off screen): it is moved to the middle of its monitor once shown.
+// edge or corner (partly off screen): it is moved to the middle of its monitor once shown.
+import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
 
 const PREFS_CLASS = 'org.gnome.Shell.Extensions';
@@ -10,21 +11,42 @@ const PREFS_CLASS = 'org.gnome.Shell.Extensions';
 export class PrefsWindow {
     constructor({title}) {
         this._title = title;
-        this._windows = new Map();   // window -> signal id
+        this._windows = new Map();   // window -> [[object, signal id]]
+        this._timeouts = new Set();
         this._id = global.display.connect('window-created', (_d, w) => this._watch(w));
     }
 
     _watch(w) {
         if (w.get_wm_class() !== PREFS_CLASS || this._windows.has(w))
             return;
-        // The title arrives with the first frame: check it then.
-        const id = w.connect('shown', () => {
-            w.disconnect(id);
+        // On X11, opened as a child of Extension Manager, Mutter may place it again after it shows
+        // (top left corner): centered when it shows and again a moment later.
+        const ids = [];
+        const done = () => {
+            ids.forEach(([obj, id]) => obj.disconnect(id));
             this._windows.delete(w);
-            if (w.get_title() === this._title)
+        };
+        const center = () => {
+            done();
+            if (w.get_title() !== this._title)
+                return;
+            this._center(w);
+            this._later(w, 150);
+            this._later(w, 400);
+        };
+        ids.push([w, w.connect('shown', center)]);
+        ids.push([w, w.connect('unmanaged', done)]);
+        this._windows.set(w, ids);
+    }
+
+    _later(w, delay) {
+        const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, () => {
+            this._timeouts.delete(id);
+            if (w.get_compositor_private())
                 this._center(w);
+            return GLib.SOURCE_REMOVE;
         });
-        this._windows.set(w, id);
+        this._timeouts.add(id);
     }
 
     _center(w) {
@@ -40,8 +62,10 @@ export class PrefsWindow {
 
     destroy() {
         global.display.disconnect(this._id);
-        for (const [w, id] of this._windows)
-            w.disconnect(id);
+        for (const ids of this._windows.values())
+            ids.forEach(([obj, id]) => obj.disconnect(id));
         this._windows.clear();
+        this._timeouts.forEach(id => GLib.source_remove(id));
+        this._timeouts.clear();
     }
 }

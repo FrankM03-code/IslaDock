@@ -161,6 +161,117 @@ export const isImage = type => !!type && Gio.content_type_is_a(type, 'image/*') 
 export const isPdf = type => type === 'application/pdf';
 export const isText = type => !!type && Gio.content_type_is_a(type, 'text/plain');
 
+// ---------- where to look ----------
+// Recent files from GTK's history (~/.local/share/recently-used.xbel), newest
+// first. Read without blocking the Shell: done(files) is called when ready.
+export function recentFiles(cancellable, done) {
+    const file = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), 'recently-used.xbel']));
+    file.load_contents_async(cancellable, (f, res) => {
+        let bytes;
+        try {
+            [, bytes] = f.load_contents_finish(res);
+        } catch {
+            return;
+        }
+        done(parseRecent(new TextDecoder().decode(bytes)));
+    });
+}
+
+function parseRecent(xml) {
+    try {
+        const files = [];
+        for (const m of xml.matchAll(/<bookmark\s[^>]*href="([^"]+)"[^>]*modified="([^"]+)"/g)) {
+            const uri = m[1].replace(/&amp;/g, '&');
+            if (!uri.startsWith('file://'))
+                continue;
+            files.push({uri, modified: m[2]});
+        }
+        files.sort((a, b) => b.modified.localeCompare(a.modified));
+        return files.map(f => Gio.File.new_for_uri(f.uri).get_path()).filter(Boolean);
+    } catch {
+        return [];
+    }
+}
+
+// Every place the history knows: its entries and the folders that hold them.
+export function candidates(paths) {
+    const home = GLib.get_home_dir();
+    const all = new Set(paths);
+    for (const path of paths) {
+        const dir = GLib.path_get_dirname(path);
+        if (dir !== home && dir !== '/' && dir.startsWith(`${home}/`))
+            all.add(dir);
+    }
+    return [...all];
+}
+
+// The desktop's file index (localsearch, formerly Tracker): paths whose name holds query,
+// newest first. [] when the index or its library is missing.
+let index = null;
+async function indexConnection() {
+    if (index !== null)
+        return index;
+    index = false;
+    let Sparql = null;
+    for (const name of ['gi://Tsparql', 'gi://Tracker?version=3.0']) {
+        try {
+            Sparql = (await import(name)).default;
+            break;
+        } catch {}
+    }
+    for (const bus of ['org.freedesktop.LocalSearch3', 'org.freedesktop.Tracker3.Miner.Files']) {
+        try {
+            index = await new Promise((resolve, reject) => Sparql.SparqlConnection.bus_new_async(bus, null, null, null,
+                (_o, res) => {
+                    try {
+                        resolve(Sparql.SparqlConnection.bus_new_finish(res));
+                    } catch (e) {
+                        reject(e);
+                    }
+                }));
+            break;
+        } catch {}
+    }
+    return index;
+}
+
+const INDEX_QUERY = `SELECT ?url WHERE { GRAPH tracker:FileSystem { ?f a nfo:FileDataObject ; nfo:fileName ?name ;
+    nie:url ?url . FILTER(CONTAINS(LCASE(?name), ~q)) } } ORDER BY DESC(nfo:fileLastModified(?f)) LIMIT ~max`;
+
+export async function indexedFiles(query, max, cancellable) {
+    const connection = await indexConnection();
+    if (!connection || cancellable?.is_cancelled())
+        return [];
+    try {
+        const statement = connection.query_statement(INDEX_QUERY, cancellable);
+        statement.bind_string('q', query.toLowerCase());
+        statement.bind_int('max', max);
+        const cursor = await new Promise((resolve, reject) => statement.execute_async(cancellable, (_o, res) => {
+            try {
+                resolve(statement.execute_finish(res));
+            } catch (e) {
+                reject(e);
+            }
+        }));
+        const paths = [];
+        while (await new Promise(resolve => cursor.next_async(cancellable, (_o, res) => {
+            try {
+                resolve(cursor.next_finish(res));
+            } catch {
+                resolve(false);
+            }
+        }))) {
+            const path = Gio.File.new_for_uri(cursor.get_string(0)[0]).get_path();
+            if (path)
+                paths.push(path);
+        }
+        cursor.close();
+        return paths;
+    } catch {
+        return [];
+    }
+}
+
 // ---------- file info ----------
 // {path, uri, name, dir, type, size, mtime, folder, readable} or null when it is gone.
 export async function fileInfo(path, cancellable) {

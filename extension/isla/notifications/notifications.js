@@ -28,6 +28,7 @@ import {addPanelChrome, dropChrome} from '../chrome.js';
 import {GnomeBanners, wantsBanner} from '../banners.js';
 import {dockLook, dressFrame} from '../look.js';
 import {dockMonitor, dockWorkArea, insideDock} from '../monitor.js';
+import {notchNotices} from '../notch/place.js';
 import {Mode} from '../state.js';
 import {ms} from '../timing.js';
 import {_} from '../i18n.js';
@@ -115,7 +116,8 @@ export class Notifications {
         }
         this._count(true);
         const critical = notification.urgency === MessageTray.Urgency.CRITICAL;
-        if ((this._state.dnd && !critical) || !wantsBanner(notification))
+        // The top island shows it instead (isla/notch/notices.js); here it waits in the panel.
+        if ((this._state.dnd && !critical) || !wantsBanner(notification) || notchNotices(this._settings))
             return;
         // Several in the same moment (two reminders due together): only the last one pops up. Built
         // and replaced within one frame, a popup was left in Clutter's queue and allocated dead.

@@ -19,6 +19,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import {GnomeBanners, wantsBanner} from './banners.js';
+import {notchNotices} from './notch/place.js';
 import {dressFrame, islandLook} from './look.js';
 import {ms} from './timing.js';
 import {_} from './i18n.js';
@@ -34,8 +35,9 @@ const RADIUS = 18;
 const oneLine = s => (s ?? '').replace(/\s+/g, ' ').trim();
 
 export class FloatingNotices {
-    constructor({state}) {
+    constructor({state, settings}) {
         this._state = state;
+        this._settings = settings;
         this._sources = new Map();       // source -> [signal ids]
         this._notes = new Map();         // notification -> [signal ids]
         this._cards = [];
@@ -44,6 +46,7 @@ export class FloatingNotices {
         Main.layoutManager.addTopChrome(this._box);
         this._boxId = this._box.connect('notify::size', () => this._place());
         this._monitorsId = Main.layoutManager.connect('monitors-changed', () => this._place());
+        this._insetId = state.connect('top-inset-changed', () => this._place());
         this._banners = new GnomeBanners();
         this._banners.hold();
         this._trayIds = [
@@ -87,7 +90,8 @@ export class FloatingNotices {
     }
 
     _show(source, notification) {
-        if (this._state.dnd || !wantsBanner(notification))
+        // The top island shows it instead (isla/notch/notices.js).
+        if (this._state.dnd || !wantsBanner(notification) || notchNotices(this._settings))
             return;
         // Seen here: GNOME won't queue it as a banner (and won't show it later).
         notification.acknowledged = true;
@@ -128,14 +132,14 @@ export class FloatingNotices {
             global.compositor.enable_unredirect();
     }
 
-    // Top center of the primary monitor, under the top bar when it is there.
+    // Top center of the primary monitor, under the top bar or the top island when they are there.
     _place() {
         const mon = Main.layoutManager.primaryMonitor;
         if (!mon)
             return;
         const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         const panel = Main.layoutManager.panelBox;
-        const top = mon.y + (panel.visible ? panel.height : 0) + TOP_GAP * sf;
+        const top = mon.y + Math.max(panel.visible ? panel.height : 0, this._state.topInset) + TOP_GAP * sf;
         const [w] = this._box.get_size();
         this._box.set_position(Math.round(mon.x + (mon.width - w) / 2), Math.round(top));
     }
@@ -152,6 +156,7 @@ export class FloatingNotices {
         this._holdRedirect(false);
         this._banners.release();
         Main.layoutManager.disconnect(this._monitorsId);
+        this._state.disconnect(this._insetId);
         this._box.disconnect(this._boxId);
         Main.layoutManager.removeChrome(this._box);
         this._box.destroy();

@@ -111,17 +111,8 @@ msgstr "Fondo desenfocado en el cajón de aplicaciones"
 msgid "Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades"
 msgstr "Tu fondo de pantalla, desenfocado, detrás de las aplicaciones y de Actividades"
 
-msgid "Respiración"
-msgstr "Respiración"
-
-msgid "En reposo, el fondo late muy despacio"
-msgstr "En reposo, el fondo late muy despacio"
-
 msgid "Ahorrar batería"
 msgstr "Ahorrar batería"
-
-msgid "Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento ni respiración. "
-msgstr "Con batería o en modo Ahorro: sin desenfoque, sin halo de Aurora en movimiento ni respiración. "
 
 msgid "Si en Accesibilidad apagas las animaciones, la isla también se calma"
 msgstr "Si en Accesibilidad apagas las animaciones, la isla también se calma"
@@ -330,56 +321,14 @@ msgstr "Ahora hay un solo monitor"
 msgid "Escritorio"
 msgstr "Escritorio"
 
-msgid "Reloj en el escritorio"
-msgstr "Reloj en el escritorio"
-
-msgid "La hora y la fecha sobre tu fondo de pantalla, detrás de las ventanas. Los clics lo atraviesan."
-msgstr "La hora y la fecha sobre tu fondo de pantalla, detrás de las ventanas. Los clics lo atraviesan."
-
-msgid "Mostrar el reloj"
-msgstr "Mostrar el reloj"
-
-msgid "Estilo"
-msgstr "Estilo"
-
 msgid "Tamaño"
 msgstr "Tamaño"
-
-msgid "Se ajusta solo a tu pantalla; esto lo agranda o achica"
-msgstr "Se ajusta solo a tu pantalla; esto lo agranda o achica"
-
-msgid "Pequeño"
-msgstr "Pequeño"
-
-msgid "Grande"
-msgstr "Grande"
-
-msgid "Posición"
-msgstr "Posición"
 
 msgid "Arriba"
 msgstr "Arriba"
 
-msgid "En el centro de la pantalla"
-msgstr "En el centro de la pantalla"
-
-msgid "Abajo"
-msgstr "Abajo"
-
-msgid "Subir o bajar"
-msgstr "Subir o bajar"
-
-msgid "Ajuste fino desde la posición elegida"
-msgstr "Ajuste fino desde la posición elegida"
-
 msgid "Reloj lateral"
 msgstr "Reloj lateral"
-
-msgid "Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora. "
-msgstr "Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora. "
-
-msgid "Sirve cuando las ventanas maximizadas tapan el reloj del escritorio."
-msgstr "Sirve cuando las ventanas maximizadas tapan el reloj del escritorio."
 
 msgid "Mostrar el reloj lateral"
 msgstr "Mostrar el reloj lateral"
@@ -605,9 +554,6 @@ msgstr "descargando…"
 
 msgid "L M X J V S D"
 msgstr "L M X J V S D"
-
-msgid "{dia} de {mes}"
-msgstr "{dia} de {mes}"
 
 msgid "Cerrar"
 msgstr "Cerrar"
@@ -882,14 +828,8 @@ msgstr "Salida: {nombre}"
 msgid "Silenciar el micrófono"
 msgstr "Silenciar el micrófono"
 
-msgid "%A %-d de %B"
-msgstr "%A %-d de %B"
-
 msgid "Hoy"
 msgstr "Hoy"
-
-msgid "Hoy, {dia}"
-msgstr "Hoy, {dia}"
 
 msgid "Mes anterior"
 msgstr "Mes anterior"
@@ -914,9 +854,6 @@ msgstr "Quitar recordatorio"
 
 msgid "Recordatorio"
 msgstr "Recordatorio"
-
-msgid "Sin recordatorios"
-msgstr "Sin recordatorios"
 
 msgid "{campo} anterior"
 msgstr "{campo} anterior"
@@ -990,11 +927,11 @@ msgstr "Salir"
 msgid "Sesión agrupada"
 msgstr "Sesión agrupada"
 
-msgid "Sin fondos, solo íconos; un punto de color bajo lo que está encendido"
-msgstr "Sin fondos, solo íconos; un punto de color bajo lo que está encendido"
+msgid "Brillo, volumen y micrófono en anillos; botones en cápsulas y acciones con su nombre"
+msgstr "Brillo, volumen y micrófono en anillos; botones en cápsulas y acciones con su nombre"
 
-msgid "Solo líneas"
-msgstr "Solo líneas"
+msgid "Anillos"
+msgstr "Anillos"
 
 msgid "Suspender"
 msgstr "Suspender"
@@ -1038,9 +975,6 @@ msgstr "Oscura"
 msgid "Paleta de los botones"
 msgstr "Paleta de los botones"
 
-msgid "Arco del día"
-msgstr "Arco del día"
-
 msgid "Con tus recordatorios"
 msgstr "Con tus recordatorios"
 
@@ -1059,17 +993,8 @@ msgstr "Isla con semana"
 msgid "L M M J V S D"
 msgstr "L M M J V S D"
 
-msgid "Lateral acento"
-msgstr "Lateral acento"
-
 msgid "Línea del día"
 msgstr "Línea del día"
-
-msgid "Línea viva"
-msgstr "Línea viva"
-
-msgid "Semana fluida"
-msgstr "Semana fluida"
 
 msgid "abr"
 msgstr "abr"
@@ -1194,8 +1119,6 @@ msgstr "Minutos"
 msgid "Recordatorios"
 msgstr "Recordatorios"
 
-
-
 msgid "Alarma"
 msgstr "Alarma"
 
@@ -1256,17 +1179,11 @@ msgstr "Anterior"
 msgid "Anteriores"
 msgstr "Anteriores"
 
-msgid "App activa en la isla"
-msgstr "App activa en la isla"
-
 msgid "Archivos"
 msgstr "Archivos"
 
 msgid "Avisos que ya descartaste"
 msgstr "Avisos que ya descartaste"
-
-msgid "Barra en el escritorio"
-msgstr "Barra en el escritorio"
 
 msgid "Borrar historial"
 msgstr "Borrar historial"
@@ -1276,9 +1193,6 @@ msgstr "Buscar “{texto}” en la web"
 
 msgid "Calendario"
 msgstr "Calendario"
-
-msgid "Con ventanas abiertas: ícono y nombre de la app que usas, cuántas ventanas más hay, la música y la campana"
-msgstr "Con ventanas abiertas: ícono y nombre de la app que usas, cuántas ventanas más hay, la música y la campana"
 
 msgid "Contenido"
 msgstr "Contenido"
@@ -1375,9 +1289,6 @@ msgstr "Sin historial"
 
 msgid "Sin resultados para “{texto}”"
 msgstr "Sin resultados para “{texto}”"
-
-msgid "Sin ventanas a la vista: música o fecha y hora, apps minimizadas y tus botones. La rueda del mouse abre el dock"
-msgstr "Sin ventanas a la vista: música o fecha y hora, apps minimizadas y tus botones. La rueda del mouse abre el dock"
 
 msgid "Sistema"
 msgstr "Sistema"
@@ -1497,3 +1408,358 @@ msgstr "No se pudo buscar. ¿Hay internet?"
 
 msgid "Usar esta"
 msgstr "Usar esta"
+
+msgid "Abrir el reproductor"
+msgstr "Abrir el reproductor"
+
+msgid "Agregar"
+msgstr "Agregar"
+
+msgid "Arriba y en el dock"
+msgstr "Arriba y en el dock"
+
+msgid "Borrar"
+msgstr "Borrar"
+
+msgid "Carátula, barra de la canción y sus botones"
+msgstr "Carátula, barra de la canción y sus botones"
+
+msgid "Elige qué mostrar en Preferencias → Arriba"
+msgstr "Elige qué mostrar en Preferencias → Arriba"
+
+msgid "Isla superior"
+msgstr "Isla superior"
+
+msgid "La música y el temporizador pueden salir del dock y quedar solo arriba."
+msgstr "La música y el temporizador pueden salir del dock y quedar solo arriba."
+
+msgid "Nada sonando"
+msgstr "Nada sonando"
+
+msgid "Nueva tarea y Enter…"
+msgstr "Nueva tarea y Enter…"
+
+msgid "Otro…"
+msgstr "Otro…"
+
+msgid "Pomodoro"
+msgstr "Pomodoro"
+
+msgid "Pomodoro, 5 o 15 minutos o el que quieras"
+msgstr "Pomodoro, 5 o 15 minutos o el que quieras"
+
+msgid "Pomodoro: 25 min de trabajo y 5 de descanso"
+msgstr "Pomodoro: 25 min de trabajo y 5 de descanso"
+
+msgid "Páginas"
+msgstr "Páginas"
+
+msgid "Quitar las hechas"
+msgstr "Quitar las hechas"
+
+msgid "Reproducir o pausar"
+msgstr "Reproducir o pausar"
+
+msgid "Solo arriba"
+msgstr "Solo arriba"
+
+msgid "Solo en el dock"
+msgstr "Solo en el dock"
+
+msgid "Tareas"
+msgstr "Tareas"
+
+msgid "Una lista corta de pendientes"
+msgstr "Una lista corta de pendientes"
+
+msgid "{n} min"
+msgstr "{n} min"
+
+msgid "¡Listo!"
+msgstr "¡Listo!"
+
+msgid "Una isla arriba al centro, con los colores de tu piel. Muestra la hora; al pasar el mouse se abre con sus páginas (cámbialas con los puntos o la rueda). Clic en la fecha: calendario."
+msgstr "Una isla arriba al centro, con los colores de tu piel. Muestra la hora; al pasar el mouse se abre con sus páginas (cámbialas con los puntos o la rueda). Clic en la fecha: calendario."
+
+msgid "Abre Spotify o Firefox…"
+msgstr "Abre Spotify o Firefox…"
+
+msgid "Descanso"
+msgstr "Descanso"
+
+msgid "Enfoque"
+msgstr "Enfoque"
+
+msgid "Sin tareas. Toca ＋ para agregar."
+msgstr "Sin tareas. Toca ＋ para agregar."
+
+msgid "Franja del borde superior"
+msgstr "Franja del borde superior"
+
+msgid "Píxeles de alto de la línea de la que cuelga la isla, como el notch de un MacBook. 0 = sin línea (las curvas se quedan)"
+msgstr "Píxeles de alto de la línea de la que cuelga la isla, como el notch de un MacBook. 0 = sin línea (las curvas se quedan)"
+
+msgid "Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora."
+msgstr "Escondido en el borde, centrado en vertical: lleva el mouse al borde y sale una burbuja con la hora."
+
+msgid "Abrir {app}"
+msgstr "Abrir {app}"
+
+msgid "Llega una: la isla se alarga con el ícono y el nombre de la app, sin mostrar el mensaje. Al pasar el mouse o con un clic, la tarjeta con Abrir y Descartar"
+msgstr "Llega una: la isla se alarga con el ícono y el nombre de la app, sin mostrar el mensaje. Al pasar el mouse o con un clic, la tarjeta con Abrir y Descartar"
+
+msgid "Notificaciones en la isla"
+msgstr "Notificaciones en la isla"
+
+msgid "Notificación"
+msgstr "Notificación"
+
+msgid "· Nuevo mensaje"
+msgstr "· Nuevo mensaje"
+
+msgid "· {n} mensaje"
+msgid_plural "· {n} mensajes"
+msgstr[0] "· {n} mensaje"
+msgstr[1] "· {n} mensajes"
+
+msgid "Esconder la isla superior"
+msgstr "Esconder la isla superior"
+
+msgid "Con una ventana maximizada"
+msgstr "Con una ventana maximizada"
+
+msgid "Sube y se esconde; vuelve al llevar el mouse al borde de arriba o cuando llega una notificación"
+msgstr "Sube y se esconde; vuelve al llevar el mouse al borde de arriba o cuando llega una notificación"
+
+msgid "Buscar"
+msgstr "Buscar"
+
+msgid "{app} ({n} ventanas)"
+msgstr "{app} ({n} ventanas)"
+
+msgid "Con batería o en modo Ahorro: sin desenfoque ni halo de Aurora en movimiento. "
+msgstr "Con batería o en modo Ahorro: sin desenfoque ni halo de Aurora en movimiento. "
+
+msgid "Sin eventos"
+msgstr "Sin eventos"
+
+msgid "Sin eventos para hoy"
+msgstr "Sin eventos para hoy"
+
+msgid "Todo el día"
+msgstr "Todo el día"
+
+msgid "Acomodar al arrastrar"
+msgstr "Acomodar al arrastrar"
+
+msgid "Acomodar ventanas"
+msgstr "Acomodar ventanas"
+
+msgid "Arrastra una ventana a un borde para ponerla en media pantalla, a una esquina para un cuarto o arriba para maximizarla."
+msgstr "Arrastra una ventana a un borde para ponerla en media pantalla, a una esquina para un cuarto o arriba para maximizarla."
+
+msgid "Esc para dejarlo vacío"
+msgstr "Esc para dejarlo vacío"
+
+msgid "Llenar la otra mitad"
+msgstr "Llenar la otra mitad"
+
+msgid "Muestra las demás ventanas para elegir cuál va al otro lado"
+msgstr "Muestra las demás ventanas para elegir cuál va al otro lado"
+
+msgid "¿Qué va en este lado?"
+msgstr "¿Qué va en este lado?"
+
+msgid "Abrir la carpeta de capturas"
+msgstr "Abrir la carpeta de capturas"
+
+msgid "Abrir la última captura"
+msgstr "Abrir la última captura"
+
+msgid "Captura tomada"
+msgstr "Captura tomada"
+
+msgid "Copiada"
+msgstr "Copiada"
+
+msgid "Copiar la última captura"
+msgstr "Copiar la última captura"
+
+msgid "Grabar"
+msgstr "Grabar"
+
+msgid "Hace un momento"
+msgstr "Hace un momento"
+
+msgid "Hace {n} h"
+msgstr "Hace {n} h"
+
+msgid "Hace {n} min"
+msgstr "Hace {n} min"
+
+msgid "No hay ventana activa"
+msgstr "No hay ventana activa"
+
+msgid "No se pudo capturar"
+msgstr "No se pudo capturar"
+
+msgid "No se pudo copiar"
+msgstr "No se pudo copiar"
+
+msgid "No se pudo grabar"
+msgstr "No se pudo grabar"
+
+msgid "No se pudo guardar"
+msgstr "No se pudo guardar"
+
+msgid "Pantalla"
+msgstr "Pantalla"
+
+msgid "Pantalla, región, ventana o grabar la pantalla"
+msgstr "Pantalla, región, ventana o grabar la pantalla"
+
+msgid "Región"
+msgstr "Región"
+
+msgid "Sin capturas aún"
+msgstr "Sin capturas aún"
+
+msgid "Ventana"
+msgstr "Ventana"
+
+msgid "Video guardado"
+msgstr "Video guardado"
+
+msgid "Captura guardada"
+msgstr "Captura guardada"
+
+msgid "Clic: silenciar"
+msgstr "Clic: silenciar"
+
+msgid "Clic: silenciar el micrófono"
+msgstr "Clic: silenciar el micrófono"
+
+msgid "Abierta ahora"
+msgstr "Abierta ahora"
+
+msgid "Abre y cierra el lanzador desde cualquier lugar"
+msgstr "Abre y cierra el lanzador desde cualquier lugar"
+
+msgid "Atajo del Lanzador Isla"
+msgstr "Atajo del Lanzador Isla"
+
+msgid "Buscar apps, archivos y acciones"
+msgstr "Buscar apps, archivos y acciones"
+
+msgid "Desarrollo"
+msgstr "Desarrollo"
+
+msgid "Detalles de la app"
+msgstr "Detalles de la app"
+
+msgid "El botón Aplicaciones abre el cajón propio de IslaDock. Apagado: la cuadrícula de GNOME. "
+msgstr "El botón Aplicaciones abre el cajón propio de IslaDock. Apagado: la cuadrícula de GNOME. "
+
+msgid "Favoritas"
+msgstr "Favoritas"
+
+msgid "Fijar en Isla Dock"
+msgstr "Fijar en Isla Dock"
+
+msgid "Internet"
+msgstr "Internet"
+
+msgid "Lanzador Isla"
+msgstr "Lanzador Isla"
+
+msgid "Mientras esté activo, Super + Espacio deja de cambiar la distribución del teclado"
+msgstr "Mientras esté activo, Super + Espacio deja de cambiar la distribución del teclado"
+
+msgid "Multimedia"
+msgstr "Multimedia"
+
+msgid "Ninguna app ni archivo. Enter abre la búsqueda rápida con “{texto}”"
+msgstr "Ninguna app ni archivo. Enter abre la búsqueda rápida con “{texto}”"
+
+msgid "No hay apps en esta categoría"
+msgstr "No hay apps en esta categoría"
+
+msgid "Oficina"
+msgstr "Oficina"
+
+msgid "Quitar de Isla Dock"
+msgstr "Quitar de Isla Dock"
+
+msgid "Seleccionada:"
+msgstr "Seleccionada:"
+
+msgid "Todas las aplicaciones"
+msgstr "Todas las aplicaciones"
+
+msgid "abrir"
+msgstr "abrir"
+
+msgid "moverse"
+msgstr "moverse"
+
+msgid "categoría"
+msgstr "categoría"
+
+msgid "cerrar"
+msgstr "cerrar"
+
+msgid "Volver a Super + Espacio"
+msgstr "Volver a Super + Espacio"
+
+msgid "Hace {n} hora"
+msgid_plural "Hace {n} horas"
+msgstr[0] "Hace {n} hora"
+msgstr[1] "Hace {n} horas"
+
+msgid "Hace {n} día"
+msgid_plural "Hace {n} días"
+msgstr[0] "Hace {n} día"
+msgstr[1] "Hace {n} días"
+
+msgid "{n} app"
+msgid_plural "{n} apps"
+msgstr[0] "{n} app"
+msgstr[1] "{n} apps"
+
+msgid "Aplicación"
+msgstr "Aplicación"
+
+msgid "Buscar aplicaciones, archivos o acciones"
+msgstr "Buscar aplicaciones, archivos o acciones"
+
+msgid "El de su categoría"
+msgstr "El de su categoría"
+
+msgid "El de su ícono"
+msgstr "El de su ícono"
+
+msgid "Lanzador: botones Bloquear, Suspender y Apagar"
+msgstr "Lanzador: botones Bloquear, Suspender y Apagar"
+
+msgid "Lanzador: color de cada app"
+msgstr "Lanzador: color de cada app"
+
+msgid "Lanzador: hora y fecha arriba"
+msgstr "Lanzador: hora y fecha arriba"
+
+msgid "abierta {cuando}"
+msgstr "abierta {cuando}"
+
+msgid "en el dock"
+msgstr "en el dock"
+
+msgid "{n} ventana abierta"
+msgid_plural "{n} ventanas abiertas"
+msgstr[0] "{n} ventana abierta"
+msgstr[1] "{n} ventanas abiertas"
+
+msgid "La tecla Windows abre las aplicaciones"
+msgstr "La tecla Windows abre las aplicaciones"
+
+msgid "Sola, abre y cierra el cajón (el mismo del botón Aplicaciones) en vez de Actividades"
+msgstr "Sola, abre y cierra el cajón (el mismo del botón Aplicaciones) en vez de Actividades"

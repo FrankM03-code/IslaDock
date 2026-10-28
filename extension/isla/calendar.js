@@ -1,15 +1,18 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Calendario: with the top bar hidden, GNOME's date menu cannot be opened.
-// This is IslaDock's own small month calendar: the month with ‹ Hoy ›, a grid
-// of day squares (the week starts on Monday; a dot marks days with reminders)
-// and a card with the chosen day's reminders. The + turns the card into a
-// short form: what to remember, its day, month, hour and minutes, Guardar.
+// This is IslaDock's own calendar (Frank's calendario-isla design): on the left
+// the month with ‹ › (its title goes back to today), a grid of day squares (the
+// week starts on Monday; a dot marks days with events or reminders); on the
+// right the chosen day's agenda: GNOME's calendar events (Evolution Data
+// Server, as in GNOME's date menu) and the reminders. The + turns the agenda
+// into a short form: what to remember, its day, month, hour and minutes, Guardar.
 // Reminders live in 'recordatorios' (JSON). At their time an alarm rings (the
 // theme's alarm sound, again and again for up to a minute) with a notification
 // that stays; clicking or closing it (or opening the calendar) stops the alarm. One missed while IslaDock
 // was off is only announced. Old reminders without a time count as 8:00.
-// On top, the weather (weather.js). The panel is solid: light over a light island, dark otherwise.
+// On top, the weather (weather.js). The panel is solid: white over a light island, dark otherwise.
+// The bar's page of today that opened it wears a blue ring ('cal-abierto') while it is open.
 // It opens from the side clock (click) or with Super+M ('atajo-calendario'),
 // which GNOME uses for the date menu ('toggle-message-tray'): while this runs
 // that binding gives it up and gets it back after ('calendario-liberado').
@@ -18,7 +21,9 @@
 // Its bottom stays above the dock: when it grows (more reminders, the form) it
 // moves up; past a few reminders their list scrolls.
 //
-// Commands it listens to: 'calendar-toggle'.
+// From the top island it comes down from under it instead ('calendar-toggle', anchor, 'arriba').
+//
+// Commands it listens to: 'calendar-toggle' (anchor actor, 'arriba' or nothing).
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import Graphene from 'gi://Graphene';
@@ -28,6 +33,7 @@ import Pango from 'gi://Pango';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 
+import * as GnomeCalendar from 'resource:///org/gnome/shell/ui/calendar.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
@@ -75,14 +81,14 @@ export class CalendarPanel {
         this._panel = null;
         this._commandId = state.connect('command', (_s, name, ...args) => {
             if (name === 'calendar-toggle')
-                this.toggle();
+                this.toggle(args[0], args[1]);
         });
         this._overviewId = Main.overview.connect('showing', () => this.close(false));
         this._freeShortcut();
         Main.wm.addKeybinding(KEY, settings, Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW, () => {
                 Main.overview.hide();
-                this.toggle(null);
+                this.toggle();
             });
         this._checkId = 0;
         this._rings = new Set();
@@ -212,44 +218,44 @@ export class CalendarPanel {
     }
 
     // ---------- content ----------
+    // Two columns: the month on the left; on the right the chosen day's agenda
+    // (GNOME's calendar events and IslaDock's reminders) with its +.
     _build(look) {
         const box = new St.BoxLayout({style_class: 'isla-cal', orientation: Clutter.Orientation.VERTICAL, reactive: true});
         if (look.light)
             box.add_style_class_name('clara');
 
+        const month = new St.BoxLayout({style_class: 'isla-cal-mes-col', orientation: Clutter.Orientation.VERTICAL});
         const head = new St.BoxLayout({style_class: 'isla-cal-enc'});
-        const title = new St.BoxLayout({style_class: 'isla-cal-titulo', x_expand: true, y_align: Clutter.ActorAlign.CENTER});
-        this._month = new St.Label({style_class: 'isla-cal-mes', y_align: Clutter.ActorAlign.END});
-        this._year = new St.Label({style_class: 'isla-cal-anio', y_align: Clutter.ActorAlign.END});
-        title.add_child(this._month);
-        title.add_child(this._year);
-        const controls = new St.BoxLayout({style_class: 'isla-cal-controles', y_align: Clutter.ActorAlign.CENTER});
-        controls.add_child(this._arrow('go-previous-symbolic', _('Mes anterior'), () => this._moveMonth(-1)));
-        const today = new St.Button({style_class: 'isla-cal-ctrl isla-cal-hoy', label: _('Hoy'), can_focus: true});
-        today.connect('clicked', () => this._goToday());
-        controls.add_child(today);
-        controls.add_child(this._arrow('go-next-symbolic', _('Mes siguiente'), () => this._moveMonth(1)));
+        // The title brings back today when another month is shown.
+        this._month = new St.Label({style_class: 'isla-cal-mes', y_align: Clutter.ActorAlign.CENTER});
+        const title = new St.Button({style_class: 'isla-cal-titulo', child: this._month, can_focus: true, x_expand: true,
+            x_align: Clutter.ActorAlign.START, accessible_name: _('Hoy')});
+        title.connect('clicked', () => this._goToday());
         head.add_child(title);
-        head.add_child(controls);
+        head.add_child(this._arrow('go-previous-symbolic', _('Mes anterior'), () => this._moveMonth(-1)));
+        head.add_child(this._arrow('go-next-symbolic', _('Mes siguiente'), () => this._moveMonth(1)));
+        month.add_child(head);
 
-        // Initials on row 0, days below; homogeneous columns.
-        this._gridLayout = new Clutter.GridLayout({column_homogeneous: true, column_spacing: 4, row_spacing: 4});
+        // Initials on row 0, days below.
+        this._gridLayout = new Clutter.GridLayout({column_spacing: 3, row_spacing: 3});
         this._grid = new St.Widget({style_class: 'isla-cal-rejilla', layout_manager: this._gridLayout});
         for (let i = 0; i < 7; i++) {
-            const label = new St.Label({style_class: 'isla-cal-ini', x_align: Clutter.ActorAlign.CENTER,
-                text: localName(GLib.DateTime.new_local(2024, 1, 1 + i, 0, 0, 0), '%a').toLocaleUpperCase()});
-            this._gridLayout.attach(label, i, 0, 1, 1);
+            const name = localName(GLib.DateTime.new_local(2024, 1, 1 + i, 0, 0, 0), '%A');
+            this._gridLayout.attach(new St.Label({style_class: 'isla-cal-ini', text: name.charAt(0).toLocaleUpperCase(),
+                x_align: Clutter.ActorAlign.CENTER}), i, 0, 1, 1);
         }
         // The day squares stay put; a month change only rewrites them.
         this._cells = [];
         for (let i = 0; i < CELLS; i++) {
-            const inner = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, x_align: Clutter.ActorAlign.CENTER,
-                y_align: Clutter.ActorAlign.CENTER});
-            const number = new St.Label({x_align: Clutter.ActorAlign.CENTER});
-            const mark = new St.Widget({style_class: 'isla-cal-punto', x_align: Clutter.ActorAlign.CENTER});
+            // The number centered in the square; the dot over its bottom edge, not pushing it up.
+            const inner = new St.Widget({layout_manager: new Clutter.BinLayout(), x_expand: true, y_expand: true});
+            const number = new St.Label({x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER});
+            const mark = new St.Widget({style_class: 'isla-cal-punto', x_align: Clutter.ActorAlign.CENTER,
+                y_align: Clutter.ActorAlign.CENTER, translation_y: 8});
             inner.add_child(number);
             inner.add_child(mark);
-            const day = new St.Button({style_class: 'isla-cal-dia', child: inner, can_focus: true, x_expand: true});
+            const day = new St.Button({style_class: 'isla-cal-dia', child: inner, can_focus: true});
             day._number = number;
             day._mark = mark;
             day._day = null;
@@ -257,14 +263,18 @@ export class CalendarPanel {
             this._gridLayout.attach(day, i % 7, 1 + Math.floor(i / 7), 1, 1);
             this._cells.push(day);
         }
+        month.add_child(this._grid);
 
-        // The card: the chosen day's reminders, or the form.
-        this._card = new St.BoxLayout({style_class: 'isla-cal-tarjeta', orientation: Clutter.Orientation.VERTICAL});
+        // The agenda: the chosen day's events and reminders, or the form.
+        this._card = new St.BoxLayout({style_class: 'isla-cal-agenda', orientation: Clutter.Orientation.VERTICAL});
+
+        const columns = new St.BoxLayout({style_class: 'isla-cal-columnas'});
+        columns.add_child(month);
+        columns.add_child(new St.Widget({style_class: 'isla-cal-sep'}));
+        columns.add_child(this._card);
 
         box.add_child(new WeatherStrip(() => this.close(), this._settings).actor);
-        box.add_child(head);
-        box.add_child(this._grid);
-        box.add_child(this._card);
+        box.add_child(columns);
         box.connect('scroll-event', (_a, event) => {
             if (this._form)
                 return Clutter.EVENT_PROPAGATE;
@@ -298,31 +308,40 @@ export class CalendarPanel {
 
     _paint() {
         const shown = this._shown;
-        const now = new Date();
-        this._month.text = capital(format(shown, '%B'));
-        this._year.text = String(shown.getFullYear());
-        const marked = new Set(this._notes().map(n => noteDate(n).getTime()));
+        this._month.text = `${capital(format(shown, '%B'))} ${shown.getFullYear()}`;
+        // GNOME's events of the six weeks on show (they come a moment later: 'changed').
         const offset = (shown.getDay() + 6) % 7;      // Monday first
+        const first = new Date(shown.getFullYear(), shown.getMonth(), 1 - offset);
+        this._events?.requestRange(first, new Date(first.getFullYear(), first.getMonth(), first.getDate() + CELLS));
+        this._paintDays();
+        this._paintCard();
+    }
+
+    _paintDays() {
+        const shown = this._shown;
+        const now = new Date();
+        const marked = new Set(this._notes().map(n => noteDate(n).getTime()));
+        const offset = (shown.getDay() + 6) % 7;
         const total = daysIn(shown.getFullYear(), shown.getMonth());
         this._cells.forEach((day, i) => {
             const n = i - offset + 1;
             if (n < 1 || n > total) {
                 day._day = null;
-                day.hide();
+                // Kept in the grid: the month's height does not jump.
+                day.opacity = 0;
+                day.reactive = day.can_focus = false;
                 return;
             }
             const date = new Date(shown.getFullYear(), shown.getMonth(), n);
             day._day = date;
             day._number.text = String(n);
-            day._mark.opacity = marked.has(date.getTime()) ? 255 : 0;
+            day._mark.opacity = marked.has(date.getTime()) || this._events?.hasEvents(date) ? 255 : 0;
             day.accessible_name = format(date, '%A %-d %B');
-            const weekend = date.getDay() === 0 || date.getDay() === 6;
-            day[weekend ? 'add_style_class_name' : 'remove_style_class_name']('finde');
             day[sameDay(date, now) ? 'add_style_class_name' : 'remove_style_class_name']('hoy');
             day[sameDay(date, this._chosen) ? 'add_style_class_name' : 'remove_style_class_name']('elegido');
-            day.show();
+            day.opacity = 255;
+            day.reactive = day.can_focus = true;
         });
-        this._paintCard();
     }
 
     // Only the marks move: the pressed button stays.
@@ -342,46 +361,75 @@ export class CalendarPanel {
         this._paintCard();
     }
 
-    // The chosen day and its reminders (each with ×), and the +.
+    // The chosen day's events (GNOME's calendar) and reminders, by time: all-day ones first.
+    _agendaOf(date) {
+        const begin = dayStart(date);
+        const end = new Date(begin.getFullYear(), begin.getMonth(), begin.getDate() + 1);
+        const hm = d => `${two(d.getHours())}:${two(d.getMinutes())}`;
+        const items = (this._events?.getEvents(begin, end) ?? []).map(e => {
+            const allDay = e.date <= begin && e.end >= end;
+            const from = e.date < begin ? begin : e.date;
+            const to = e.end > end ? end : e.end;
+            return {name: e.summary, when: allDay ? _('Todo el día') : to > from ? `${hm(from)} – ${hm(to)}` : hm(from),
+                at: allDay ? -1 : from.getTime()};
+        });
+        for (const note of this._notesOn(date)) {
+            const at = noteTime(note);
+            items.push({name: note.texto, when: hm(at), at: at.getTime(), note});
+        }
+        return items.sort((a, b) => a.at - b.at);
+    }
+
+    // "Hoy" (or the chosen day) with its +, then its events and reminders (each reminder with ×).
     _paintCard() {
         if (!this._card || this._form)
             return;
+        this._card.remove_style_class_name('formulario');
         this._card.destroy_all_children();
         const chosen = this._chosen;
-        const top = new St.BoxLayout({style_class: 'isla-cal-tarjeta-fila'});
-        const day = capital(format(chosen, _('%A %-d de %B')));
-        top.add_child(new St.Label({style_class: 'isla-cal-sel', x_expand: true, y_align: Clutter.ActorAlign.CENTER,
-            text: sameDay(chosen, new Date()) ? fmt(_('Hoy, {dia}'), {dia: day}) : day}));
+        const isToday = sameDay(chosen, new Date());
+        const top = new St.BoxLayout({style_class: 'isla-cal-agenda-enc'});
+        top.add_child(new St.Label({style_class: 'isla-cal-agenda-titulo', x_expand: true, y_align: Clutter.ActorAlign.CENTER,
+            text: isToday ? _('Hoy') : capital(format(chosen, '%A %-d'))}));
         const add = new St.Button({style_class: 'isla-cal-mas', accessible_name: _('Nuevo recordatorio'), can_focus: true,
             y_align: Clutter.ActorAlign.CENTER, child: new St.Icon({icon_name: 'list-add-symbolic', style_class: 'isla-cal-mas-icono'})});
         add.connect('clicked', () => this._openForm());
         top.add_child(add);
         this._card.add_child(top);
-        const notes = this._notesOn(chosen);
-        if (!notes.length) {
-            this._card.add_child(new St.Label({style_class: 'isla-cal-vacio', text: _('Sin recordatorios')}));
+        const items = this._agendaOf(chosen);
+        if (!items.length) {
+            this._card.add_child(new St.Label({style_class: 'isla-cal-vacio',
+                text: isToday ? _('Sin eventos para hoy') : _('Sin eventos')}));
             return;
         }
         // A few fit; past that the list scrolls (the panel would cover the screen).
         const list = new St.BoxLayout({style_class: 'isla-cal-notas-caja', orientation: Clutter.Orientation.VERTICAL});
         const scroll = new St.ScrollView({style_class: 'isla-cal-notas', hscrollbar_policy: St.PolicyType.NEVER,
             vscrollbar_policy: St.PolicyType.AUTOMATIC, overlay_scrollbars: true, child: list});
-        for (const note of notes) {
-            const row = new St.BoxLayout({style_class: 'isla-cal-nota'});
-            row.add_child(new St.Label({style_class: 'isla-cal-nota-hora', y_align: Clutter.ActorAlign.CENTER,
-                text: `${two(note.hora ?? NOTICE_HOUR)}:${two(note.minuto ?? 0)}`}));
-            const text = new St.Label({style_class: 'isla-cal-nota-texto', text: note.texto, x_expand: true,
-                y_align: Clutter.ActorAlign.CENTER});
-            text.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-            const remove = new St.Button({style_class: 'isla-cal-quitar', accessible_name: _('Quitar recordatorio'),
-                can_focus: true, child: new St.Icon({icon_name: 'window-close-symbolic', style_class: 'isla-cal-quitar-icono'})});
-            remove.connect('clicked', () => {
-                this._saveNotes(this._notes().filter(n => n.id !== note.id));
-                this._paint();
-                this._announce();
-            });
+        for (const item of items) {
+            const row = new St.BoxLayout({style_class: 'isla-cal-evento'});
+            row.add_child(new St.Widget({style_class: 'isla-cal-evento-barra'}));
+            const text = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, x_expand: true});
+            const name = new St.Label({style_class: 'isla-cal-evento-nombre', text: item.name});
+            name.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+            text.add_child(name);
+            const when = new St.BoxLayout({style_class: 'isla-cal-evento-hora-fila'});
+            if (item.note)
+                when.add_child(new St.Icon({icon_name: 'alarm-symbolic', style_class: 'isla-cal-evento-alarma', y_align: Clutter.ActorAlign.CENTER}));
+            when.add_child(new St.Label({style_class: 'isla-cal-evento-hora', text: item.when, y_align: Clutter.ActorAlign.CENTER}));
+            text.add_child(when);
             row.add_child(text);
-            row.add_child(remove);
+            if (item.note) {
+                const remove = new St.Button({style_class: 'isla-cal-quitar', accessible_name: _('Quitar recordatorio'),
+                    can_focus: true, y_align: Clutter.ActorAlign.CENTER,
+                    child: new St.Icon({icon_name: 'window-close-symbolic', style_class: 'isla-cal-quitar-icono'})});
+                remove.connect('clicked', () => {
+                    this._saveNotes(this._notes().filter(n => n.id !== item.note.id));
+                    this._paint();
+                    this._announce();
+                });
+                row.add_child(remove);
+            }
             list.add_child(row);
         }
         this._card.add_child(scroll);
@@ -395,13 +443,14 @@ export class CalendarPanel {
         const hora = sameDay(c, now) ? Math.min(now.getHours() + 1, 23) : NOTICE_HOUR;
         this._form = {dia: c.getDate(), mes: c.getMonth(), anio: c.getFullYear(), hora, minuto: 0};
         this._card.destroy_all_children();
+        this._card.add_style_class_name('formulario');
         this._entry = new St.Entry({style_class: 'isla-cal-campo', hint_text: _('¿Qué quieres recordar?'),
             can_focus: true, x_expand: true});
         this._entry.clutter_text.connect('activate', () => this._saveForm());
         this._card.add_child(this._entry);
 
         // Day and month, each with ‹ ›.
-        const dates = new St.BoxLayout({style_class: 'isla-cal-fecha'});
+        const dates = new St.BoxLayout({style_class: 'isla-cal-fecha', orientation: Clutter.Orientation.VERTICAL});
         const stepper = (name, step) => {
             const box = new St.BoxLayout({style_class: 'isla-cal-paso', x_expand: true});
             const label = new St.Label({style_class: 'isla-cal-paso-valor', x_expand: true,
@@ -521,32 +570,44 @@ export class CalendarPanel {
     }
 
     // ---------- open / close ----------
-    toggle() {
+    toggle(anchor = null, side = null) {
         if (this._panel)
             this.close();
         else
-            this.open();
+            this.open(anchor, side);
     }
 
-    open() {
+    open(anchor = null, side = null) {
         if (this._panel)
             return;
+        // Under the top island (it grows down from it), or over the dock.
+        this._top = side === 'arriba' && anchor?.get_stage() ? anchor : null;
+        const rise = this._top ? -RISE : RISE;
         // A ringing alarm stops: whoever opens the calendar has heard it.
         [...this._rings].forEach(r => r.stop());
         // Still leaving: done now.
         this._finishClosing?.();
         const look = islandLook(this._state);
+        if (!this._events) {
+            this._events = new GnomeCalendar.DBusEventSource();
+            this._events.connect('changed', () => {
+                if (!this._panel)
+                    return;
+                this._paintDays();
+                this._paintCard();
+            });
+        }
         const content = this._build(look);
         this._goToday();
         const panel = this._panel = new St.Widget({layout_manager: new Clutter.BinLayout(), reactive: true});
-        // The island's color and transparency, like every other panel (and Aurora's halo).
-        if (look.style)
-            content.style = look.style;
-        dressFrame(look, panel, content, 20);
+        // Solid (not the island's transparency); the skin's layers stay (Aurora's halo).
+        dressFrame(look, panel, content, 16);
         addPanelChrome(panel);
+        this._ring(anchor);
         this._place();
         // Grown or shrunk (a reminder, the form): the bottom stays over the dock.
         content.connect('notify::height', () => this._panel === panel && this._place());
+        content.connect('notify::width', () => this._panel === panel && this._place());
         panel.connect('captured-event', (_a, event) => this._onEvent(event));
         panel.connect('key-press-event', (_a, event) => {
             const key = event.get_key_symbol();
@@ -565,8 +626,8 @@ export class CalendarPanel {
         this._grab = Main.pushModal(panel, {actionMode: Shell.ActionMode.POPUP});
         // Over a maximized window drawn straight to the screen (X11).
         global.compositor.disable_unredirect();
-        panel.set({pivot_point: new Graphene.Point({x: 0.5, y: 1}), opacity: 0, scale_x: SMALL, scale_y: SMALL,
-            translation_y: RISE});
+        panel.set({pivot_point: new Graphene.Point({x: 0.5, y: this._top ? 0 : 1}), opacity: 0, scale_x: SMALL, scale_y: SMALL,
+            translation_y: rise});
         panel.ease({opacity: 255, duration: ms(IN_TIME * 0.6), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
         panel.ease({scale_x: 1, scale_y: 1, translation_y: 0, duration: ms(IN_TIME),
             mode: Clutter.AnimationMode.EASE_OUT_BACK});
@@ -574,6 +635,10 @@ export class CalendarPanel {
 
     // Centered on the dock, just above the island, inside the work area.
     _place() {
+        if (this._top) {
+            this._placeUnder(this._top);
+            return;
+        }
         const panel = this._panel;
         const area = dockWorkArea();
         const mon = dockMonitor();
@@ -589,11 +654,46 @@ export class CalendarPanel {
             center = ix + iw / 2;
             // A hidden island sits below the screen: then from the bottom edge.
             top = Math.min(iy, mon.y + mon.height);
+            // Opened from the bar's page of today: centered over it.
+            const page = this._ringed;
+            if (page?.get_stage() && page !== this._top) {
+                const [px, py] = page.get_transformed_position();
+                const [pw, ph] = page.get_transformed_size();
+                const [, ih] = island.get_transformed_size();
+                if (py + ph / 2 >= iy && py + ph / 2 <= iy + ih)
+                    center = px + pw / 2;
+            }
         }
         let x = center - w / 2;
         x = Math.min(Math.max(x, area.x + 4 * sf), area.x + area.width - w - 4 * sf);
         const y = Math.max(top - GAP * sf - h, area.y + 4 * sf);
         panel.set_position(Math.round(x), Math.round(y));
+    }
+
+    // Centered under the top island, inside its monitor.
+    _placeUnder(anchor) {
+        const panel = this._panel;
+        const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        const [, w] = panel.get_preferred_width(-1);
+        const [ax, ay] = anchor.get_transformed_position();
+        const [aw, ah] = anchor.get_transformed_size();
+        const mon = Main.layoutManager.findMonitorForActor(anchor) ?? Main.layoutManager.primaryMonitor;
+        let x = ax + aw / 2 - w / 2;
+        x = Math.min(Math.max(x, mon.x + 4 * sf), mon.x + mon.width - w - 4 * sf);
+        panel.set_position(Math.round(x), Math.round(ay + ah + GAP * sf));
+    }
+
+    // The blue ring on what opened the panel.
+    _ring(anchor) {
+        if (this._ringed) {
+            this._ringed.disconnect(this._ringedId);
+            this._ringed.remove_style_class_name('cal-abierto');
+        }
+        this._ringed = anchor?.get_stage() ? anchor : null;
+        if (!this._ringed)
+            return;
+        this._ringed.add_style_class_name('cal-abierto');
+        this._ringedId = this._ringed.connect('destroy', () => (this._ringed = null));
     }
 
     _onEvent(event) {
@@ -620,9 +720,10 @@ export class CalendarPanel {
             this._grab = null;
         }
         global.compositor.enable_unredirect();
+        this._ring(null);
         panel.reactive = false;
         this._form = null;
-        this._card = this._grid = this._gridLayout = this._cells = this._month = this._year = null;
+        this._card = this._grid = this._gridLayout = this._cells = this._month = null;
         this._entry = this._dayLabel = this._monthLabel = this._hourLabel = this._minuteLabel = null;
         const done = () => {
             if (this._finishClosing !== done)
@@ -634,7 +735,7 @@ export class CalendarPanel {
         };
         this._finishClosing = done;
         if (animate) {
-            panel.ease({opacity: 0, scale_x: SMALL, scale_y: SMALL, translation_y: RISE, duration: ms(OUT_TIME),
+            panel.ease({opacity: 0, scale_x: SMALL, scale_y: SMALL, translation_y: this._top ? -RISE : RISE, duration: ms(OUT_TIME),
                 mode: Clutter.AnimationMode.EASE_IN_QUAD, onStopped: done});
         } else {
             done();
@@ -648,6 +749,8 @@ export class CalendarPanel {
         this._checkId = 0;
         [...this._rings].forEach(r => r.stop());
         this._source?.destroy();
+        this._events?.destroy();
+        this._events = null;
         this._state.disconnect(this._commandId);
         Main.overview.disconnect(this._overviewId);
         Main.wm.removeKeybinding(KEY);
