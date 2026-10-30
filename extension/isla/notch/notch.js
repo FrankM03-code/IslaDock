@@ -116,6 +116,9 @@ export class TopIsland {
             [settings, settings.connect('changed::isla-superior-franja', () => this._fit())],
             [settings, settings.connect('changed::isla-superior-avisos', () => this._watchNotices())],
             [state, state.connect('dnd-changed', () => this._syncStatus())],
+            // GNOME's light/dark switch reloads every stylesheet: once it settled, the island again.
+            [St.ThemeContext.get_for_stage(global.stage), St.ThemeContext.get_for_stage(global.stage).connect('changed',
+                () => this._later('restyle', 250, () => this._restyled()))],
         ];
         this._watchNotices();
         this._fit();
@@ -326,6 +329,24 @@ export class TopIsland {
         dressFrame(look, this._frame, this._card, OPEN_R);
         // Over the skin's layers (Aurora's halo), beside the card.
         this._curves.forEach(c => this._frame.add_child(c));
+    }
+
+    // After a theme change: dressed again and the folded content shown afresh, as a click
+    // left it. Recording while going from light to dark, the folded island stayed blank
+    // until clicked (Frank, 2026-10-30).
+    _restyled() {
+        this._dress();
+        const turn = this._turn ?? 'time';
+        const turns = {time: this._timeBox, weather: this._weather, music: this._song, rec: this._rec};
+        for (const [name, actor] of Object.entries(turns)) {
+            actor.remove_all_transitions();
+            actor.set({visible: name === turn, opacity: 255, translation_y: 0});
+        }
+        const view = this._viewActor(this._view ?? 'folded');
+        view.remove_all_transitions();
+        view.set({visible: true, opacity: 255, scale_x: 1, scale_y: 1});
+        this._card.queue_relayout();
+        global.stage.queue_redraw();
     }
 
     get _stripOn() {

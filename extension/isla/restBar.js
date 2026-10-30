@@ -428,6 +428,12 @@ export class RestBar {
     }
 
     _updateMinimized() {
+        // The list of a group is open: its tile stays until it closes (rebuilt, the tile
+        // would take the list with it and an × could close only one window).
+        if (this._menu?.isOpen) {
+            this._minLater = true;
+            return;
+        }
         const windows = this._minimizedWindows();
         const key = windows.map(w => w.get_stable_sequence()).join(',');
         if (key === this._minKey)
@@ -470,6 +476,7 @@ export class RestBar {
                     // Over the icon's top right corner, a little outside it.
                     const count = new St.Label({style_class: 'isla-barra-grupo-cuenta', text: String(mine.length)});
                     box.add_child(count);
+                    tile._count = count;
                     const place = () => count.set_position(Math.round(column.width - count.width + 4), -3);
                     column.connect('notify::width', place);
                     count.connect('notify::width', place);
@@ -507,6 +514,12 @@ export class RestBar {
         menu.actor.add_style_class_name('isla-menu');
         Main.uiGroup.add_child(menu.actor);
         this._menuManager.addMenu(menu);
+        menu.connect('open-state-changed', (_m, open) => {
+            if (!open && this._minLater) {
+                this._minLater = false;
+                this._queueMinimized();
+            }
+        });
         const tracker = Shell.WindowTracker.get_default();
         for (const w of windows) {
             const app = tracker.get_window_app(w);
@@ -515,6 +528,22 @@ export class RestBar {
             const icon = app?.create_icon_texture(16);
             if (icon)
                 item.insert_child_at_index(icon, 1);
+            // An × at the end closes that window without opening it (Frank, 2026-10-30).
+            const close = new St.Button({style_class: 'isla-menu-cerrar', can_focus: true, accessible_name: _('Cerrar ventana'),
+                x_expand: true, x_align: Clutter.ActorAlign.END, y_align: Clutter.ActorAlign.CENTER,
+                child: new St.Icon({icon_name: 'window-close-symbolic', icon_size: 14})});
+            close.connect('clicked', () => {
+                w.delete(global.get_current_time());
+                item.destroy();
+                const left = menu.numMenuItems;
+                if (anchor._count) {
+                    anchor._count.text = String(left);
+                    anchor._count.visible = left > 1;
+                }
+                if (!left)
+                    menu.close(BoxPointer.PopupAnimation.FULL);
+            });
+            item.add_child(close);
         }
         menu.open(BoxPointer.PopupAnimation.FULL);
     }

@@ -1763,3 +1763,6 @@ msgstr "La tecla Windows abre las aplicaciones"
 
 msgid "Sola, abre y cierra el cajón (el mismo del botón Aplicaciones) en vez de Actividades"
 msgstr "Sola, abre y cierra el cajón (el mismo del botón Aplicaciones) en vez de Actividades"
+
+msgid "Cerrar ventana"
+msgstr "Cerrar ventana"

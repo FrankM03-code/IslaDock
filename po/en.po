@@ -1763,3 +1763,6 @@ msgstr "The Windows key opens the apps"
 
 msgid "Sola, abre y cierra el cajón (el mismo del botón Aplicaciones) en vez de Actividades"
 msgstr "On its own, it opens and closes the drawer (the same as the Applications button) instead of Activities"
+
+msgid "Cerrar ventana"
+msgstr "Close window"

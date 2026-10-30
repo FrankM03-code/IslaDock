@@ -1059,6 +1059,8 @@
 .isla-barra-grupo-linea { width: 5px; height: 5px; border-radius: 3px; background-color: -st-accent-color; }
 .isla-barra-grupo-cuenta { min-width: 16px; height: 16px; padding: 0 2px; border-radius: 8px; font-size: 10px; font-weight: bold;
     text-align: center; background-color: -st-accent-color; color: -st-accent-fg-color; }
+.isla-menu-cerrar { margin-left: 12px; padding: 4px; border-radius: 99px; color: inherit; }
+.isla-menu-cerrar:hover, .isla-menu-cerrar:focus { background-color: rgba(255, 59, 48, 0.85); color: #ffffff; }
 .isla-barra-reloj { border-radius: 9px; }
 .isla-barra-reloj-caja { spacing: 10px; }
 /* Today's page: Frank's calendario.svg (white, thin dark edge, red month). */
