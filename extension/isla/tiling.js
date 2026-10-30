@@ -5,7 +5,7 @@
 // will go; letting it go there puts it on that half (left / right edge), that quarter (a corner)
 // or maximized (the top edge). Dragged away again, it takes back the size it had before.
 // 'acomodar-ventanas-llenar': after a half, the other half shows the other windows of that
-// monitor and workspace as small live pictures; a click puts that one there (Esc or a click
+// monitor and workspace as colored tiles (icon, name, title); a click puts that one there (Esc or a click
 // outside leaves the space empty). Like Tiling Assistant's popup, which Frank used.
 // While on, GNOME's own edge tiling ('edge-tiling' of org.gnome.mutter) steps aside so the two
 // never draw their shadows at once; it comes back when this goes ('acomodo-liberado').
@@ -37,8 +37,20 @@ const UNTILE = 12;         // px the pointer moves before a tiled window gets it
 const SHADOW_TIME = 160;
 const SETTLE = 300;        // ms after a tile to check the window took its place (some have a minimum size)
 const PICK_MAX = 9;        // windows offered to fill the other half
-const THUMB_W = 200;
-const THUMB_H = 130;
+const TILE_W = 300;       // a tile of the picker; one left alone on the last row takes the whole row
+const TILE_H = 150;
+const TILE_ICON = 64;
+const CARD_GAP = 18;      // px between two tiles of the picker
+// Soft tile colors, light and dark theme; an app always gets the same one (from its id).
+const TILE_LIGHT = ['#FDE2E4', '#DCEBFF', '#D6F0FF', '#E3ECFF', '#FFF1D6', '#DFF5E3', '#EEE3FF', '#FFE6D5'];
+const TILE_DARK = ['#4A2F36', '#2A3A55', '#21414F', '#2F3557', '#4A3F26', '#27452F', '#3A3055', '#4B3428'];
+const tileColor = (key, light) => {
+    let h = 0;
+    for (const c of key)
+        h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    const list = light ? TILE_LIGHT : TILE_DARK;
+    return list[h % list.length];
+};
 
 // GNOME 49 dropped the flags of maximize() / unmaximize() and get_maximized().
 const maximized = w => w.is_maximized?.() ?? w.get_maximized() !== 0;
@@ -302,47 +314,39 @@ export class Tiling {
             panel.add_style_class_name('clara');
         panel.add_child(new St.Label({style_class: 'isla-acomodo-titulo', text: _('¿Qué va en este lado?'),
             x_align: Clutter.ActorAlign.CENTER}));
-        const flow = new St.Widget({layout_manager: new Clutter.FlowLayout({column_spacing: 14, row_spacing: 14,
-            homogeneous: true}), x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER, x_expand: true,
-            y_expand: true});
+        // Rows made by hand: Clutter.FlowLayout gave every card 0 px of height once they wrapped to a
+        // second row (more than three windows), so a click fell on the panel and closed it.
+        const flow = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style: 'spacing: 14px;',
+            x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER, x_expand: true, y_expand: true});
+        const perRow = Math.max(1, Math.min(2, Math.floor((rect.width - 48 + CARD_GAP) / (TILE_W + CARD_GAP))));
+        let row = null;
         panel.add_child(new St.Label({style_class: 'isla-acomodo-ayuda', text: _('Esc para dejarlo vacío'),
             x_align: Clutter.ActorAlign.CENTER}));
         panel.add_child(flow);
         const tracker = Shell.WindowTracker.get_default();
         let first = null;
         for (const w of windows) {
-            const card = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-acomodo-caja'});
-            const actor = w.get_compositor_private();
-            const r = w.get_frame_rect();
-            const scale = Math.min(THUMB_W / r.width, THUMB_H / r.height, 1);
-            const thumb = new St.Widget({style_class: 'isla-acomodo-miniatura', width: THUMB_W, height: THUMB_H});
+            // A colored tile: the app's icon, its name and the window's title, all centered.
             const app = tracker.get_window_app(w);
-            // A minimized window draws nothing: its app's icon instead.
-            if (w.minimized || !actor) {
-                const icon = app?.create_icon_texture(64) ?? new St.Icon({icon_name: 'application-x-executable', icon_size: 64});
-                icon.set({x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER, x_expand: true, y_expand: true});
-                thumb.layout_manager = new Clutter.BinLayout();
-                thumb.add_child(icon);
-            } else {
-                // The frame only, not the invisible shadow border around it.
-                const [bx, by] = actor.get_position();
-                const clone = new Clutter.Clone({source: actor, scale_x: scale, scale_y: scale});
-                clone.set_position(Math.round((THUMB_W - r.width * scale) / 2 - (r.x - bx) * scale),
-                    Math.round((THUMB_H - r.height * scale) / 2 - (r.y - by) * scale));
-                thumb.add_child(clone);
-                thumb.clip_to_allocation = true;
+            const card = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-acomodo-caja',
+                x_align: Clutter.ActorAlign.CENTER, y_align: Clutter.ActorAlign.CENTER, x_expand: true, y_expand: true});
+            const icon = app?.create_icon_texture(TILE_ICON) ??
+                new St.Icon({icon_name: 'application-x-executable', icon_size: TILE_ICON});
+            icon.x_align = Clutter.ActorAlign.CENTER;
+            card.add_child(icon);
+            const lines = [[app?.get_name() || w.get_title() || '', 'isla-acomodo-nombre'],
+                [w.get_title() ?? '', 'isla-acomodo-titulo-ventana']];
+            if (lines[1][0] === lines[0][0])
+                lines.pop();
+            for (const [text, style] of lines) {
+                const label = new St.Label({style_class: style, text, x_align: Clutter.ActorAlign.CENTER});
+                label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+                label.style = `max-width: ${TILE_W - 40}px;`;
+                card.add_child(label);
             }
-            card.add_child(thumb);
-            const name = new St.BoxLayout({style_class: 'isla-acomodo-nombre', x_align: Clutter.ActorAlign.CENTER});
-            if (app)
-                name.add_child(app.create_icon_texture(16));
-            const title = new St.Label({text: w.get_title() || app?.get_name() || '', y_align: Clutter.ActorAlign.CENTER});
-            title.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-            title.style = `max-width: ${THUMB_W - 24}px;`;
-            name.add_child(title);
-            card.add_child(name);
             const button = new St.Button({style_class: 'isla-acomodo-ventana', child: card, can_focus: true,
-                accessible_name: w.get_title() ?? ''});
+                accessible_name: w.get_title() ?? '', height: TILE_H,
+                style: `background-color: ${tileColor(app?.get_id() ?? w.get_wm_class() ?? '', look.light)};`});
             button.connect('clicked', () => {
                 this._closePicker();
                 if (w.minimized)
@@ -350,8 +354,17 @@ export class Tiling {
                 this.tile(w, side, monitor);
                 w.activate(global.get_current_time());
             });
-            flow.add_child(button);
+            if (!row || row.get_n_children() === perRow) {
+                row = new St.BoxLayout({style: `spacing: ${CARD_GAP}px;`, x_align: Clutter.ActorAlign.CENTER});
+                flow.add_child(row);
+            }
+            row.add_child(button);
             first ??= button;
+        }
+        // Every tile as wide as a column; one left alone on the last row spans the whole row.
+        for (const r of flow.get_children()) {
+            const alone = r.get_n_children() === 1 && flow.get_n_children() > 1;
+            r.get_children().forEach(b => (b.width = alone ? perRow * TILE_W + (perRow - 1) * CARD_GAP : TILE_W));
         }
         Main.layoutManager.uiGroup.add_child(panel);
         this._picker = panel;

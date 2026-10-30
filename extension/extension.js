@@ -35,6 +35,7 @@ import {SideClock} from './isla/sideClock.js';
 import {PrivacyStatus} from './isla/privacy.js';
 import {CalendarPanel} from './isla/calendar.js';
 import {Tiling} from './isla/tiling.js';
+import {HotCorners} from './isla/hotCorners.js';
 import {Notifications} from './isla/notifications/notifications.js';
 import {TopIsland} from './isla/notch/notch.js';
 import {notchNotices} from './isla/notch/place.js';
@@ -79,6 +80,7 @@ const MODULES = {
     calendar: [null, ctx => new CalendarPanel(ctx)],
     notch: ['isla-superior', ctx => new TopIsland(ctx)],
     tiling: ['acomodar-ventanas', ctx => new Tiling(ctx)],
+    hotCorners: ['esquinas-activas', ctx => new HotCorners(ctx)],
 };
 
 export default class IslaDockExtension extends Extension {

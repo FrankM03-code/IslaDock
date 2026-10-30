@@ -28,9 +28,10 @@ convierte en el dock completo.
 - **Panel Ajustes**: red, Bluetooth, modo de energía, luz nocturna, estilo oscuro, volumen, captura, bloquear, cerrar sesión, reiniciar y apagar.
 - **Modo activo**: la pantalla no se apaga, pero puedes suspender cuando quieras (en el panel Ajustes).
 - **Mayúsculas**: para teclados sin luz de Bloq Mayús, un pequeño ⇪ en la isla mientras están activas.
-- **Lanzador Isla**: un cajón de aplicaciones propio que sale del dock (botón Aplicaciones, la tecla Windows sola o Super + Espacio), con la hora, categorías, las apps usadas hace poco, búsqueda de apps y archivos con vista previa, y el mismo color del dock. Apagado, se usa la cuadrícula de GNOME.
+- **Lanzador Isla**: un cajón de aplicaciones propio que sale del dock (botón Aplicaciones, la tecla Windows sola o Super + Espacio), con la hora, categorías, las apps usadas hace poco, búsqueda de apps y archivos con vista previa (y «Buscar en internet» con tu navegador), y el mismo color del dock. Apagado, se usa la cuadrícula de GNOME.
 - **Isla superior** (opcional): una isla pequeña arriba con la hora y el clima; al pasar el mouse muestra la música, el temporizador y las notificaciones.
 - **Acomodar ventanas**: arrastra una ventana a un borde (mitad), a una esquina (cuarto) o arriba (maximizar); después puedes elegir qué ventana va en la otra mitad.
+- **Esquinas activas**: cada esquina de la pantalla con su interruptor y su acción (Preferencias → Escritorio → Esquinas activas).
 - **Sin barra superior** (opcional, encendido por defecto): todo queda en la isla y el panel Ajustes.
 - **Lo que se perdía sin la barra**: batería, avisos de micrófono, cámara, ubicación y pantalla compartida, idioma del teclado, espacios de trabajo, y un calendario con recordatorios (Super + M) y el clima de los próximos días; la ciudad del clima se busca por nombre (cualquier pueblo, no solo las ciudades que conoce GNOME) en Preferencias → Isla → Clima o con un clic en su nombre.
 - **Reloj lateral**: escondido en el borde de la pantalla; al llevar el mouse sale la hora en cuatro estilos (Editorial, Isla con semana, Línea del día, Horizonte), también sobre ventanas maximizadas.

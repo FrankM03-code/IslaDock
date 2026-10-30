@@ -1,7 +1,7 @@
 {
   "uuid": "isla-dock@frankm",
   "name": "IslaDock",
-  "description": "Un dock en forma de isla: una cápsula pequeña que avisa qué está abierto, qué suena y cuánto falta, y que al acercarte se convierte en el dock completo. Con lo que se pierde al quitar la barra superior: batería, avisos de micrófono y cámara, idioma del teclado, espacios de trabajo, calendario con recordatorios y un reloj lateral escondido en el borde. Además pila de descargas, carpetas a mano, portapapeles, búsqueda rápida, temporizador, panel de Ajustes (red, Bluetooth, volumen, salida de sonido, micrófono, apagar…), modo activo, centro de notificaciones, barra del escritorio con las apps minimizadas, lanzador de aplicaciones propio (también con la tecla Windows), isla superior y varias pieles. En español e inglés.\n\nCreado y diseñado por Frank Molina.",
+  "description": "Un dock en forma de isla: una cápsula pequeña que avisa qué está abierto, qué suena y cuánto falta, y que al acercarte se convierte en el dock completo. Con lo que se pierde al quitar la barra superior: batería, avisos de micrófono y cámara, idioma del teclado, espacios de trabajo, calendario con recordatorios y un reloj lateral escondido en el borde. Además pila de descargas, carpetas a mano, portapapeles, búsqueda rápida, temporizador, panel de Ajustes (red, Bluetooth, volumen, salida de sonido, micrófono, apagar…), modo activo, centro de notificaciones, barra del escritorio con las apps minimizadas, lanzador de aplicaciones propio (también con la tecla Windows), isla superior, esquinas activas y varias pieles. En español e inglés.\n\nCreado y diseñado por Frank Molina.",
   "shell-version": [
     "48",
     "49",
@@ -9,7 +9,7 @@
   ],
   "settings-schema": "org.gnome.shell.extensions.isla-dock",
   "gettext-domain": "isladock",
-  "version-name": "2.5",
+  "version-name": "2.6",
   "url": "https://github.com/FrankM03-code/IslaDock",
   "donations": {
     "paypal": "frankmolina29"

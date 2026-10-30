@@ -12,8 +12,9 @@
 // While a search finds files the panel widens and the selected app or file shows its
 // preview on the right, the same card as the quick search (filePreview.js).
 // No live blur behind it (it left dark stripes on X11 with NVIDIA); light when the dock is light.
-// Typing filters live (GNOME's own app search: names, generic names, keywords); with no
-// app found, Enter hands the text to the quick search (files, folders, sums).
+// Typing filters live (GNOME's own app search: names, generic names, keywords). Under the
+// apps and files the last row searches the text on the internet in the default browser
+// (2026-10-28); a sum with nothing found goes to the quick search, which does the math.
 // Right click on an app: the same actions. Dragging one onto the dock pins it there
 // (apps.js accepts it).
 // GNOME uses Super+Space to switch the keyboard layout ('switch-input-source'): while
@@ -67,6 +68,9 @@ const FILE_LOOKUPS = 40;        // files looked up on disk for one search, at mo
 const FILE_DELAY = 150;         // ms after the last key
 const PREVIEW = 330;            // the preview card (stylesheet .isla-vp: 302 + 2 × 14)
 const PREVIEW_GAP = 22;
+const WEB_SEARCH = 'https://www.google.com/search?q=';
+// Only numbers and operators ("12*3", "100 / 4"): the quick search does the math.
+const SUM = /^(?=.*\d)(?=.*[-+*/×÷%^])[\d\s.,()+\-*/×÷%^]+$/;
 // It comes up out of the dock like the calendar: from 0.82 and 28 px lower, with a small bounce.
 const RISE = 28;
 const SMALL = 0.82;
@@ -350,7 +354,7 @@ export class Launcher {
 
         // One floating panel; the overlay around it is clear (it only catches the clicks outside).
         const width = Math.min(WIDTH * sf, mon.width - 32 * sf);
-        const panel = this._panel = new St.BoxLayout({style_class: 'isla-launcher-panel', vertical: true, width});
+        const panel = this._panel = new St.BoxLayout({style_class: 'isla-launcher-panel', orientation: Clutter.Orientation.VERTICAL, width});
         // The dock's own color and edge; light, as see-through as the dock (81 %, Frank 2026-10-28),
         // dark at PANEL_ALPHA as the calendar and Ajustes. Its big shadow stays.
         const fill = look.light ? dockLook(this._state) : look;
@@ -447,7 +451,7 @@ export class Launcher {
     }
 
     _buildCard() {
-        const card = new St.BoxLayout({style_class: 'isla-launcher-card', vertical: true});
+        const card = new St.BoxLayout({style_class: 'isla-launcher-card', orientation: Clutter.Orientation.VERTICAL});
         const top = new St.BoxLayout({style_class: 'isla-launcher-card-top'});
         const tabs = new St.BoxLayout({style_class: 'isla-launcher-tabs'});
         this._tabs = new Map();
@@ -466,7 +470,7 @@ export class Launcher {
 
         // The list on the left (always the panel's own inner width), the preview on the right.
         const body = new St.BoxLayout({style_class: 'isla-launcher-body'});
-        const list = this._list = new St.BoxLayout({vertical: true, style_class: 'isla-launcher-list', width: this._inner});
+        const list = this._list = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-launcher-list', width: this._inner});
         body.add_child(list);
         this._vp = new FilePreview({onOpen: () => this._activate(this._selected), openButton: false});
         this._vp.actor.visible = false;
@@ -476,14 +480,16 @@ export class Launcher {
 
         this._scroll = new St.ScrollView({style_class: 'isla-launcher-scroll', hscrollbar_policy: St.PolicyType.NEVER,
             vscrollbar_policy: St.PolicyType.AUTOMATIC, overlay_scrollbars: true});
-        this._grid = new St.BoxLayout({vertical: true, style_class: 'isla-launcher-grid'});
+        this._grid = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-launcher-grid'});
         this._scroll.set_child(this._grid);
         list.add_child(this._scroll);
-        this._filesBox = new St.BoxLayout({style_class: 'isla-launcher-files', vertical: true, visible: false});
+        this._filesBox = new St.BoxLayout({style_class: 'isla-launcher-files', orientation: Clutter.Orientation.VERTICAL, visible: false});
         this._filesBox.add_child(new St.Label({text: _('Archivos'), style_class: 'isla-launcher-files-title'}));
-        this._fileList = new St.BoxLayout({vertical: true, style_class: 'isla-launcher-file-list'});
+        this._fileList = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-launcher-file-list'});
         this._filesBox.add_child(this._fileList);
         list.add_child(this._filesBox);
+        this._webRow = this._buildWebRow();
+        list.add_child(this._webRow);
         this._empty = new St.Button({style_class: 'isla-launcher-empty', visible: false, can_focus: false,
             x_align: Clutter.ActorAlign.CENTER});
         this._empty.connect('clicked', () => this._searchFiles());
@@ -491,11 +497,47 @@ export class Launcher {
         return card;
     }
 
+    // "Buscar «…» en internet", with the default browser's own icon and name.
+    _buildWebRow() {
+        const row = new St.Button({style_class: 'isla-launcher-file isla-launcher-web', can_focus: false,
+            track_hover: true, x_expand: true, visible: false});
+        const box = new St.BoxLayout({style_class: 'isla-launcher-file-box', x_expand: true});
+        const browser = Gio.AppInfo.get_default_for_uri_scheme('https');
+        box.add_child(new St.Icon({gicon: browser?.get_icon() ?? Gio.ThemedIcon.new('web-browser-symbolic'),
+            icon_size: 26, y_align: Clutter.ActorAlign.CENTER}));
+        this._webName = new St.Label({style_class: 'isla-launcher-file-name', x_expand: true, y_align: Clutter.ActorAlign.CENTER});
+        this._webName.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+        box.add_child(this._webName);
+        box.add_child(new St.Label({text: browser ? `${browser.get_display_name()} · Google` : 'Google',
+            style_class: 'isla-launcher-file-where', y_align: Clutter.ActorAlign.CENTER}));
+        row.set_child(box);
+        row.connect('clicked', () => this._searchWeb());
+        row.connect('notify::hover', () => row.hover && this._select(this._webIndex(), false));
+        return row;
+    }
+
+    _webIndex() {
+        return this._webRow.visible ? (this._shown?.length ?? 0) + this._found.length : -1;
+    }
+
+    _searchWeb() {
+        const text = this._query;
+        if (!text)
+            return;
+        this.close();
+        try {
+            Gio.AppInfo.launch_default_for_uri(`${WEB_SEARCH}${encodeURIComponent(text)}`,
+                global.create_app_launch_context(0, -1));
+        } catch (e) {
+            Main.notifyError(_('No se pudo abrir el navegador'), e.message);
+        }
+    }
+
     _buildDetail() {
         const bar = this._detail = new St.BoxLayout({style_class: 'isla-launcher-detail'});
         this._detailIcon = new St.Bin({style_class: 'isla-launcher-detail-icon', y_align: Clutter.ActorAlign.CENTER});
         bar.add_child(this._detailIcon);
-        const text = new St.BoxLayout({vertical: true, x_expand: true, y_align: Clutter.ActorAlign.CENTER});
+        const text = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, x_expand: true, y_align: Clutter.ActorAlign.CENTER});
         this._detailName = new St.Label({style_class: 'isla-launcher-detail-name'});
         this._detailInfo = new St.Label({style_class: 'isla-launcher-detail-info'});
         this._detailName.clutter_text.ellipsize = Pango.EllipsizeMode.END;
@@ -624,15 +666,15 @@ export class Launcher {
         });
         this._drawFiles();
         this._showPreview(this._found.length > 0 && this._previewRoom);
-        this._empty.visible = !apps.length && !this._found.length;
+        this._webRow.visible = !!this._query;
+        if (this._query)
+            this._webName.text = fmt(_('Buscar “{texto}” en internet'), {texto: this._query});
+        this._empty.visible = !apps.length && !this._found.length && !this._query;
         this._scroll.visible = apps.length > 0;
-        if (this._empty.visible) {
-            this._empty.label = this._query
-                ? fmt(_('Ninguna app ni archivo. Enter abre la búsqueda rápida con “{texto}”'), {texto: this._query})
-                : _('No hay apps en esta categoría');
-        }
+        if (this._empty.visible)
+            this._empty.label = _('No hay apps en esta categoría');
         this._fitHeight();
-        this._select(Math.min(this._selected, apps.length + this._found.length - 1), false);
+        this._select(Math.min(this._selected, apps.length + this._found.length + (this._query ? 0 : -1)), false);
     }
 
     // ---------- files ----------
@@ -761,10 +803,12 @@ export class Launcher {
             });
     }
 
-    // An app tile or, past the apps, a file row.
+    // An app tile or, past the apps, a file row or the internet row.
     _activate(i) {
         const apps = this._shown ?? [];
-        if (i < apps.length)
+        if (i === this._webIndex())
+            this._searchWeb();
+        else if (i < apps.length)
             this._launch(apps[i]);
         else if (this._found[i - apps.length])
             this._openFile(this._found[i - apps.length]);
@@ -801,7 +845,7 @@ export class Launcher {
         if (tile)
             return tile;
         tile = new St.Button({style_class: 'isla-launcher-tile', can_focus: false, reactive: true, track_hover: true});
-        const box = new St.BoxLayout({vertical: true, style_class: 'isla-launcher-tile-box', x_expand: true});
+        const box = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-launcher-tile-box', x_expand: true});
         const square = new St.Bin({style_class: 'isla-launcher-tile-icon', x_align: Clutter.ActorAlign.CENTER,
             child: new St.Icon({gicon: this._gicon(app), icon_size: 54})});
         square.set_pivot_point(0.5, 0.5);
@@ -889,7 +933,16 @@ export class Launcher {
         if (oldTile)
             this._paintTile(oldTile, false);
         this._found.forEach(f => f.row?.remove_style_pseudo_class('selected'));
+        this._webRow.remove_style_pseudo_class('selected');
         this._selected = Math.max(0, i);
+        if (this._selected === this._webIndex()) {
+            this._webRow.add_style_pseudo_class('selected');
+            // The preview card empties instead of keeping the last app or file.
+            if (this._vp.actor.visible)
+                this._vp.show(null);
+            this._fillDetail(null);
+            return;
+        }
         const app = apps[this._selected];
         const file = this._found[this._selected - apps.length];
         if (this._vp.actor.visible)
@@ -961,16 +1014,18 @@ export class Launcher {
             adjustment.value = bottom - adjustment.page_size;
     }
 
-    // In the grid by tiles and rows; down past the last row into the files, one by one there.
+    // In the grid by tiles and rows; down past the last row into the files and the internet
+    // row, one by one there.
     _move(step) {
         const apps = this._shown?.length ?? 0;
-        const n = apps + this._found.length;
+        const below = this._found.length + (this._webRow.visible ? 1 : 0);
+        const n = apps + below;
         const at = this._selected;
         let i;
         if (at >= apps)
             i = at + Math.sign(step);
         else if (at + step >= apps && step > 0)
-            i = this._found.length ? apps : (step > 1 && at < apps - 1 ? apps - 1 : -1);
+            i = below ? apps : (step > 1 && at < apps - 1 ? apps - 1 : -1);
         else
             i = at + step;
         if (i < 0 || i >= n)
@@ -1010,10 +1065,10 @@ export class Launcher {
                 this._openNew(app);
             else if (file && ctrl)
                 this._openFolder(file);
-            else if (app || file)
-                this._activate(this._selected);
-            else if (this._query)
+            else if (!app && !file && SUM.test(this._query))
                 this._searchFiles();
+            else
+                this._activate(this._selected);
             return Clutter.EVENT_STOP;
         }
         case Clutter.KEY_Tab:
@@ -1123,11 +1178,14 @@ export class Launcher {
                 return;
             this._entry?.grab_key_focus();
             GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
-                menu.destroy();
+                // The launcher may have destroyed it already (closed in between).
+                if (!menu.gone)
+                    menu.destroy();
                 return GLib.SOURCE_REMOVE;
             });
         });
         menu.connect('destroy', () => {
+            menu.gone = true;
             if (this._menu === menu)
                 this._menu = null;
         });

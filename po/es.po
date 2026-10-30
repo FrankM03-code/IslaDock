@@ -1764,5 +1764,77 @@ msgstr "La tecla Windows abre las aplicaciones"
 msgid "Sola, abre y cierra el cajón (el mismo del botón Aplicaciones) en vez de Actividades"
 msgstr "Sola, abre y cierra el cajón (el mismo del botón Aplicaciones) en vez de Actividades"
 
+msgid "Esquinas activas"
+msgstr "Esquinas activas"
+
+msgid "Lleva el puntero a una esquina y empuja un poco contra el borde. Mientras están activas, la esquina de GNOME se apaga: la superior izquierda hace su trabajo."
+msgstr "Lleva el puntero a una esquina y empuja un poco contra el borde. Mientras están activas, la esquina de GNOME se apaga: la superior izquierda hace su trabajo."
+
+msgid "Usar las esquinas activas"
+msgstr "Usar las esquinas activas"
+
+msgid "Vista general"
+msgstr "Vista general"
+
+msgid "Abrir terminal"
+msgstr "Abrir terminal"
+
+msgid "Mostrar escritorio"
+msgstr "Mostrar escritorio"
+
+msgid "Bloquear pantalla"
+msgstr "Bloquear pantalla"
+
+msgid "Comando propio"
+msgstr "Comando propio"
+
+msgid "Superior izquierda"
+msgstr "Superior izquierda"
+
+msgid "Superior derecha"
+msgstr "Superior derecha"
+
+msgid "Inferior izquierda"
+msgstr "Inferior izquierda"
+
+msgid "Inferior derecha"
+msgstr "Inferior derecha"
+
+msgid "Acción"
+msgstr "Acción"
+
+msgid "Comando"
+msgstr "Comando"
+
+msgid "Sensibilidad"
+msgstr "Sensibilidad"
+
+msgid "Presión contra el borde para activar. Más bajo = más fácil"
+msgstr "Presión contra el borde para activar. Más bajo = más fácil"
+
+msgid "Destello de color"
+msgstr "Destello de color"
+
+msgid "Un cuarto de círculo del color de la acción en la esquina"
+msgstr "Un cuarto de círculo del color de la acción en la esquina"
+
+msgid "Ignorar en pantalla completa"
+msgstr "Ignorar en pantalla completa"
+
+msgid "Evita activarlas mientras ves un video o juegas"
+msgstr "Evita activarlas mientras ves un video o juegas"
+
+msgid "No molestar activado"
+msgstr "No molestar activado"
+
+msgid "No molestar desactivado"
+msgstr "No molestar desactivado"
+
+msgid "Esta esquina no tiene un comando configurado."
+msgstr "Esta esquina no tiene un comando configurado."
+
+msgid "No se encontró una terminal instalada. Puedes usar «Comando propio» en su lugar."
+msgstr "No se encontró una terminal instalada. Puedes usar «Comando propio» en su lugar."
+
 msgid "Cerrar ventana"
 msgstr "Cerrar ventana"

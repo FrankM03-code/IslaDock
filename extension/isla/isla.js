@@ -29,7 +29,7 @@ const CLOSE_TIME = 250;
 const FADE_TIME = 120;
 const LEAVE_DELAY = 400;     // waits do not follow the animation speed
 const FOLD_DELAY = 2500;     // the open island waits this long after the pointer leaves (a stray move must not fold it)
-const RELEASE_DELAY = 400;    // after a click outside closes a panel, before folding
+const RELEASE_DELAY = 1500;   // after a click outside closes a panel (or opening a folder), before folding
 const EDGE_GRACE = 1500;      // open after touching the edge without reaching the island
 const ICON_STAGGER = 25;
 const MIN_ICON = 16;           // px: the smallest the icons get when there are too many
@@ -530,6 +530,8 @@ export class Isla {
                 this._maybeFold(true);
             else if (name === 'maybe-fold' && !this.hovered)
                 this._later('leave', RELEASE_DELAY, () => this._maybeFold());
+            else if (name === 'apps-open')
+                this._apps.openApps();
             else if (name === 'search-content')
                 this._search.set_child(args[0]);
             else if (name === 'search-wide')
@@ -920,11 +922,16 @@ export class Isla {
 
     // A button of the desktop bar: the real one opens over the open dock.
     _fromMirror(kind, button) {
+        // The launcher opens the dock itself and comes up out of it.
+        if (kind === 'apps') {
+            this._apps.openApps();
+            return;
+        }
         if (kind === 'power' && button === 3) {
             this._state.command('power-suspend');
             return;
         }
-        const command = {trash: 'trash-toggle', notifications: 'notifications-toggle', clipboard: 'clipboard-toggle',
+        const command = {notifications: 'notifications-toggle', clipboard: 'clipboard-toggle',
             power: 'power-toggle'}[kind];
         this._openOver(kind, () => this._apps._items?.get(kind), command);
     }

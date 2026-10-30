@@ -372,5 +372,78 @@
       <default>'[]'</default>
       <summary>Tareas de la isla superior (JSON: texto, hecha)</summary>
     </key>
+    <key name="esquinas-activas" type="b">
+      <default>true</default>
+      <summary>Esquinas activas: cada esquina de la pantalla hace algo al empujar el puntero contra ella</summary>
+    </key>
+    <key name="esquina-sup-izq" type="b">
+      <default>true</default>
+      <summary>Esquina superior izquierda activada</summary>
+    </key>
+    <key name="esquina-sup-izq-accion" type="s">
+      <choices><choice value='none'/><choice value='overview'/><choice value='apps'/><choice value='dnd'/><choice value='terminal'/><choice value='desktop'/><choice value='lock'/><choice value='command'/></choices>
+      <default>'overview'</default>
+      <summary>Acción de la esquina superior izquierda</summary>
+    </key>
+    <key name="esquina-sup-izq-comando" type="s">
+      <default>''</default>
+      <summary>Comando propio de la esquina superior izquierda</summary>
+    </key>
+    <key name="esquina-sup-der" type="b">
+      <default>true</default>
+      <summary>Esquina superior derecha activada</summary>
+    </key>
+    <key name="esquina-sup-der-accion" type="s">
+      <choices><choice value='none'/><choice value='overview'/><choice value='apps'/><choice value='dnd'/><choice value='terminal'/><choice value='desktop'/><choice value='lock'/><choice value='command'/></choices>
+      <default>'dnd'</default>
+      <summary>Acción de la esquina superior derecha</summary>
+    </key>
+    <key name="esquina-sup-der-comando" type="s">
+      <default>''</default>
+      <summary>Comando propio de la esquina superior derecha</summary>
+    </key>
+    <key name="esquina-inf-izq" type="b">
+      <default>true</default>
+      <summary>Esquina inferior izquierda activada</summary>
+    </key>
+    <key name="esquina-inf-izq-accion" type="s">
+      <choices><choice value='none'/><choice value='overview'/><choice value='apps'/><choice value='dnd'/><choice value='terminal'/><choice value='desktop'/><choice value='lock'/><choice value='command'/></choices>
+      <default>'terminal'</default>
+      <summary>Acción de la esquina inferior izquierda</summary>
+    </key>
+    <key name="esquina-inf-izq-comando" type="s">
+      <default>''</default>
+      <summary>Comando propio de la esquina inferior izquierda</summary>
+    </key>
+    <key name="esquina-inf-der" type="b">
+      <default>true</default>
+      <summary>Esquina inferior derecha activada</summary>
+    </key>
+    <key name="esquina-inf-der-accion" type="s">
+      <choices><choice value='none'/><choice value='overview'/><choice value='apps'/><choice value='dnd'/><choice value='terminal'/><choice value='desktop'/><choice value='lock'/><choice value='command'/></choices>
+      <default>'lock'</default>
+      <summary>Acción de la esquina inferior derecha</summary>
+    </key>
+    <key name="esquina-inf-der-comando" type="s">
+      <default>''</default>
+      <summary>Comando propio de la esquina inferior derecha</summary>
+    </key>
+    <key name="esquinas-presion" type="i">
+      <range min="30" max="400"/>
+      <default>100</default>
+      <summary>Esquinas activas: presión contra el borde para activarlas (más bajo = más fácil)</summary>
+    </key>
+    <key name="esquinas-destello" type="b">
+      <default>true</default>
+      <summary>Esquinas activas: destello de color al activarlas</summary>
+    </key>
+    <key name="esquinas-pantalla-completa" type="b">
+      <default>true</default>
+      <summary>Esquinas activas: no se activan con una ventana en pantalla completa</summary>
+    </key>
+    <key name="esquinas-nativa-apagada" type="b">
+      <default>false</default>
+      <summary>Estado: IslaDock apagó la esquina activa de GNOME y debe volver a encenderla</summary>
+    </key>
   </schema>
 </schemalist>

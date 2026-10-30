@@ -12,9 +12,8 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 const MODES = Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW;
 
 export class SuperKey {
-    constructor({state, settings}) {
+    constructor({state}) {
         this._state = state;
-        this._settings = settings;
         // GNOME's handlers, blocked before ours is connected.
         this._blocked = GObject.signal_handlers_block_matched(global.display, {signalId: 'overlay-key'});
         this._id = global.display.connect('overlay-key', () => this._onSuper());
@@ -23,12 +22,7 @@ export class SuperKey {
     }
 
     _onSuper() {
-        if (this._settings.get_boolean('lanzador-isla') && !Main.overview.visible)
-            this._state.command('launcher-toggle');
-        else if (Main.overview.visible)
-            Main.overview.hide();
-        else
-            Main.overview.showApps();
+        this._state.command('apps-open');
     }
 
     destroy() {

@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // The bar (dock-minimizado-isla-dock.md, 2026-10-24): the folded island, always (since
 // 2026-10-26 also with windows in sight, in the app grid and in do not disturb):
-//   [Papelera] | [ date and time | minimized apps ] | [Notificaciones Portapapeles Ajustes] | [music]
+//   [Aplicaciones] | [ date and time | minimized apps ] | [Notificaciones Portapapeles Ajustes] | [music]
 // While a player plays the song (title and previous / pause / next) comes in at the
 // very end, after Ajustes (Frank: not right after the search field), and leaves 3 s
 // after it stops. The date and time are not there with the top island on (it shows
 // them already); a click on the time opens IslaDock's calendar.
 // With the top island on and 'musica-lugar' = 'arriba' (the default) the song plays up there, not here.
-// The middle piece's right part has one icon per minimized window (5 at most, then "+N" with the rest in a menu); a
+// The middle piece's right part has one icon per minimized window (all of them, Frank 2026-10-26); a
 // click brings it back. The buttons at the ends are copies of the dock's (they
-// count and look alike); a click opens the real one over the open dock.
+// count and look alike); a click opens the real one over the open dock. The first one is the
+// app launcher (Aplicaciones), in place of the Papelera since 2026-10-28 (Frank).
 // With the top island on (dock-opcion-a.html, 2026-10-26) the minimized windows go by
 // app: a bigger icon, a small dot under it, and how many when there are several
 // (a click on those lists them). After it (dock-opcion-a(1).html) a few pinned
@@ -39,6 +40,7 @@ import {shortcutLabel} from './clipboard/panel.js';
 import {dayName, monthName, monthShort} from './dates.js';
 import {dockMonitorIndex} from './monitor.js';
 import {inDock} from './notch/place.js';
+import {Mode} from './state.js';
 import {ms} from './timing.js';
 import {workspacesInUse} from './workspaces.js';
 
@@ -51,7 +53,7 @@ const SWAP_TIME = 220;
 // What a person would call "a window" (the window bar counts the same ones).
 export const TYPES = [Meta.WindowType.NORMAL, Meta.WindowType.DIALOG, Meta.WindowType.MODAL_DIALOG, Meta.WindowType.UTILITY];
 
-const KEYS = {trash: 'mostrar-papelera', notifications: 'centro-notificaciones', clipboard: 'mostrar-portapapeles',
+const KEYS = {apps: 'mostrar-aplicaciones', notifications: 'centro-notificaciones', clipboard: 'mostrar-portapapeles',
     power: 'mostrar-energia'};
 
 // A window of the active workspace on the dock's monitor that a person would call "a window".
@@ -74,7 +76,7 @@ export class RestBar {
         this.actor.connect('destroy', () => this._dropTimers());
 
         this._mirrors = {};
-        for (const kind of ['trash', 'notifications', 'clipboard', 'power'])
+        for (const kind of ['apps', 'notifications', 'clipboard', 'power'])
             this._mirrors[kind] = apps.mirror(kind, TILE);
         this._sepStart = this._sep('isla-barra-sep');
         this._sepEnd = this._sep('isla-barra-sep');
@@ -99,7 +101,7 @@ export class RestBar {
             this._piece.add_child(actor);
 
         this._extras = extras;
-        for (const actor of [this._mirrors.trash, this._sepStart, this._find, this._piece, ...extras, this._sepPinned, this._pinned, this._sepEnd,
+        for (const actor of [this._mirrors.apps, this._sepStart, this._find, this._piece, ...extras, this._sepPinned, this._pinned, this._sepEnd,
             this._spaces, this._mirrors.notifications, this._mirrors.clipboard, this._mirrors.power, this._sepMusic, this._music])
             this.actor.add_child(actor);
 
@@ -168,7 +170,7 @@ export class RestBar {
         this._syncSpaces(top);
         const right = ['notifications', 'clipboard', 'power'].some(k => this._mirrors[k].visible) || this._spaces.visible;
         // The search field is always in the middle.
-        this._sepStart.visible = this._mirrors.trash.visible;
+        this._sepStart.visible = this._mirrors.apps.visible;
         this._sepPinned.visible = this._pinned.visible;
         this._sepEnd.visible = right;
         this._onChange();
@@ -193,8 +195,30 @@ export class RestBar {
         box.add_child(this._searchKey);
         button.set_child(box);
         button.connect('clicked', () => this._state.command('search-open'));
+        this._on(this._state, 'mode-changed', (_s, mode, old) => {
+            if (old === Mode.SEARCH && mode !== Mode.SEARCH)
+                this._clearSearchField();
+        });
         this._updateSearchKey();
         return button;
+    }
+
+    // Frank's video (2026-10-29): after a search from here the field stayed marked until
+    // something else opened. The search's grab swallows the pointer leaving it (hover) and
+    // hands the key focus back to it (blue border); on X11 + NVIDIA the shrinking panel can
+    // also leave old pixels. Clear both and repaint once the search is gone.
+    // The search drops its grab right after leaving the mode, so this waits a moment.
+    _clearSearchField() {
+        if (this._findId)
+            GLib.source_remove(this._findId);
+        this._findId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
+            this._findId = 0;
+            if (global.stage.key_focus === this._find)
+                global.stage.set_key_focus(null);
+            this._find.sync_hover();
+            global.stage.queue_redraw();
+            return GLib.SOURCE_REMOVE;
+        });
     }
 
     _updateSearchKey() {
@@ -357,7 +381,8 @@ export class RestBar {
     _updateMusic() {
         const title = this._state.musicTitle;
         // With the top island on, the song may live only up there ('musica-lugar').
-        const playing = !!title && !!this._state.musicPlaying && inDock(this._settings, 'musica-lugar');
+        const here = inDock(this._settings, 'musica-lugar');
+        const playing = !!title && !!this._state.musicPlaying && here;
         if (title)
             this._song.text = title.toUpperCase();
         this._play.child.icon_name = playing ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic';
@@ -365,6 +390,10 @@ export class RestBar {
         if (playing) {
             this._cancelStop();
             this._showMusic(true, true);
+        } else if (this._musicShown && !here) {
+            // The song moved up to the top island: it leaves the bar right away, not after the pause grace.
+            this._cancelStop();
+            this._showMusic(false, true);
         } else if (this._musicShown && !this._stopId) {
             // A song change pauses for a moment: the clock comes back only if it stays stopped.
             this._stopId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, title ? STOP_GRACE : 0, () => {
@@ -470,16 +499,18 @@ export class RestBar {
                 lift = icon(GROUP_ICON);
                 column.add_child(lift);
                 column.add_child(new St.Widget({style_class: 'isla-barra-grupo-linea', x_align: Clutter.ActorAlign.CENTER}));
-                const box = new St.Widget();
+                const box = new St.Widget({layout_manager: new Clutter.BinLayout()});
                 box.add_child(column);
                 if (mine.length > 1) {
-                    // Over the icon's top right corner, a little outside it.
-                    const count = new St.Label({style_class: 'isla-barra-grupo-cuenta', text: String(mine.length)});
+                    // Over the icon's top right corner, a little outside it. Placed by the layout and
+                    // moved by translation: a set_position from notify::width runs in the middle of
+                    // GNOME's layout and left the dock without a place (Frank, 2026-10-30).
+                    // Without x/y_expand the layout ignores the alignment and centers it on the icon.
+                    const count = new St.Label({style_class: 'isla-barra-grupo-cuenta', text: String(mine.length),
+                        x_expand: true, y_expand: true, x_align: Clutter.ActorAlign.END, y_align: Clutter.ActorAlign.START,
+                        translation_x: 4, translation_y: -3});
                     box.add_child(count);
                     tile._count = count;
-                    const place = () => count.set_position(Math.round(column.width - count.width + 4), -3);
-                    column.connect('notify::width', place);
-                    count.connect('notify::width', place);
                 }
                 tile.set_child(box);
             } else {
@@ -572,11 +603,11 @@ export class RestBar {
 
     _dropTimers() {
         this._cancelStop();
-        for (const id of [this._clockId, this._minId, this._pinId]) {
+        for (const id of [this._clockId, this._minId, this._pinId, this._findId]) {
             if (id)
                 GLib.source_remove(id);
         }
-        this._clockId = this._minId = this._pinId = 0;
+        this._clockId = this._minId = this._pinId = this._findId = 0;
     }
 
     destroy() {

@@ -172,11 +172,11 @@ export class AppsRow extends Signals.EventEmitter {
         return [this._items?.get(kind), this._mirrors.get(kind)].filter(Boolean);
     }
 
-    // A copy of Papelera, Notificaciones, Portapapeles or Ajustes for the desktop bar
+    // A copy of Aplicaciones, Notificaciones, Portapapeles or Ajustes for the desktop bar
     // (restBar.js), `size` px: it looks and counts like the dock's own; a click goes
     // out as 'mirror-activate' (kind, button) for the island to open the real one.
     mirror(kind, size) {
-        const label = {trash: _('Papelera'), notifications: _('Notificaciones'), clipboard: _('Portapapeles'),
+        const label = {apps: _('Aplicaciones'), notifications: _('Notificaciones'), clipboard: _('Portapapeles'),
             power: _('Ajustes')}[kind];
         const item = new DockItem({kind, key: `espejo-${kind}`, label});
         // The dock's items sit on its bottom edge; in the bar they go in the middle like the rest.
@@ -185,8 +185,6 @@ export class AppsRow extends Signals.EventEmitter {
         item.connect('activate', (_i, button) => this.emit('mirror-activate', kind, button));
         item.connect('destroy', () => this._mirrors.delete(kind));
         this._mirrors.set(kind, item);
-        if (kind === 'trash')
-            item.setGIcon(this._trashIcon());
         this._updateButtons();
         return item;
     }
@@ -533,15 +531,20 @@ export class AppsRow extends Signals.EventEmitter {
         return app.get_id() === id;
     }
 
+    // All installed apps: the Lanzador Isla (launcher.js), or GNOME's grid with its search on top.
+    // The Aplicaciones button of the dock and its copy in the desktop bar.
+    openApps() {
+        if (this._settings.get_boolean('lanzador-isla') && !Main.overview.visible)
+            this._state.command('launcher-toggle');
+        else if (Main.overview.visible)
+            Main.overview.hide();
+        else
+            Main.overview.showApps();
+    }
+
     _onActivate(item, button) {
-        // All installed apps: the Lanzador Isla (launcher.js), or GNOME's grid with its search on top.
         if (item.kind === 'apps') {
-            if (this._settings.get_boolean('lanzador-isla') && !Main.overview.visible)
-                this._state.command('launcher-toggle');
-            else if (Main.overview.visible)
-                Main.overview.hide();
-            else
-                Main.overview.showApps();
+            this.openApps();
             return;
         }
         // Notificaciones: its panel with a click, the quick menu with a right click.

@@ -1764,5 +1764,77 @@ msgstr "The Windows key opens the apps"
 msgid "Sola, abre y cierra el cajón (el mismo del botón Aplicaciones) en vez de Actividades"
 msgstr "On its own, it opens and closes the drawer (the same as the Applications button) instead of Activities"
 
+msgid "Esquinas activas"
+msgstr "Hot corners"
+
+msgid "Lleva el puntero a una esquina y empuja un poco contra el borde. Mientras están activas, la esquina de GNOME se apaga: la superior izquierda hace su trabajo."
+msgstr "Move the pointer to a corner and push a little against the edge. While they are on, GNOME's own corner is switched off: the top left one does its job."
+
+msgid "Usar las esquinas activas"
+msgstr "Use hot corners"
+
+msgid "Vista general"
+msgstr "Overview"
+
+msgid "Abrir terminal"
+msgstr "Open a terminal"
+
+msgid "Mostrar escritorio"
+msgstr "Show desktop"
+
+msgid "Bloquear pantalla"
+msgstr "Lock screen"
+
+msgid "Comando propio"
+msgstr "Custom command"
+
+msgid "Superior izquierda"
+msgstr "Top left"
+
+msgid "Superior derecha"
+msgstr "Top right"
+
+msgid "Inferior izquierda"
+msgstr "Bottom left"
+
+msgid "Inferior derecha"
+msgstr "Bottom right"
+
+msgid "Acción"
+msgstr "Action"
+
+msgid "Comando"
+msgstr "Command"
+
+msgid "Sensibilidad"
+msgstr "Sensitivity"
+
+msgid "Presión contra el borde para activar. Más bajo = más fácil"
+msgstr "Pressure against the edge to fire. Lower = easier"
+
+msgid "Destello de color"
+msgstr "Color flash"
+
+msgid "Un cuarto de círculo del color de la acción en la esquina"
+msgstr "A quarter circle in the action's color in the corner"
+
+msgid "Ignorar en pantalla completa"
+msgstr "Ignore in full screen"
+
+msgid "Evita activarlas mientras ves un video o juegas"
+msgstr "Keeps them from firing while you watch a video or play"
+
+msgid "No molestar activado"
+msgstr "Do not disturb on"
+
+msgid "No molestar desactivado"
+msgstr "Do not disturb off"
+
+msgid "Esta esquina no tiene un comando configurado."
+msgstr "This corner has no command set."
+
+msgid "No se encontró una terminal instalada. Puedes usar «Comando propio» en su lugar."
+msgstr "No installed terminal was found. You can use “Custom command” instead."
+
 msgid "Cerrar ventana"
 msgstr "Close window"

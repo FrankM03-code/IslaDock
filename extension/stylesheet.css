@@ -1173,7 +1173,6 @@
 .isla-sup-fuerte { font-weight: 700; font-size: 9pt; }
 .isla-sup-tenue { color: rgba(244, 244, 245, 0.55); font-size: 7.5pt; }
 .isla-sup-mini { color: rgba(244, 244, 245, 0.48); font-size: 7pt; font-feature-settings: "tnum"; }
-.isla-sup-grande { font-size: 15pt; font-weight: 700; font-feature-settings: "tnum"; }
 .isla-sup-anillo-texto { font-weight: 700; font-size: 9pt; font-feature-settings: "tnum"; }
 .isla-sup-fila { spacing: 5px; padding-top: 5px; }
 
@@ -1353,14 +1352,16 @@
 .isla-acomodo-titulo { font-size: 15px; font-weight: 700; }
 .isla-acomodo-ayuda { font-size: 12px; margin-bottom: 10px; color: rgba(244, 245, 250, 0.6); }
 .isla-acomodo.clara .isla-acomodo-ayuda { color: #6B7085; }
-.isla-acomodo-ventana { padding: 10px; border-radius: 14px; background-color: rgba(30, 32, 39, 0.92);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); color: #F4F5FA; }
-.isla-acomodo.clara .isla-acomodo-ventana { background-color: #FFFFFF; color: #15172A; box-shadow: 0 6px 18px rgba(16, 36, 90, 0.18); }
-.isla-acomodo-ventana:hover { box-shadow: 0 0 0 2px -st-accent-color, 0 6px 18px rgba(0, 0, 0, 0.35); }
-.isla-acomodo-ventana:focus { box-shadow: 0 0 0 3px -st-accent-color; }
-.isla-acomodo-caja { spacing: 8px; }
-.isla-acomodo-miniatura { border-radius: 8px; }
-.isla-acomodo-nombre { spacing: 6px; font-size: 12px; font-weight: 600; }
+.isla-acomodo-ventana { padding: 14px 20px; border-radius: 26px; color: #F4F5FA; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+.isla-acomodo.clara .isla-acomodo-ventana { color: #15172A; box-shadow: 0 8px 24px rgba(16, 36, 90, 0.12); }
+.isla-acomodo-ventana:hover, .isla-acomodo-ventana:focus { box-shadow: 0 0 0 3px #F4F5FA, 0 12px 30px rgba(0, 0, 0, 0.35); }
+.isla-acomodo.clara .isla-acomodo-ventana:hover, .isla-acomodo.clara .isla-acomodo-ventana:focus {
+  box-shadow: 0 0 0 3px #15172A, 0 12px 30px rgba(16, 36, 90, 0.25); }
+.isla-acomodo-caja { spacing: 4px; }
+.isla-acomodo-caja > StIcon { margin-bottom: 6px; }
+.isla-acomodo-nombre { font-size: 16px; font-weight: 700; }
+.isla-acomodo-titulo-ventana { font-size: 12px; color: rgba(244, 245, 250, 0.65); }
+.isla-acomodo.clara .isla-acomodo-titulo-ventana { color: rgba(21, 23, 42, 0.62); }
 
 /* ---------- Lanzador Isla "Minimal+" (launcher.js, ~/Descargas/lanzador-isla-minimal-spec.md) ---------- */
 /* One floating panel. Tokens: panel rgba(22, 24, 30, 0.82), text #f2f3f5 / #a3a8b2 / #8a909b, app names #b4b9c3, surfaces white at
@@ -1486,3 +1487,4 @@
   box-shadow: 0 8px 22px rgba(16, 36, 90, 0.16); }
 .isla-launcher-menu.clara .popup-menu-item { color: #15172a; }
 .isla-launcher-menu.clara .popup-menu-item:hover, .isla-launcher-menu.clara .popup-menu-item:focus { background-color: rgba(21, 23, 42, 0.07); }
+

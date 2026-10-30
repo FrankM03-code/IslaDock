@@ -95,7 +95,7 @@ function switchRow(settings, key, title, subtitle = '') {
 // Drop-down bound to a string key: options = [[value, label], ...].
 // Settings that are state, not choices: never copied.
 const NOT_EXPORTED = ['temporizador-fin', 'temporizador-modo', 'banners-previos', 'portapapeles-liberado',
-    'calendario-liberado', 'lanzador-liberado', 'no-molestar', 'cafeina-activa', 'preferencias-abrir', 'isla-superior-pagina'];
+    'calendario-liberado', 'lanzador-liberado', 'esquinas-nativa-apagada', 'no-molestar', 'cafeina-activa', 'preferencias-abrir', 'isla-superior-pagina'];
 
 export function exportSettings(settings, metadata) {
     const values = {};
@@ -762,6 +762,7 @@ export default class IslaDockPreferences extends ExtensionPreferences {
         settings.bind('acomodar-ventanas', fill, 'sensitive', Gio.SettingsBindFlags.GET);
         tiling.add(fill);
         page.add(tiling);
+        page.add(this._cornersGroup(settings));
 
         const hasInter = PangoCairo.FontMap.get_default().list_families().some(f => f.get_name() === 'Inter');
         if (!hasInter) {
@@ -773,6 +774,65 @@ export default class IslaDockPreferences extends ExtensionPreferences {
             page.add(font);
         }
         return page;
+    }
+
+    // Esquinas activas: each corner with its own switch, action and (for Comando propio) command.
+    _cornersGroup(settings) {
+        const group = new Adw.PreferencesGroup({
+            title: _('Esquinas activas'),
+            description: _('Lleva el puntero a una esquina y empuja un poco contra el borde. Mientras están activas, la esquina de GNOME se apaga: la superior izquierda hace su trabajo.'),
+        });
+        group.add(switchRow(settings, 'esquinas-activas', _('Usar las esquinas activas')));
+        const actions = [
+            ['overview', _('Vista general')],
+            ['apps', _('Aplicaciones')],
+            ['dnd', _('No molestar')],
+            ['terminal', _('Abrir terminal')],
+            ['desktop', _('Mostrar escritorio')],
+            ['lock', _('Bloquear pantalla')],
+            ['command', _('Comando propio')],
+        ];
+        const rows = [];
+        for (const [corner, title] of [
+            ['sup-izq', _('Superior izquierda')],
+            ['sup-der', _('Superior derecha')],
+            ['inf-izq', _('Inferior izquierda')],
+            ['inf-der', _('Inferior derecha')],
+        ]) {
+            const key = `esquina-${corner}`;
+            const expander = new Adw.ExpanderRow({title, show_enable_switch: true});
+            settings.bind(key, expander, 'enable-expansion', Gio.SettingsBindFlags.DEFAULT);
+            const action = comboRow(settings, `${key}-accion`, _('Acción'), actions);
+            const command = new Adw.EntryRow({title: _('Comando'), show_apply_button: true,
+                text: settings.get_string(`${key}-comando`)});
+            command.connect('apply', () => settings.set_string(`${key}-comando`, command.text.trim()));
+            const sync = () => {
+                const value = settings.get_string(`${key}-accion`);
+                expander.subtitle = actions.find(([v]) => v === value)?.[1] ?? '';
+                command.visible = value === 'command';
+            };
+            const id = settings.connect(`changed::${key}-accion`, sync);
+            expander.connect('destroy', () => settings.disconnect(id));
+            sync();
+            expander.add_row(action);
+            expander.add_row(command);
+            group.add(expander);
+            rows.push(expander);
+        }
+        const pressure = new Adw.SpinRow({
+            title: _('Sensibilidad'),
+            subtitle: _('Presión contra el borde para activar. Más bajo = más fácil'),
+            adjustment: new Gtk.Adjustment({lower: 30, upper: 400, step_increment: 10, page_increment: 50}),
+        });
+        settings.bind('esquinas-presion', pressure, 'value', Gio.SettingsBindFlags.DEFAULT);
+        rows.push(pressure,
+            switchRow(settings, 'esquinas-destello', _('Destello de color'), _('Un cuarto de círculo del color de la acción en la esquina')),
+            switchRow(settings, 'esquinas-pantalla-completa', _('Ignorar en pantalla completa'), _('Evita activarlas mientras ves un video o juegas')));
+        for (const row of rows.slice(4))
+            group.add(row);
+        for (const row of rows)
+            settings.bind('esquinas-activas', row, 'sensitive', Gio.SettingsBindFlags.GET);
+        return group;
     }
 
     // ---------- About ----------
