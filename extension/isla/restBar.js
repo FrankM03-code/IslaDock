@@ -43,6 +43,7 @@ import {inDock} from './notch/place.js';
 import {Mode} from './state.js';
 import {ms} from './timing.js';
 import {workspacesInUse} from './workspaces.js';
+import {markLaunched} from './readyNotice.js';
 
 const TILE = 36;
 const APP_ICON = 26;
@@ -155,18 +156,19 @@ export class RestBar {
         this._syncPiece();
     }
 
-    // With the top island on, the date and time stay up there: the middle piece keeps only
-    // the music and the minimized apps, and goes away when it has neither.
+    // The big date-and-time button is never shown (Frank 2026-11-02: not even with the top
+    // island off); the pinned apps (with their little calendar page) take its place. The
+    // middle piece keeps only the music and the minimized apps, and goes away when it has neither.
     _syncPiece() {
         const top = this._settings.get_boolean('isla-superior');
-        const clock = !top;
+        const clock = false;
         const any = this._minimized.get_n_children() > 0;
         this._clock.visible = clock;
         this._left.visible = clock;
         this._music.visible = this._sepMusic.visible = !!this._musicShown;
         this._innerSep.visible = any && this._left.visible;
         this._piece.visible = this._left.visible || any;
-        this._pinned.visible = top && this._pinned.get_n_children() > 0;
+        this._pinned.visible = this._pinned.get_n_children() > 0;
         this._syncSpaces(top);
         const right = ['notifications', 'clipboard', 'power'].some(k => this._mirrors[k].visible) || this._spaces.visible;
         // The search field is always in the middle.
@@ -247,7 +249,10 @@ export class RestBar {
         const closed = AppFavorites.getAppFavorites().getFavorites().filter(app => app.get_n_windows() === 0);
         for (const app of closed.slice(0, PINNED)) {
             const tile = this._pinnedTile(app.create_icon_texture(GROUP_ICON), app.get_name());
-            tile.connect('clicked', () => app.activate());
+            tile.connect('clicked', () => {
+                markLaunched(app);
+                app.activate();
+            });
         }
         if (this._month)
             this._updateClock();
@@ -471,7 +476,9 @@ export class RestBar {
         this._hideTip();
         this._minimized.destroy_all_children();
         const tracker = Shell.WindowTracker.get_default();
-        const byApp = this._settings.get_boolean('isla-superior');
+        // By app always (Frank 2026-11-02: two LibreOffice Calc = one icon with a 2, also
+        // with the top island off).
+        const byApp = true;
         this._minimized[byApp ? 'add_style_class_name' : 'remove_style_class_name']('por-app');
         this._piece[byApp ? 'add_style_class_name' : 'remove_style_class_name']('por-app');
         // One entry per window, or per app (its windows, newest first) with the top island on.
@@ -509,6 +516,8 @@ export class RestBar {
                     const count = new St.Label({style_class: 'isla-barra-grupo-cuenta', text: String(mine.length),
                         x_expand: true, y_expand: true, x_align: Clutter.ActorAlign.END, y_align: Clutter.ActorAlign.START,
                         translation_x: 4, translation_y: -3});
+                    // St.Label draws its text at the top of its box: centered, the digit sits in the middle.
+                    count.clutter_text.y_align = Clutter.ActorAlign.CENTER;
                     box.add_child(count);
                     tile._count = count;
                 }

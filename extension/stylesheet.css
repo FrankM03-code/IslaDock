@@ -59,11 +59,13 @@
 .isla-capsule.oscura .isla-progreso-pista { background-color: rgba(255, 255, 255, 0.16); }
 /* Inside the icon, which rests at about 70 % of its size: drawn bigger. */
 .isla-insignia {
-  min-width: 22px; height: 22px; padding: 0 5px; border-radius: 11px;
+  min-width: 12px; height: 22px; padding: 0 5px; border-radius: 11px;
   background-color: #E5484D; color: #FFFFFF;
   font-size: 14px; font-weight: bold; text-align: center;
   box-shadow: 0 1px 3px rgba(30, 32, 40, 0.3);
 }
+/* How many windows the app has (not a message counter): quieter. */
+.isla-insignia.ventanas { background-color: #5E6470; }
 
 /* ---------- music ---------- */
 .isla-musica-mini { spacing: 7px; }
@@ -1057,7 +1059,7 @@
 .isla-barra-grupo { padding: 0; background-color: transparent; }
 .isla-barra-grupo-caja { spacing: 3px; padding: 4px 3px 0 3px; }
 .isla-barra-grupo-linea { width: 5px; height: 5px; border-radius: 3px; background-color: -st-accent-color; }
-.isla-barra-grupo-cuenta { min-width: 16px; height: 16px; padding: 0 2px; border-radius: 8px; font-size: 10px; font-weight: bold;
+.isla-barra-grupo-cuenta { min-width: 12px; height: 16px; padding: 0 2px; border-radius: 8px; font-size: 10px; font-weight: bold;
     text-align: center; background-color: -st-accent-color; color: -st-accent-fg-color; }
 .isla-menu-cerrar { margin-left: 12px; padding: 4px; border-radius: 99px; color: inherit; }
 .isla-menu-cerrar:hover, .isla-menu-cerrar:focus { background-color: rgba(255, 59, 48, 0.85); color: #ffffff; }

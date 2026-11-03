@@ -1606,7 +1606,7 @@ msgstr ""
 msgid "Anterior"
 msgstr ""
 
-#: extension/isla/restBar.js:375 extension/isla/restBar.js:388
+#: extension/isla/restBar.js:375 extension/isla/restBar.js:389
 msgid "Pausa"
 msgstr ""
 
@@ -1614,15 +1614,15 @@ msgstr ""
 msgid "Siguiente"
 msgstr ""
 
-#: extension/isla/restBar.js:388
+#: extension/isla/restBar.js:389
 msgid "Reproducir"
 msgstr ""
 
-#: extension/isla/restBar.js:524
+#: extension/isla/restBar.js:530
 msgid "{app} ({n} ventanas)"
 msgstr ""
 
-#: extension/isla/restBar.js:557
+#: extension/isla/restBar.js:563
 msgid "Cerrar ventana"
 msgstr ""
 
@@ -1724,11 +1724,11 @@ msgstr ""
 msgid "Reloj"
 msgstr ""
 
-#: extension/isla/tiling.js:303
+#: extension/isla/tiling.js:315
 msgid "¿Qué va en este lado?"
 msgstr ""
 
-#: extension/isla/tiling.js:308
+#: extension/isla/tiling.js:323
 msgid "Esc para dejarlo vacío"
 msgstr ""
 

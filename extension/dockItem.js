@@ -178,7 +178,9 @@ export const DockItem = GObject.registerClass({
     }
 
     // A number on the corner of the icon (it grows with the icon).
-    setBadge(count) {
+    // @windows: the count is how many windows the app has (grey), not a counter
+    // published by the app (red).
+    setBadge(count, windows = false) {
         if (!count) {
             this._badge?.destroy();
             this._badge = null;
@@ -189,9 +191,12 @@ export const DockItem = GObject.registerClass({
                 y_align: Clutter.ActorAlign.START, x_expand: true, y_expand: true});
             // "99+" is wider than the round badge: it grows, never cut to "9…".
             this._badge.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+            // St.Label draws its text at the top of its box: centered, the digit sits in the middle.
+            this._badge.clutter_text.y_align = Clutter.ActorAlign.CENTER;
             this._tile.add_child(this._badge);
         }
         this._badge.text = count > 99 ? '99+' : String(count);
+        this._badge[windows ? 'add_style_class_name' : 'remove_style_class_name']('ventanas');
     }
 
     // An 8 px blue dot on the corner: something new to see (Downloads).

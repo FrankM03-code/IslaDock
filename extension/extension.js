@@ -42,6 +42,7 @@ import {notchNotices} from './isla/notch/place.js';
 import {dockMonitorIndex, setDockSettings} from './isla/monitor.js';
 import {Calm} from './isla/calm.js';
 import {IslaState} from './isla/state.js';
+import {ReadyNotice} from './isla/readyNotice.js';
 
 // Modules that a setting can switch off: [key or null, factory, (settings) => also needed, keys it reads].
 const MODULES = {
@@ -81,6 +82,7 @@ const MODULES = {
     notch: ['isla-superior', ctx => new TopIsland(ctx)],
     tiling: ['acomodar-ventanas', ctx => new Tiling(ctx)],
     hotCorners: ['esquinas-activas', ctx => new HotCorners(ctx)],
+    readyNotice: [null, () => new ReadyNotice()],
 };
 
 export default class IslaDockExtension extends Extension {

@@ -46,6 +46,7 @@ import {dockMonitor} from './monitor.js';
 import {candidates, fileInfo, folderLabel, highlight, indexedFiles, rank, recentFiles, relativeDate} from './searchFiles.js';
 import {Mode} from './state.js';
 import {ms} from './timing.js';
+import {markLaunched} from './readyNotice.js';
 
 const KEY = 'atajo-lanzador';
 const KEPT = 'lanzador-liberado';
@@ -1123,6 +1124,7 @@ export class Launcher {
 
     _launch(app) {
         this.close();
+        markLaunched(app);
         app.activate();
     }
 
@@ -1130,6 +1132,7 @@ export class Launcher {
         if (!app?.can_open_new_window())
             return;
         this.close();
+        markLaunched(app);
         app.open_new_window(-1);
     }
 

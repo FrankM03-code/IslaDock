@@ -26,6 +26,7 @@ import {trashIcon} from './trashIcon.js';
 import {dockMonitor} from './monitor.js';
 import {downloadsDir} from './stack/downloadsModel.js';
 import * as FileActions from './stack/fileActions.js';
+import {markLaunched} from './readyNotice.js';
 import {_} from './i18n.js';
 
 // Magnification by distance to the hovered icon, as a factor of the base size.
@@ -422,7 +423,7 @@ export class AppsRow extends Signals.EventEmitter {
         this.tail.visible = this.tail.get_n_children() > 0;
         this._appItems = [...this.actor.get_children(), ...this.tail.get_children()].filter(a => a.kind !== 'separator');
         for (const item of this._appItems)
-            item.setBadge?.(item.app ? this._badges.get(item.app.get_id()) ?? null : null);
+            this._applyBadge(item);
         // Every icon back to its size: the pointer grows them again on its next move.
         this._hovered = -1;
         this._applyZoom();
@@ -475,6 +476,7 @@ export class AppsRow extends Signals.EventEmitter {
                 const windows = app.state === Shell.AppState.STOPPED ? 0
                     : Math.max(1, app.get_windows().filter(w => !w.skip_taskbar).length);
                 item.setRunning(windows, Shell.WindowTracker.get_default().focus_app === app);
+                this._applyBadge(item);
             }
             else if (item.kind === 'downloads')
                 this._showDownloads(item);
@@ -508,13 +510,30 @@ export class AppsRow extends Signals.EventEmitter {
         return Object.values(windows).filter(locations => locations.some(shows)).length;
     }
 
+    // The app's own counter (unread messages…) wins; otherwise, with two or more
+    // windows, how many (Frank 2026-11-02: two LibreOffice Calc = one icon with a 2).
+    _applyBadge(item) {
+        if (!item.app || !item.setBadge)
+            return;
+        const own = this._badges.get(item.app.get_id()) ?? null;
+        if (own) {
+            item.setBadge(own);
+            return;
+        }
+        const windows = item.app.state === Shell.AppState.STOPPED ? 0
+            : item.app.get_windows().filter(w => !w.skip_taskbar).length;
+        item.setBadge(windows > 1 ? windows : null, true);
+    }
+
     // A counter published by the app (unread messages, files left...).
     setBadge(appId, count) {
         if (count)
             this._badges.set(appId, count);
         else
             this._badges.delete(appId);
-        this._appItems.find(i => i.app?.get_id() === appId)?.setBadge(count ?? null);
+        const item = this._appItems.find(i => i.app?.get_id() === appId);
+        if (item)
+            this._applyBadge(item);
     }
 
     // ---------- clicks ----------
@@ -598,6 +617,7 @@ export class AppsRow extends Signals.EventEmitter {
         }
         Main.overview.hide();
         if (button === 2 && this._isFolderApp(item)) {
+            markLaunched(item.app);
             item.app.activate();
             return;
         }
@@ -612,6 +632,7 @@ export class AppsRow extends Signals.EventEmitter {
         const app = item.app;
         if (button === 2) {
             if (app.can_open_new_window()) {
+                markLaunched(app);
                 app.open_new_window(-1);
                 item.bounce();
             }
@@ -619,6 +640,7 @@ export class AppsRow extends Signals.EventEmitter {
         }
         if (app.state === Shell.AppState.STOPPED) {
             item.bounce();
+            markLaunched(app);
             app.activate();
             return;
         }
@@ -636,6 +658,7 @@ export class AppsRow extends Signals.EventEmitter {
                 windows.forEach(w => w.minimize());
             return;
         }
+        markLaunched(app);
         app.activate();
     }
 
