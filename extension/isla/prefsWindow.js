@@ -13,59 +13,59 @@ export class PrefsWindow {
         this._title = title;
         this._windows = new Map();   // window -> [[object, signal id]]
         this._timeouts = new Set();
-        this._id = global.display.connect('window-created', (_d, w) => this._watch(w));
+        this._id = global.display.connect('window-created', (_display, metaWindow) => this._watch(metaWindow));
     }
 
-    _watch(w) {
-        if (w.get_wm_class() !== PREFS_CLASS || this._windows.has(w))
+    _watch(metaWindow) {
+        if (metaWindow.get_wm_class() !== PREFS_CLASS || this._windows.has(metaWindow))
             return;
         // On X11, opened as a child of Extension Manager, Mutter may place it again after it shows
         // (top left corner): centered when it shows and again a moment later.
-        const ids = [];
+        const handlers = [];
         const done = () => {
-            ids.forEach(([obj, id]) => obj.disconnect(id));
-            this._windows.delete(w);
+            handlers.forEach(([object, handlerId]) => object.disconnect(handlerId));
+            this._windows.delete(metaWindow);
         };
         const center = () => {
             done();
-            if (w.get_title() !== this._title)
+            if (metaWindow.get_title() !== this._title)
                 return;
-            this._center(w);
-            this._later(w, 150);
-            this._later(w, 400);
+            this._center(metaWindow);
+            this._later(metaWindow, 150);
+            this._later(metaWindow, 400);
         };
-        ids.push([w, w.connect('shown', center)]);
-        ids.push([w, w.connect('unmanaged', done)]);
-        this._windows.set(w, ids);
+        handlers.push([metaWindow, metaWindow.connect('shown', center)]);
+        handlers.push([metaWindow, metaWindow.connect('unmanaged', done)]);
+        this._windows.set(metaWindow, handlers);
     }
 
-    _later(w, delay) {
-        const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, () => {
-            this._timeouts.delete(id);
-            if (w.get_compositor_private())
-                this._center(w);
+    _later(metaWindow, delay) {
+        const timeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, () => {
+            this._timeouts.delete(timeoutId);
+            if (metaWindow.get_compositor_private())
+                this._center(metaWindow);
             return GLib.SOURCE_REMOVE;
         });
-        this._timeouts.add(id);
+        this._timeouts.add(timeoutId);
     }
 
-    _center(w) {
-        const area = w.get_work_area_current_monitor();
-        const f = w.get_frame_rect();
-        const x = area.x + Math.round((area.width - f.width) / 2);
-        const y = area.y + Math.max(0, Math.round((area.height - f.height) / 2));
+    _center(metaWindow) {
+        const area = metaWindow.get_work_area_current_monitor();
+        const frame = metaWindow.get_frame_rect();
+        const left = area.x + Math.round((area.width - frame.width) / 2);
+        const top = area.y + Math.max(0, Math.round((area.height - frame.height) / 2));
         // GNOME 49 replaced get_maximized() with is_maximized().
-        const maximized = w.is_maximized ? w.is_maximized() : w.get_maximized() === Meta.MaximizeFlags.BOTH;
+        const maximized = metaWindow.is_maximized ? metaWindow.is_maximized() : metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH;
         if (!maximized)
-            w.move_frame(true, x, y);
+            metaWindow.move_frame(true, left, top);
     }
 
     destroy() {
         global.display.disconnect(this._id);
-        for (const ids of this._windows.values())
-            ids.forEach(([obj, id]) => obj.disconnect(id));
+        for (const handlers of this._windows.values())
+            handlers.forEach(([object, handlerId]) => object.disconnect(handlerId));
         this._windows.clear();
-        this._timeouts.forEach(id => GLib.source_remove(id));
+        this._timeouts.forEach(timeoutId => GLib.source_remove(timeoutId));
         this._timeouts.clear();
     }
 }

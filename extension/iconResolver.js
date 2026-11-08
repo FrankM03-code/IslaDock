@@ -23,6 +23,7 @@ export class IconResolver extends Signals.EventEmitter {
         this._dirs = [USER_DOCK_ICONS, USER_ICONS, extensionDir.get_child('icons').get_path()];
         this._monitors = new Map();
         this._refreshId = 0;
+        this._map = new Map();
         this._load();
         this._settingsIds = [settings.connect('changed::tema-iconos', () => this._queueRefresh())];
         this._stSettingsId = St.Settings.get().connect('notify::gtk-icon-theme', () => this._queueRefresh());
@@ -108,26 +109,46 @@ export class IconResolver extends Signals.EventEmitter {
         return files;
     }
 
+    // map.json is read in the background; the dock is told ('changed') once it is in.
     _loadMap() {
-        const map = new Map();
+        this._mapCancel?.cancel();
+        const cancellable = this._mapCancel = new Gio.Cancellable();
         // Extension first, user files override it.
-        for (const dir of [...this._dirs].reverse()) {
-            const path = GLib.build_filenamev([dir, 'map.json']);
-            try {
-                const [ok, bytes] = GLib.file_get_contents(path);
-                if (!ok)
-                    continue;
-                const data = JSON.parse(new TextDecoder().decode(bytes));
-                for (const [k, v] of Object.entries(data)) {
-                    if (typeof v === 'string' && v)
-                        map.set(k.replace(/\.desktop$/i, '').toLowerCase(), {value: v, dir});
+        const dirs = [...this._dirs].reverse();
+        Promise.all(dirs.map(dir => this._readMap(dir, cancellable))).then(found => {
+            if (cancellable.is_cancelled())
+                return;
+            const map = new Map();
+            found.forEach(entries => entries.forEach(([key, entry]) => map.set(key, entry)));
+            if (map.size === 0 && this._map.size === 0)
+                return;
+            this._map = map;
+            this._cache = new Map();
+            this.emit('changed');
+        });
+    }
+
+    _readMap(dir, cancellable) {
+        const path = GLib.build_filenamev([dir, 'map.json']);
+        return new Promise(resolve => {
+            Gio.File.new_for_path(path).load_contents_async(cancellable, (file, result) => {
+                const entries = [];
+                try {
+                    const [, bytes] = file.load_contents_finish(result);
+                    const data = JSON.parse(new TextDecoder().decode(bytes));
+                    for (const [key, value] of Object.entries(data)) {
+                        if (typeof value === 'string' && value)
+                            entries.push([key.replace(/\.desktop$/i, '').toLowerCase(), {value, dir}]);
+                    }
+                } catch (e) {
+                    const missing = e instanceof GLib.Error &&
+                        (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.NOT_FOUND) || e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED));
+                    if (!missing)
+                        console.warn(`isla-dock: no se pudo leer ${path}: ${e.message}`);
                 }
-            } catch (e) {
-                if (!(e instanceof GLib.Error && e.matches(GLib.FileError, GLib.FileError.NOENT)))
-                    console.warn(`isla-dock: no se pudo leer ${path}: ${e.message}`);
-            }
-        }
-        return map;
+                resolve(entries);
+            });
+        });
     }
 
     _themePath() {
@@ -146,7 +167,7 @@ export class IconResolver extends Signals.EventEmitter {
     _load() {
         this._cache = new Map();
         this._listings = this._dirs.map(d => this._listDir(d));
-        this._map = this._loadMap();
+        this._loadMap();
         this._watch([...this._dirs, ...this._themeDirs ?? []]);
         this._indexCancel?.cancel();
         const themePath = this._themePath();
@@ -202,6 +223,7 @@ export class IconResolver extends Signals.EventEmitter {
 
     destroy() {
         this._indexCancel?.cancel();
+        this._mapCancel?.cancel();
         if (this._refreshId)
             GLib.source_remove(this._refreshId);
         this._refreshId = 0;
