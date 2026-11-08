@@ -4,8 +4,7 @@
 // for when maximized windows cover the desktop clock. At rest only a thin
 // mark shows on the edge; the pointer on the edge slides the bubble out
 // (300 ms, ease-out) and it goes back 600 ms after the pointer leaves it.
-// Four looks ('clock-style', isla-dock-reloj-estilos.md), 24 h, in GNOME's accent color
-// (Settings → Appearance; orange in the design):
+// Four looks ('clock-style'), 24 h, in GNOME's accent color (Settings → Appearance):
 //   editorial  no box: hour and minutes huge and stacked, the day in accent, a bar on the edge
 //   semana     a glass tab with the time and this week, today in an accent pill
 //   linea      a tab with a vertical line of the day (00:00 at the top, 24:00 at the bottom)
@@ -34,7 +33,7 @@ import {_} from './i18n.js';
 import {dayName, dayProgress, dayShort, initials, monthName, monthShort, two, week} from './dates.js';
 
 const KEYS = ['clock-style', 'reloj-lateral-borde'];
-export const CLOCK_STYLES = ['editorial', 'semana', 'linea', 'horizonte'];
+const CLOCK_STYLES = ['editorial', 'semana', 'linea', 'horizonte'];
 
 const ZONE_WIDTH = 4;      // px of edge that wake it
 const ZONE_HEIGHT = 160;

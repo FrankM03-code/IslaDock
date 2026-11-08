@@ -26,7 +26,7 @@ const SAVE_DELAY = 500;
 const COLOR_RE = /^(#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\([^)]*\))$/i;
 const LINK_RE = /^((https?:\/\/|www\.)\S+|[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(\/\S*)?)$/i;
 
-export function classify(text) {
+function classify(text) {
     const t = text.trim();
     if (COLOR_RE.test(t))
         return 'color';
@@ -100,17 +100,21 @@ export class ClipboardHistory extends Signals.EventEmitter {
             return;
         }
         const path = GLib.build_filenamev([this._dir, `${checksum}.png`]);
-        try {
-            Gio.File.new_for_path(path).replace_contents(bytes.toArray(), null, false,
-                Gio.FileCreateFlags.REPLACE_DESTINATION | Gio.FileCreateFlags.PRIVATE, null);
-        } catch (e) {
-            console.error(`isla-dock: no se pudo guardar la imagen copiada: ${e.message}`);
-            return;
-        }
         const when = GLib.DateTime.new_now_local().format('%H:%M');
-        this._items.unshift({id: GLib.uuid_string_random(), kind: 'image', value: fmt(_('Imagen {hora}.png'), {hora: when}), file: path,
-            checksum, time: Date.now(), pinned: false});
-        this._changed(true);
+        Gio.File.new_for_path(path).replace_contents_bytes_async(bytes, null, false,
+            Gio.FileCreateFlags.REPLACE_DESTINATION | Gio.FileCreateFlags.PRIVATE, null, (file, res) => {
+                try {
+                    file.replace_contents_finish(res);
+                } catch (e) {
+                    console.error(`isla-dock: no se pudo guardar la imagen copiada: ${e.message}`);
+                    return;
+                }
+                if (!this._clipboard)
+                    return;
+                this._items.unshift({id: GLib.uuid_string_random(), kind: 'image', value: fmt(_('Imagen {hora}.png'), {hora: when}),
+                    file: path, checksum, time: Date.now(), pinned: false});
+                this._changed(true);
+            });
     }
 
     // Puts an entry back on the clipboard (it moves up, it is not copied again).
@@ -119,14 +123,19 @@ export class ClipboardHistory extends Signals.EventEmitter {
         if (!item)
             return false;
         if (item.kind === 'image') {
-            try {
-                const [, contents] = Gio.File.new_for_path(item.file).load_contents(null);
+            Gio.File.new_for_path(item.file).load_bytes_async(null, (file, res) => {
+                let bytes;
+                try {
+                    [bytes] = file.load_bytes_finish(res);
+                } catch (e) {
+                    console.error(`isla-dock: no se pudo leer la imagen: ${e.message}`);
+                    return;
+                }
+                if (!this._clipboard)
+                    return;
                 this._echo = item.checksum;
-                this._clipboard.set_content(St.ClipboardType.CLIPBOARD, IMAGE_MIME, new GLib.Bytes(contents));
-            } catch (e) {
-                console.error(`isla-dock: no se pudo leer la imagen: ${e.message}`);
-                return false;
-            }
+                this._clipboard.set_content(St.ClipboardType.CLIPBOARD, IMAGE_MIME, bytes);
+            });
         } else {
             this._echo = item.value;
             this._clipboard.set_text(St.ClipboardType.CLIPBOARD, item.value);
@@ -169,14 +178,17 @@ export class ClipboardHistory extends Signals.EventEmitter {
     _deleteFile(item) {
         if (item.kind !== 'image' || !item.file)
             return;
-        try {
-            Gio.File.new_for_path(item.file).delete(null);
-        } catch {}
+        // Already gone is fine.
+        Gio.File.new_for_path(item.file).delete_async(GLib.PRIORITY_LOW, null, (file, res) => {
+            try {
+                file.delete_finish(res);
+            } catch {}
+        });
     }
 
     _changed(captured) {
         this._trim();
-        if (!this._saveId) {
+        if (this._loaded && !this._saveId) {
             this._saveId = GLib.timeout_add(GLib.PRIORITY_LOW, SAVE_DELAY, () => {
                 this._saveId = 0;
                 this._save();
@@ -189,28 +201,41 @@ export class ClipboardHistory extends Signals.EventEmitter {
     }
 
     _save() {
-        try {
-            this._file.replace_contents(new TextEncoder().encode(JSON.stringify(this._items)), null, false,
-                Gio.FileCreateFlags.REPLACE_DESTINATION | Gio.FileCreateFlags.PRIVATE, null);
-        } catch (e) {
-            console.error(`isla-dock: no se pudo guardar el historial del portapapeles: ${e.message}`);
-        }
+        const bytes = new GLib.Bytes(new TextEncoder().encode(JSON.stringify(this._items)));
+        this._file.replace_contents_bytes_async(bytes, null, false,
+            Gio.FileCreateFlags.REPLACE_DESTINATION | Gio.FileCreateFlags.PRIVATE, null, (file, res) => {
+                try {
+                    file.replace_contents_finish(res);
+                } catch (e) {
+                    console.error(`isla-dock: no se pudo guardar el historial del portapapeles: ${e.message}`);
+                }
+            });
     }
 
+    // Read in the background; what was copied meanwhile is newer and stays on top. Nothing is
+    // written before the old list is in, or it would be lost.
     _load() {
-        try {
-            const [, contents] = this._file.load_contents(null);
-            const list = JSON.parse(new TextDecoder().decode(contents));
-            if (Array.isArray(list)) {
-                this._items = list.filter(i => i?.id && typeof i.value === 'string' &&
-                    (i.kind !== 'image' || GLib.file_test(i.file ?? '', GLib.FileTest.EXISTS)));
+        this._loadCancel = new Gio.Cancellable();
+        this._file.load_contents_async(this._loadCancel, (file, res) => {
+            let list = [];
+            try {
+                const [, contents] = file.load_contents_finish(res);
+                list = JSON.parse(new TextDecoder().decode(contents));
+            } catch (e) {
+                if (e.matches?.(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                    return;
             }
-        } catch {
-            this._items = [];
-        }
+            this._loaded = true;
+            const saved = Array.isArray(list) ? list.filter(i => i?.id && typeof i.value === 'string' &&
+                (i.kind !== 'image' || GLib.file_test(i.file ?? '', GLib.FileTest.EXISTS))) : [];
+            const known = new Set(this._items.map(i => i.kind === 'image' ? i.checksum : i.value));
+            this._items = [...this._items, ...saved.filter(i => !known.has(i.kind === 'image' ? i.checksum : i.value))];
+            this._changed(false);
+        });
     }
 
     destroy() {
+        this._loadCancel.cancel();
         this._selection.disconnect(this._ownerId);
         if (this._saveId) {
             GLib.source_remove(this._saveId);

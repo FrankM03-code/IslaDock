@@ -47,7 +47,7 @@ const PANEL_ORDER = ['recording', 'timer', 'music'];
 const CARD_GAP = 12;          // between the island and the glass card of some skins
 const CARD_FADE = 200;
 const CARD_FADE_OUT = 140;    // gone before the island finishes folding (CLOSE_TIME)
-const BG_OPACITY = 255;   // the transparency lives in the stylesheet (light dock and launcher at 81 %, Frank 2026-10-28)
+const BG_OPACITY = 255;   // the transparency lives in the stylesheet
 
 // The monitor strip: the island at its natural size, centered, standing BOTTOM px above the edge.
 // With a glass card (some skins put the activity panels there) both are centered as a group.
@@ -77,8 +77,8 @@ class IslaStripLayout extends Clutter.LayoutManager {
         };
         const [cw, ch] = size(capsule);
         const withCard = card?.visible;
-        let [kw, kh] = withCard ? size(card) : [0, 0];
-        kh = Math.max(kh, ch);
+        const [kw, cardHeight] = withCard ? size(card) : [0, 0];
+        const kh = Math.max(cardHeight, ch);
         const gap = withCard ? Math.round(CARD_GAP * St.ThemeContext.get_for_stage(global.stage).scale_factor) : 0;
         // Centered; a group wider than the screen starts at its left edge. The card's room grows and
         // shrinks with its fade, so the group recenters smoothly (no jump when it goes).
@@ -148,7 +148,7 @@ class IslaCapsuleLayout extends Clutter.LayoutManager {
             return [0, 0];
         // Measure the content box too: Clutter stops passing a page's size change up at a box
         // still marked unmeasured, so the capsule kept a stale width (window bar overflowing
-        // the island when the extension turns on with the microphone in use, 2026-10-24).
+        // the island when the extension turned on with the microphone in use).
         this._isla._content.get_preferred_width(-1);
         this._isla._content.get_preferred_height(-1);
         const [, w] = page.get_preferred_width(-1);
@@ -170,13 +170,12 @@ class IslaCapsuleLayout extends Clutter.LayoutManager {
         for (const child of container.get_children()) {
             if (!child.visible)
                 continue;
-            if (child._allocateIn) {
+            if (child._allocateIn)
                 child._allocateIn(box);
-            } else if (child === this._isla._progress) {
+            else if (child === this._isla._progress)
                 this._isla._allocateProgress(box);
-            } else {
+            else
                 child.allocate(box);
-            }
         }
         this._isla._skin?.onResize(box);
     }
@@ -280,8 +279,8 @@ export class Isla {
             track_hover: true,
             layout_manager: new CapsuleLayout(this),
         });
-        // Watchdog: the bar left wider than its icons in Frank's session (2026-10-27, not
-        // reproduced here) is put right a moment after any change, and logged.
+        // Watchdog: a bar left wider than its icons (seen once, never reproduced) is put right
+        // a moment after any change, and logged.
         this._capsule.connect('notify::width', () => this._later('size-check', SIZE_CHECK, () => this._checkSize()));
         // And every few seconds while it is on screen: a stuck piece does not always change any size.
         this._watchId = GLib.timeout_add_seconds(GLib.PRIORITY_LOW, WATCH_EVERY, () => {
@@ -306,7 +305,7 @@ export class Isla {
         // Open: apps | activity panels
         this._apps = new AppsRow({settings: this._settings, resolver, state: this._state});
 
-        // The bar: the folded island, always (2026-10-26: the first island and the window bar are gone).
+        // The bar: the folded island, always.
         this._restBar = new RestBar({state: this._state, settings: this._settings, apps: this._apps,
             extras: [this._miniBin, this._statusFolded], onChange: () => {
                 if (this._page === this._rest)
@@ -477,11 +476,12 @@ export class Isla {
     _connectSignals() {
         this._on(this._settings, 'changed::isla-piel', () => this._setSkin(true));
         this._on(this._settings, 'changed::velocidad', () => setSpeed(this._settings.get_double('velocidad')));
-        for (const key of ['isla-oscura', 'desenfoque', 'tamano-base'])
+        for (const key of ['isla-oscura', 'desenfoque', 'tamano-base']) {
             this._on(this._settings, `changed::${key}`, () => {
                 this._applySettings();
                 this._resize();
             });
+        }
         this._on(this._settings, 'changed::ocultar', () => this._updateAutohide());
         // The blurred wallpaper copy must not slide with the island.
         this._on(this._capsule, 'notify::translation-y', () => (this._blur.slide = this._capsule.translation_y));
@@ -641,8 +641,9 @@ export class Isla {
     _windowsOverlap() {
         if (!this._capsule.mapped && !this._capsule.get_stage())
             return false;
-        let [cx, cy] = this._capsule.get_transformed_position();
-        let [cw, ch] = this._capsule.get_transformed_size();
+        const [x, cy] = this._capsule.get_transformed_position();
+        const [width, ch] = this._capsule.get_transformed_size();
+        let cx = x, cw = width;
         // The glass card counts as part of the island.
         if (this._card.visible) {
             const [kx] = this._card.get_transformed_position();
@@ -688,7 +689,7 @@ export class Isla {
     }
 
     // Pieces shown but left without a place: after a full-screen video on X11 the minimized
-    // apps' box came back EMPTY with the bar too wide (Frank, 2026-10-27 17:35), and GNOME
+    // apps' box came back EMPTY with the bar too wide, and GNOME
     // warned about them on every frame. Clutter stops asking a container for a new layout
     // when the piece is already marked as waiting, so it never got one: every container
     // above it is asked again.
@@ -1008,7 +1009,7 @@ export class Isla {
         if (old) {
             old.remove_all_transitions();
             if (animate) {
-                // onStopped, not onComplete: a fade cut short (frames lost, 2026-10-27) left the old
+                // onStopped, not onComplete: a fade cut short (frames lost) left the old
                 // page shown at opacity 0 and without room, and GNOME warned about each of its
                 // icons on every frame (thousands a minute).
                 old.ease({opacity: 0, duration: ms(FADE_TIME), mode: Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1056,8 +1057,8 @@ export class Isla {
             mode: grows ? Clutter.AnimationMode.EASE_OUT_BACK : Clutter.AnimationMode.EASE_OUT_QUAD,
             onStopped: release,
         });
-        // An animation that stalls (frames lost while the screen was being recorded,
-        // 2026-10-26) left the bar frozen as wide as the open dock: end it anyway.
+        // An animation that stalls (frames lost while the screen was being recorded)
+        // left the bar frozen as wide as the open dock: end it anyway.
         this._later('resize', duration + 300, () => {
             capsule.remove_transition('width');
             capsule.remove_transition('height');

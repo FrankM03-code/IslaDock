@@ -97,7 +97,7 @@ function switchRow(settings, key, title, subtitle = '') {
 const NOT_EXPORTED = ['temporizador-fin', 'temporizador-modo', 'banners-previos', 'portapapeles-liberado',
     'calendario-liberado', 'lanzador-liberado', 'esquinas-nativa-apagada', 'no-molestar', 'cafeina-activa', 'preferencias-abrir', 'isla-superior-pagina'];
 
-export function exportSettings(settings, metadata) {
+function exportSettings(settings, metadata) {
     const values = {};
     for (const key of settings.settings_schema.list_keys()) {
         if (!NOT_EXPORTED.includes(key))
@@ -107,7 +107,7 @@ export function exportSettings(settings, metadata) {
 }
 
 // Checks the whole file before touching anything; returns how many were set.
-export function importSettings(settings, text) {
+function importSettings(settings, text) {
     const data = JSON.parse(text);
     if (data?.app !== 'IslaDock' || typeof data.settings !== 'object' || !data.settings)
         throw new Error('falta la marca de IslaDock');

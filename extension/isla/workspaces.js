@@ -87,11 +87,11 @@ export class WorkspacesStatus {
     _onScroll(event) {
         const dir = event.get_scroll_direction();
         let step = 0;
-        if (dir === Clutter.ScrollDirection.UP || dir === Clutter.ScrollDirection.LEFT)
+        if (dir === Clutter.ScrollDirection.UP || dir === Clutter.ScrollDirection.LEFT) {
             step = -1;
-        else if (dir === Clutter.ScrollDirection.DOWN || dir === Clutter.ScrollDirection.RIGHT)
+        } else if (dir === Clutter.ScrollDirection.DOWN || dir === Clutter.ScrollDirection.RIGHT) {
             step = 1;
-        else if (dir === Clutter.ScrollDirection.SMOOTH) {
+        } else if (dir === Clutter.ScrollDirection.SMOOTH) {
             const [dx, dy] = event.get_scroll_delta();
             const d = Math.abs(dy) > Math.abs(dx) ? dy : dx;
             // A touchpad sends many small steps: one workspace per gesture.

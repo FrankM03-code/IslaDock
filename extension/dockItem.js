@@ -17,7 +17,7 @@ import {_} from './isla/i18n.js';
 
 // Icons that fill their whole square (Chrome…) need room before the mark under them.
 export const INDICATOR_GAP = 4;
-export const INDICATOR_HEIGHT = 3;
+const INDICATOR_HEIGHT = 3;
 const INDICATOR_WIDTH = 4;
 const INDICATOR_FOCUSED = 8;   // the app in front: longer marks
 const INDICATOR_SPACING = 2;
@@ -215,7 +215,7 @@ export const DockItem = GObject.registerClass({
 
     // A 2 px arc around the icon for a real percentage (0..1), or null.
     setRing(value) {
-        if (value === null || value === undefined) {
+        if (value == null) {
             this._ring?.destroy();
             this._ring = null;
             return;

@@ -261,9 +261,7 @@ export class Timer {
     }
 
     _alarm(text, beat) {
-        try {
-            global.display.get_sound_player().play_from_theme('complete', text, null);
-        } catch {}
+        global.display.get_sound_player().play_from_theme('complete', text, null);
         Main.notify(_('Temporizador'), text);
         this._state.command('pulse', beat ? 3 : 1);
     }
@@ -314,13 +312,14 @@ export class Timer {
         const text = d.done ? '¡Listo!' : clock(left);
         this._miniTime.text = text;
         this._time.text = text;
-        if (d.done)
+        if (d.done) {
             this._caption = _('Toca la isla para cerrarlo');
-        else if (d.kind === 'pomodoro')
+        } else if (d.kind === 'pomodoro') {
             this._caption = fmt(d.phase === 'trabajo' ? _('Trabajo · bloque {n} de {total}') : _('Descanso · bloque {n} de {total}'),
                 {n: d.block, total: BLOCKS});
-        else
+        } else {
             this._caption = d.paused !== null ? _('En pausa') : fmt(_('Temporizador de {tiempo}'), {tiempo: clock(d.total)});
+        }
         this._panel.accessible_name = `${text} · ${this._caption}`;
         this._pauseButton.visible = !d.done;
         this._pauseButton.child.icon_name = d.paused !== null ? 'media-playback-start-symbolic' : 'media-playback-pause-symbolic';

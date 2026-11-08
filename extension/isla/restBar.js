@@ -1,27 +1,17 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// The bar (dock-minimizado-isla-dock.md, 2026-10-24): the folded island, always (since
-// 2026-10-26 also with windows in sight, in the app grid and in do not disturb):
-//   [Aplicaciones] | [ date and time | minimized apps ] | [Notificaciones Portapapeles Ajustes] | [music]
-// While a player plays the song (title and previous / pause / next) comes in at the
-// very end, after Ajustes (Frank: not right after the search field), and leaves 3 s
-// after it stops. The date and time are not there with the top island on (it shows
-// them already); a click on the time opens IslaDock's calendar.
-// With the top island on and 'musica-lugar' = 'arriba' (the default) the song plays up there, not here.
-// The middle piece's right part has one icon per minimized window (all of them, Frank 2026-10-26); a
-// click brings it back. The buttons at the ends are copies of the dock's (they
-// count and look alike); a click opens the real one over the open dock. The first one is the
-// app launcher (Aplicaciones), in place of the Papelera since 2026-10-28 (Frank).
-// With the top island on (dock-opcion-a.html, 2026-10-26) the minimized windows go by
-// app: a bigger icon, a small dot under it, and how many when there are several
-// (a click on those lists them). After it (dock-opcion-a(1).html) a few pinned
-// icons: today's page (the calendar) and the first dock favorites that are not open
-// (an open one is already in sight: the next favorite takes its place); and, when more
-// than one workspace is in use, a column of dots for them (the active one taller).
-// Before the middle piece, the quick search field (2026-10-26, Frank's style B "vidrio
-// con teclas"): a click on it opens the same search as Ctrl+Espacio, right there in the dock.
-// Hovering leaves it as it is (it is meant to be used); the wheel over it opens
-// the whole dock (isla.js).
+// The bar: the folded island, also with windows in sight, in the app grid and in do not disturb.
+//   [Aplicaciones] | [Buscar] [ minimized apps | pinned ] | [Notificaciones Portapapeles Ajustes] | [music]
+// While a player plays, the song (title and previous / pause / next) comes in at the very end
+// and leaves 3 s after it stops; with the top island on and 'musica-lugar' = 'arriba' it plays
+// up there instead.
+// Minimized windows go by app: an icon, a small dot under it and how many when there are
+// several (a click on those lists them); a click brings it back. Then a few pinned icons:
+// today's page (the calendar) and the first dock favorites that are not open, and, with more
+// than one workspace in use, a column of dots for them (the active one taller).
+// The buttons at the ends are copies of the dock's; a click opens the real one over the open dock.
+// The search field opens the same search as Ctrl+Espacio, right there in the dock. Hovering
+// leaves it as it is (it is meant to be used); the wheel over it opens the whole dock (isla.js).
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -46,7 +36,6 @@ import {workspacesInUse} from './workspaces.js';
 import {markLaunched} from './readyNotice.js';
 
 const TILE = 36;
-const APP_ICON = 26;
 const GROUP_ICON = 32;
 const PINNED = 2;            // dock favorites after today's page
 const STOP_GRACE = 3000;     // paused for this long: back to the clock
@@ -156,9 +145,8 @@ export class RestBar {
         this._syncPiece();
     }
 
-    // The big date-and-time button is never shown (Frank 2026-11-02: not even with the top
-    // island off); the pinned apps (with their little calendar page) take its place. The
-    // middle piece keeps only the music and the minimized apps, and goes away when it has neither.
+    // No date-and-time button: the pinned apps (with their little calendar page) take its place.
+    // The middle piece keeps only the music and the minimized apps, and goes away when it has neither.
     _syncPiece() {
         const top = this._settings.get_boolean('isla-superior');
         const clock = false;
@@ -192,7 +180,7 @@ export class RestBar {
             y_align: Clutter.ActorAlign.CENTER}));
         box.add_child(new St.Label({style_class: 'isla-barra-buscar-texto', text: _('Buscar'), x_expand: true,
             y_align: Clutter.ActorAlign.CENTER}));
-        // The shortcut drawn as little keys (Frank's style B, "vidrio con teclas").
+        // The shortcut drawn as little keys.
         this._searchKey = new St.BoxLayout({style_class: 'isla-barra-buscar-teclas', y_align: Clutter.ActorAlign.CENTER});
         box.add_child(this._searchKey);
         button.set_child(box);
@@ -205,8 +193,7 @@ export class RestBar {
         return button;
     }
 
-    // Frank's video (2026-10-29): after a search from here the field stayed marked until
-    // something else opened. The search's grab swallows the pointer leaving it (hover) and
+    // After a search from here the field stayed marked until something else opened. The search's grab swallows the pointer leaving it (hover) and
     // hands the key focus back to it (blue border); on X11 + NVIDIA the shrinking panel can
     // also leave old pixels. Clear both and repaint once the search is gone.
     // The search drops its grab right after leaving the mode, so this waits a moment.
@@ -476,65 +463,51 @@ export class RestBar {
         this._hideTip();
         this._minimized.destroy_all_children();
         const tracker = Shell.WindowTracker.get_default();
-        // By app always (Frank 2026-11-02: two LibreOffice Calc = one icon with a 2, also
-        // with the top island off).
-        const byApp = true;
-        this._minimized[byApp ? 'add_style_class_name' : 'remove_style_class_name']('por-app');
-        this._piece[byApp ? 'add_style_class_name' : 'remove_style_class_name']('por-app');
+        // By app: two windows of one app are one icon with a 2.
+        this._minimized.add_style_class_name('por-app');
+        this._piece.add_style_class_name('por-app');
         // One entry per window, or per app (its windows, newest first) with the top island on.
         const entries = [];
         for (const w of windows) {
             const app = tracker.get_window_app(w);
-            const same = byApp && app && entries.find(e => e.app === app);
+            const same = app && entries.find(e => e.app === app);
             if (same)
                 same.windows.push(w);
             else
                 entries.push({app, windows: [w]});
         }
-        // All of them, never a "+N" (Frank, 2026-10-26).
+        // All of them, never a "+N".
         for (const {app, windows: mine} of entries) {
             const w = mine[0];
             const name = app?.get_name() ?? w.get_title() ?? '';
             const icon = size => app?.create_icon_texture(size) ?? new St.Icon({icon_name: 'application-x-executable-symbolic',
                 icon_size: size});
-            const tile = new St.Button({style_class: byApp ? 'isla-barra-grupo' : 'isla-barra-app', can_focus: true,
+            const tile = new St.Button({style_class: 'isla-barra-grupo', can_focus: true,
                 accessible_name: name, track_hover: true, y_align: Clutter.ActorAlign.CENTER});
-            let lift = null;
-            if (byApp) {
-                // The icon over a small dot; the count on its corner.
-                const column = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-barra-grupo-caja'});
-                lift = icon(GROUP_ICON);
-                column.add_child(lift);
-                column.add_child(new St.Widget({style_class: 'isla-barra-grupo-linea', x_align: Clutter.ActorAlign.CENTER}));
-                const box = new St.Widget({layout_manager: new Clutter.BinLayout()});
-                box.add_child(column);
-                if (mine.length > 1) {
-                    // Over the icon's top right corner, a little outside it. Placed by the layout and
-                    // moved by translation: a set_position from notify::width runs in the middle of
-                    // GNOME's layout and left the dock without a place (Frank, 2026-10-30).
-                    // Without x/y_expand the layout ignores the alignment and centers it on the icon.
-                    const count = new St.Label({style_class: 'isla-barra-grupo-cuenta', text: String(mine.length),
-                        x_expand: true, y_expand: true, x_align: Clutter.ActorAlign.END, y_align: Clutter.ActorAlign.START,
-                        translation_x: 4, translation_y: -3});
-                    // St.Label draws its text at the top of its box: centered, the digit sits in the middle.
-                    count.clutter_text.y_align = Clutter.ActorAlign.CENTER;
-                    box.add_child(count);
-                    tile._count = count;
-                }
-                tile.set_child(box);
-            } else {
-                // Just the icon, no tile behind it; it grows a little under the mouse.
-                tile.set_child(icon(APP_ICON));
+            // The icon over a small dot; the count on its corner.
+            const column = new St.BoxLayout({orientation: Clutter.Orientation.VERTICAL, style_class: 'isla-barra-grupo-caja'});
+            const lift = icon(GROUP_ICON);
+            column.add_child(lift);
+            column.add_child(new St.Widget({style_class: 'isla-barra-grupo-linea', x_align: Clutter.ActorAlign.CENTER}));
+            const box = new St.Widget({layout_manager: new Clutter.BinLayout()});
+            box.add_child(column);
+            if (mine.length > 1) {
+                // Over the icon's top right corner, a little outside it. Placed by the layout and
+                // moved by translation: a set_position from notify::width runs in the middle of
+                // GNOME's layout and left the dock without a place.
+                // Without x/y_expand the layout ignores the alignment and centers it on the icon.
+                const count = new St.Label({style_class: 'isla-barra-grupo-cuenta', text: String(mine.length),
+                    x_expand: true, y_expand: true, x_align: Clutter.ActorAlign.END, y_align: Clutter.ActorAlign.START,
+                    translation_x: 4, translation_y: -3});
+                // St.Label draws its text at the top of its box: centered, the digit sits in the middle.
+                count.clutter_text.y_align = Clutter.ActorAlign.CENTER;
+                box.add_child(count);
+                tile._count = count;
             }
-            tile.set_pivot_point(0.5, 0.5);
+            tile.set_child(box);
             tile.connect('clicked', () => mine.length > 1 ? this._openRest(tile, mine) : Main.activateWindow(w));
             tile.connect('notify::hover', () => {
-                if (lift) {
-                    lift.ease({translation_y: tile.hover ? -2 : 0, duration: ms(150), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
-                } else {
-                    const scale = tile.hover ? 1.12 : 1;
-                    tile.ease({scale_x: scale, scale_y: scale, duration: ms(120), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
-                }
+                lift.ease({translation_y: tile.hover ? -2 : 0, duration: ms(150), mode: Clutter.AnimationMode.EASE_OUT_QUAD});
                 if (tile.hover)
                     this._showTip(tile, mine.length > 1 ? fmt(_('{app} ({n} ventanas)'), {app: name, n: mine.length}) : name);
                 else
@@ -568,7 +541,7 @@ export class RestBar {
             const icon = app?.create_icon_texture(16);
             if (icon)
                 item.insert_child_at_index(icon, 1);
-            // An × at the end closes that window without opening it (Frank, 2026-10-30).
+            // An × at the end closes that window without opening it.
             const close = new St.Button({style_class: 'isla-menu-cerrar', can_focus: true, accessible_name: _('Cerrar ventana'),
                 x_expand: true, x_align: Clutter.ActorAlign.END, y_align: Clutter.ActorAlign.CENTER,
                 child: new St.Icon({icon_name: 'window-close-symbolic', icon_size: 14})});

@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// The notification panel (notificaciones-isla-dock.md), top to bottom: the
+// The notification panel, top to bottom: the
 // header ("Notificaciones", how many are unread, No molestar and the
 // extension's settings), the filters (Todas · Mensajes · Sistema, with their
 // counts), "Hoy" and "Anteriores" with one card per notice (the notices of one
 // app in one card, its count spreads them), and a footer with "Historial" and
 // "Limpiar todo". In do not disturb the list gives way to the duration chips
 // and how many notices wait. The history is a second page of the same panel.
-// A card (notificaciones-compactas.md): one row with the app's icon on its kind's
+// A card: one row with the app's icon on its kind's
 // tint, the app in its kind's color, the time, the title and the body in one line
 // each, the app's first action at the right, × on hover; a right click shows the
 // other actions.

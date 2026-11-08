@@ -18,7 +18,7 @@ const ATTRIBUTES = 'standard::name,standard::display-name,standard::content-type
     'standard::type,standard::size,time::modified,time::created,thumbnail::path';
 const BATCH = 50;
 const DEBOUNCE = 300;
-export const PARTIAL_DOWNLOAD = /\.(part|crdownload|download|partial|opdownload)$/i;
+const PARTIAL_DOWNLOAD = /\.(part|crdownload|download|partial|opdownload)$/i;
 
 export function downloadsDir(settings) {
     const own = settings.get_string('stack-folder');

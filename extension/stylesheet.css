@@ -1,6 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Frank Molina
  * SPDX-License-Identifier: GPL-2.0-or-later */
-/* IslaDock. Sizes from ISLA.md (0.5 px lines are 1 px at half the alpha). */
+/* IslaDock. 0.5 px lines are drawn as 1 px at half the alpha. */
 
 /* ---------- the capsule ---------- */
 .isla-capsule .isla-bg {
@@ -224,7 +224,7 @@
   border-color: rgba(255, 255, 255, 0.10);
 }
 
-/* =================== skins (PIELES_ISLA.md) =================== */
+/* =================== skins =================== */
 
 /* ---------- Aurora ---------- */
 .isla-capsule.isla-skin-aurora .isla-bg {
@@ -268,7 +268,7 @@
   background-color: #2F7DE1; border: 1.5px solid rgba(255, 255, 255, 0.95);
 }
 
-/* ---------- Energía (panel-energia-dock-spec.md) ---------- */
+/* ---------- Energía ---------- */
 
 .isla-pd-panel {
   background-color: #2c2c2e;
@@ -332,7 +332,7 @@
 .isla-insignia-icono { icon-size: 12px; color: #ffffff; }
 .isla-insignia-mayus { background-color: #2F7DE1; }
 
-/* ---------- Portapapeles (INSTRUCCIONES-PORTAPAPELES.md) ----------
+/* ---------- Portapapeles ----------
    Dark like the Energía panel; .clara over a light island. */
 .isla-clip-panel {
   width: 340px; padding: 10px; spacing: 6px; border-radius: 18px;
@@ -462,7 +462,7 @@
   border-radius: 2px; background-color: rgba(120, 122, 132, 0.60);
   box-shadow: 0 0 3px rgba(255, 255, 255, 0.35);
 }
-/* Four looks ('clock-style', isla-dock-reloj-estilos.md). .derecha / .izquierda: the edge it lives on. */
+/* Four looks ('clock-style'). .derecha / .izquierda: the edge it lives on. */
 .isla-clock { color: #F2F2F5; font-feature-settings: "tnum"; }
 /* A glass tab against the edge (semana, linea) */
 .isla-clock-tab, .clock-editorial, .clock-horizonte { background-color: rgba(18, 26, 40, 0.92); border: 1px solid rgba(255, 255, 255, 0.08); }
@@ -554,8 +554,8 @@
 .isla-privacidad-caja, .isla-privacidad-iconos { spacing: 6px; }
 .isla-privacidad-texto { font-size: 12px; font-weight: 600; }
 
-/* Calendario: Frank's calendario-isla design. Two columns: the month and the day's agenda.
-   Dark by default; .clara (white, as in the design) over a light island. Solid, not the island's color. */
+/* Calendario. Two columns: the month and the day's agenda.
+   Dark by default; .clara (white) over a light island. Solid, not the island's color. */
 .isla-cal {
   padding: 16px 18px; spacing: 12px;
   border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.10);
@@ -658,7 +658,7 @@
 .isla-cal-boton.guardar { background-color: -st-accent-color; color: #FFFFFF; }
 .isla-cal-boton.guardar:hover { background-color: #5592EA; }
 
-/* Over a light island: the design's own colors. */
+/* Over a light island: its own light colors. */
 .isla-cal.clara { color: #15172A; border-width: 0; background-color: #FFFFFF; box-shadow: 0 12px 28px rgba(16, 36, 90, 0.28); }
 .isla-cal.clara .isla-cal-sep { background-color: #E3E5EC; }
 .isla-cal.clara .isla-cal-titulo { color: #15172A; }
@@ -710,7 +710,7 @@
 .isla-pd-panel.clara .isla-pd-salida:hover, .isla-pd-panel.clara .isla-pd-salida:focus { background-color: rgba(30, 30, 30, 0.08); }
 .isla-pd-panel.clara .isla-pd-salida:checked { color: #1E1E1E; }
 
-/* ---------- Ajustes: the four looks of the panel ('panel-style', isla-dock-panel-ajustes-estilos.md) ----------
+/* ---------- Ajustes: the four looks of the panel ('panel-style') ----------
    Dark by default; .clara is the same over a light island. Coral = the accent buttons' (-st-accent-color / st-mix(-st-accent-color, #ffffff, 85%));
    Apagar is the only red. */
 .isla-quick-panel { border-radius: 20px; padding: 14px; spacing: 12px; color: #E9EAF0; min-width: 300px; }
@@ -851,7 +851,7 @@
 .isla-quick-panel.clara .isla-q-menu-item:hover, .isla-quick-panel.clara .isla-q-menu-item:focus { background-color: st-transparentize(-st-accent-color, 0.7); }
 .isla-quick-panel.clara .isla-q-menu-item.power, .isla-quick-panel.clara .isla-q-menu-item.power .isla-q-icono { color: #D93A3A; }
 
-/* Anillos (estilo-anillos.html) */
+/* Anillos */
 .panel-anillos { padding: 16px 14px; spacing: 14px; }
 .isla-q-anillos { spacing: 6px; }
 .isla-q-dial { spacing: 4px; }
@@ -926,8 +926,8 @@
 .isla-capsule.oscura .isla-fila-boton.copiado, .isla-skin-aurora .isla-fila-boton.copiado { color: #3DDC84; }
 .isla-capsule .isla-busqueda-lupa.con-texto { color: -st-accent-color; }
 
-/* ---------- notification center (notificaciones-isla-dock.md, notificaciones-compactas.md) ---------- */
-/* Panel 400 px: 370 + 2 × 14 + 2 × 1 (border). Light islands: the design's pink; dark ones (.oscura) the island's color. */
+/* ---------- notification center ---------- */
+/* Panel 400 px: 370 + 2 × 14 + 2 × 1 (border). Light islands: pink; dark ones (.oscura) the island's color. */
 .isla-np {
   width: 370px; padding: 14px; spacing: 10px;
   border-radius: 22px;
@@ -1033,15 +1033,14 @@
 .oscura .isla-np-app.sistema { color: #f2b073; }
 .oscura .isla-np-limpiar { background-color: rgba(229, 54, 75, 0.20); color: #ff9aa6; }
 
-/* ---------- desktop bar (dock-minimizado-isla-dock.md) ---------- */
-/* The bar keeps the dock's own background (2026-10-26: Frank wants no change on minimizing all). */
+/* ---------- desktop bar ---------- */
+/* The bar keeps the dock's own background, also with every window minimized. */
 .isla-barra { height: 56px; padding: 0 10px; spacing: 6px; }
 .isla-barra-sep { width: 1px; height: 28px; background-color: rgba(30, 32, 40, 0.20); }
 .isla-barra-sep-interno { width: 1px; height: 22px; background-color: rgba(30, 32, 40, 0.22); }
 .isla-barra-pieza { height: 40px; padding: 0 5px; spacing: 10px; border-radius: 13px; background-color: rgba(30, 32, 40, 0.06); }
 .isla-barra-pieza.sin-minimizadas { padding-right: 12px; }
 .isla-barra-cuadro { width: 30px; height: 30px; border-radius: 9px; background-color: rgba(255, 255, 255, 0.62); color: #3b3f55; }
-.isla-barra-app { width: 30px; height: 30px; padding: 0; background-color: transparent; }
 .isla-barra-minimizadas { spacing: 6px; }
 .isla-barra-pieza.por-app { height: 46px; }
 .isla-barra-fijas { spacing: 4px; }
@@ -1065,13 +1064,13 @@
 .isla-menu-cerrar:hover, .isla-menu-cerrar:focus { background-color: rgba(255, 59, 48, 0.85); color: #ffffff; }
 .isla-barra-reloj { border-radius: 9px; }
 .isla-barra-reloj-caja { spacing: 10px; }
-/* Today's page: Frank's calendario.svg (white, thin dark edge, red month). */
+/* Today's page: white, thin dark edge, red month. */
 .isla-barra-hoja { width: 30px; height: 30px; border-radius: 7px; background-color: #FFFFFF; border: 1px solid rgba(0, 0, 0, 0.12); }
 .isla-barra-hoja-mes { font-size: 7px; font-weight: bold; color: #C9362B; margin-top: 3px; }
 .isla-barra-hoja-dia { font-size: 13px; font-weight: bold; color: #15172A; }
 .isla-barra-hora { font-size: 15px; font-weight: bold; color: #1E2028; }
 .isla-barra-fecha { font-size: 12px; color: #5c6070; }
-/* Search field: Frank's style B, "vidrio con teclas" (~/Descargas/m/busqueda.css). */
+/* Search field: glass with the shortcut drawn as keys. */
 .isla-barra-buscar {
   width: 220px; height: 36px; padding: 0 6px 0 12px; border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.95); background-color: rgba(255, 255, 255, 0.55);
@@ -1111,7 +1110,7 @@
 .isla-capsule.oscura .isla-barra-tecla, .isla-skin-aurora .isla-barra-tecla {
   color: #E6E8F0; background-color: rgba(255, 255, 255, 0.16); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45); }
 
-/* Volume indicator over the dock (volumen-isla-dock.md, A2 "Solo barra"). */
+/* Volume indicator over the dock. */
 .isla-volumen {
   width: 130px; height: 20px; padding: 0 9px; spacing: 7px; border-radius: 11px;   /* 150 × 22 with the border */
   background-color: rgba(253, 245, 249, 0.97); border: 1px solid rgba(110, 30, 80, 0.16);
@@ -1314,7 +1313,7 @@
 .isla-sup.clara .isla-sup-grabando-parar { background-color: rgba(0, 0, 0, 0.10); }
 .isla-sup.clara .isla-sup-grabando-cuadro { background-color: #1E1F24; }
 
-/* Top island notifications (isla-notificaciones design): green #25D366, red for critical ones. */
+/* Top island notifications: green #25D366, red for critical ones. */
 .isla-sup-punto.aviso { background-color: #25D366; }
 .isla-sup-punto.aviso.urgente { background-color: #FF5D62; }
 .isla-sup-alerta { padding: 0 12px; spacing: 6px; }
@@ -1365,7 +1364,7 @@
 .isla-acomodo-titulo-ventana { font-size: 12px; color: rgba(244, 245, 250, 0.65); }
 .isla-acomodo.clara .isla-acomodo-titulo-ventana { color: rgba(21, 23, 42, 0.62); }
 
-/* ---------- Lanzador Isla "Minimal+" (launcher.js, ~/Descargas/lanzador-isla-minimal-spec.md) ---------- */
+/* ---------- Lanzador (launcher.js) ---------- */
 /* One floating panel. Tokens: panel rgba(22, 24, 30, 0.82), text #f2f3f5 / #a3a8b2 / #8a909b, app names #b4b9c3, surfaces white at
    6 / 3.5 / 5 %. The app colors (duotone) are set from code. .clara: with a light dock. */
 .isla-launcher { font-family: Inter, Cantarell, sans-serif; color: #f2f3f5; }

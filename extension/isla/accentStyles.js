@@ -28,7 +28,7 @@ const luminance = c => (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
 // The shades of an accent [r, g, b] (0-255; GNOME's, Settings → Appearance):
 // main, light and lighter (the symbol over a dark island, at rest and on hover),
 // deep (over a light one), and the text over it (dark over a pale accent).
-export function shades(accent = CORAL_RGB) {
+function shades(accent = CORAL_RGB) {
     return {main: css(accent), light: css(mix(accent, WHITE, 0.15)), lighter: css(mix(accent, WHITE, 0.28)),
         deep: css(mix(accent, BLACK, 0.10)), on: luminance(accent) > 0.55 ? css(mix(accent, BLACK, 0.83)) : '#FFFFFF',
         tint: (t, a = 1) => css(mix(WHITE, accent, t), a), alpha: a => css(accent, a),

@@ -26,7 +26,7 @@ const IDLE_STATUS = N_('Clic para copiar');
 // Looks like a command or code: shown in a monospace font.
 const CODE_RE = /^(sudo|git|npm|cd|ls|cat|grep|journalctl|gsettings|flatpak|apt|dnf|python3?|node)\b|[{};]|=>|\$\(|&&|\|\|/;
 
-export function timeAgo(ms) {
+function timeAgo(ms) {
     const s = Math.floor((Date.now() - ms) / 1000);
     if (s < 60)
         return _('ahora');
@@ -83,9 +83,8 @@ export class ClipboardPanel {
             this.refresh();
         });
         box.add_child(this._entry);
-        if (shortcut) {
+        if (shortcut)
             box.add_child(new St.Label({text: shortcut, style_class: 'isla-clip-atajo', y_align: Clutter.ActorAlign.CENTER}));
-        }
         this.actor.add_child(box);
     }
 

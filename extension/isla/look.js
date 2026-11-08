@@ -49,7 +49,7 @@ function baseLook(state) {
 
 // How much of the dock's background covers what is behind it (its color's alpha, then the
 // island's own opacity); never below DOCK_ALPHA_MIN, so what sits on it keeps reading.
-export function dockAlpha(state) {
+function dockAlpha(state) {
     const bg = state.skin?.isla?._bg;
     if (!bg?.get_stage())
         return PANEL_ALPHA;

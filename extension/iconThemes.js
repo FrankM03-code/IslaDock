@@ -8,7 +8,7 @@ import GLib from 'gi://GLib';
 export const USER_ICONS = GLib.build_filenamev([GLib.get_home_dir(), '.icons']);
 export const USER_DOCK_ICONS = GLib.build_filenamev([USER_ICONS, 'isla-dock']);
 
-export function iconThemeDirs() {
+function iconThemeDirs() {
     return [
         USER_ICONS,
         GLib.build_filenamev([GLib.get_user_data_dir(), 'icons']),

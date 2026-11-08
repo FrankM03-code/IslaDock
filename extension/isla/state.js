@@ -22,7 +22,7 @@ export const Mode = {
     SEARCH: 'busqueda',
 };
 
-// Lower number = more important (section 3 of ISLA.md).
+// Lower number = more important.
 export const Priority = {
     RECORDING: 1,
     TIMER_DONE: 2,

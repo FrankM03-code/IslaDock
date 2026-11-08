@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Captura, a page of the top island (Frank's isla-captura-minimal design): four modes in a row,
+// Captura, a page of the top island: four modes in a row,
 // only an icon and a small label (the chosen one with a soft round behind its icon),
 // and a footer line: the last capture's thumbnail and "Hace 2 min", copy and folder.
 //   Pantalla  the monitor the island is on, at once; GNOME's white flash and "Captura guardada"
@@ -42,7 +42,7 @@ const SAVED_TIME = 2500;   // ms "Video guardado" / "Captura guardada" stay on t
 // GNOME's own folder and file names, in the user's language (the gnome-shell domain).
 const shellText = text => GLib.dgettext('gnome-shell', text);
 
-export function screenshotsDir() {
+function screenshotsDir() {
     return Gio.File.new_for_path(GLib.build_filenamev([
         GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES) || GLib.get_home_dir(),
         shellText('Screenshots')]));
@@ -171,26 +171,36 @@ export class CapturePage {
     _store(bytes) {
         St.Clipboard.get_default().set_content(St.ClipboardType.CLIPBOARD, 'image/png', bytes);
         const dir = screenshotsDir();
-        try {
-            dir.make_directory_with_parents(null);
-        } catch (e) {
-            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.EXISTS))
-                throw e;
-        }
+        GLib.mkdir_with_parents(dir.get_path(), 0o755);
         const name = shellText('Screenshot From %s').replace('%s', GLib.DateTime.new_now_local().format('%Y-%m-%d %H-%M-%S'));
-        for (let i = 0; ; i++) {
+        // create() never overwrites: a name already taken gets -1, -2...
+        const save = i => {
             const file = dir.get_child(`${name}${i ? `-${i}` : ''}.png`);
-            try {
-                const out = file.create(Gio.FileCreateFlags.NONE, null);
-                out.write_bytes(bytes, null);
-                out.close(null);
-                this._setLast(file);
-                return;
-            } catch (e) {
-                if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.EXISTS))
-                    throw e;
-            }
-        }
+            file.create_async(Gio.FileCreateFlags.NONE, GLib.PRIORITY_DEFAULT, null, (f, res) => {
+                let out;
+                try {
+                    out = f.create_finish(res);
+                } catch (e) {
+                    if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.EXISTS))
+                        save(i + 1);
+                    else
+                        console.warn(`isla-dock: no se pudo guardar la captura: ${e.message}`);
+                    return;
+                }
+                const flags = Gio.OutputStreamSpliceFlags.CLOSE_SOURCE | Gio.OutputStreamSpliceFlags.CLOSE_TARGET;
+                out.splice_async(Gio.MemoryInputStream.new_from_bytes(bytes), flags, GLib.PRIORITY_DEFAULT, null, (o, r) => {
+                    try {
+                        o.splice_finish(r);
+                    } catch (e) {
+                        console.warn(`isla-dock: no se pudo guardar la captura: ${e.message}`);
+                        return;
+                    }
+                    if (!this._gone)
+                        this._setLast(file);
+                });
+            });
+        };
+        save(0);
     }
 
     // GNOME's screenshot tool on its area selection; it saves, copies and tells us (screenshot-taken).
@@ -227,23 +237,47 @@ export class CapturePage {
         const dir = screenshotsDir();
         dir.enumerate_children_async('standard::name,standard::content-type,time::modified',
             Gio.FileQueryInfoFlags.NONE, GLib.PRIORITY_LOW, null, (d, res) => {
-                let best = null;
+                let en;
                 try {
-                    const en = d.enumerate_children_finish(res);
-                    for (let info; (info = en.next_file(null));) {
-                        if (!info.get_content_type()?.startsWith('image/'))
-                            continue;
-                        const t = info.get_attribute_uint64('time::modified');
-                        if (!best || t > best.time)
-                            best = {file: dir.get_child(info.get_name()), time: t};
+                    en = d.enumerate_children_finish(res);
+                } catch {
+                    en = null;     // no folder yet
+                }
+                let best = null;
+                const next = () => {
+                    if (!en) {
+                        this._showFound(best);
+                        return;
                     }
-                    en.close(null);
-                } catch {}
-                if (this._gone || this._last)
-                    return;
-                this._last = best;
-                this._paintLast();
+                    en.next_files_async(100, GLib.PRIORITY_LOW, null, (e, r) => {
+                        let infos = [];
+                        try {
+                            infos = e.next_files_finish(r);
+                        } catch {}
+                        for (const info of infos) {
+                            if (!info.get_content_type()?.startsWith('image/'))
+                                continue;
+                            const time = info.get_attribute_uint64('time::modified');
+                            if (!best || time > best.time)
+                                best = {file: dir.get_child(info.get_name()), time};
+                        }
+                        if (infos.length) {
+                            next();
+                            return;
+                        }
+                        e.close_async(GLib.PRIORITY_LOW, null, null);
+                        this._showFound(best);
+                    });
+                };
+                next();
             });
+    }
+
+    _showFound(best) {
+        if (this._gone || this._last)
+            return;
+        this._last = best;
+        this._paintLast();
     }
 
     _setLast(file) {
@@ -261,14 +295,30 @@ export class CapturePage {
         }
         this._paintWhen();
         // A small copy of the picture (a 4K screenshot is never loaded whole).
-        try {
-            const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-            const pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(last.file.get_path(), THUMB_W * 2 * sf, THUMB_H * 2 * sf, true);
-            const content = St.ImageContent.new_with_preferred_size(THUMB_W, THUMB_H);
-            content.set_bytes(global.stage.context.get_backend().get_cogl_context(), pb.read_pixel_bytes(),
-                pb.has_alpha ? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888, pb.width, pb.height, pb.rowstride);
-            this._thumb.content = content;
-        } catch {}
+        const sf = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        last.file.read_async(GLib.PRIORITY_LOW, null, (f, res) => {
+            let stream;
+            try {
+                stream = f.read_finish(res);
+            } catch {
+                return;
+            }
+            GdkPixbuf.Pixbuf.new_from_stream_at_scale_async(stream, THUMB_W * 2 * sf, THUMB_H * 2 * sf, true, null, (_o, r) => {
+                stream.close_async(GLib.PRIORITY_LOW, null, null);
+                let pb;
+                try {
+                    pb = GdkPixbuf.Pixbuf.new_from_stream_finish(r);
+                } catch {
+                    return;     // not a picture GdkPixbuf can read
+                }
+                if (this._gone || this._last !== last)
+                    return;
+                const content = St.ImageContent.new_with_preferred_size(THUMB_W, THUMB_H);
+                content.set_bytes(global.stage.context.get_backend().get_cogl_context(), pb.read_pixel_bytes(),
+                    pb.has_alpha ? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888, pb.width, pb.height, pb.rowstride);
+                this._thumb.content = content;
+            });
+        });
     }
 
     _paintWhen() {
@@ -298,9 +348,7 @@ export class CapturePage {
 
     _openFolder() {
         const dir = screenshotsDir();
-        try {
-            dir.make_directory_with_parents(null);
-        } catch {}
+        GLib.mkdir_with_parents(dir.get_path(), 0o755);
         Gio.AppInfo.launch_default_for_uri_async(dir.get_uri(), null, null, null);
         this._notch.fold();
     }

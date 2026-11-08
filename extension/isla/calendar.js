@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Calendario: with the top bar hidden, GNOME's date menu cannot be opened.
-// This is IslaDock's own calendar (Frank's calendario-isla design): on the left
+// This is IslaDock's own calendar: on the left
 // the month with ‹ › (its title goes back to today), a grid of day squares (the
 // week starts on Monday; a dot marks days with events or reminders); on the
 // right the chosen day's agenda: GNOME's calendar events (Evolution Data
@@ -97,12 +97,7 @@ export class CalendarPanel {
 
     // ---------- Super+M, lent by GNOME ----------
     _freeShortcut() {
-        try {
-            this._tray = new Gio.Settings({schema_id: TRAY_SCHEMA});
-        } catch {
-            this._tray = null;
-            return;
-        }
+        this._tray = new Gio.Settings({schema_id: TRAY_SCHEMA});
         const ours = this._settings.get_strv(KEY);
         const current = this._tray.get_strv(TRAY_KEY);
         const taken = current.filter(a => ours.some(b => same(a, b)));

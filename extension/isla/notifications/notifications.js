@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Notification center (notificaciones-isla-dock.md, 2026-10-24): IslaDock's own
+// Notification center: IslaDock's own
 // notifications instead of GNOME's. The bell on the dock (right after the
 // player) carries the unread count and sways when one arrives; a click opens the
 // panel over it (panel.js), a right click the quick menu (No molestar, Limpiar
@@ -298,7 +298,7 @@ export class Notifications {
             button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE, accessible_name: `${entry.appName}: ${entry.title}`});
         const look = this._look(card);
         dressFrame(look, toast, card, TOAST_RADIUS);
-        // One row (notificaciones-compactas.md): icon | app · time and the title | the first action, ×.
+        // One row: icon | app · time and the title | the first action, ×.
         const row = new St.BoxLayout({style_class: 'isla-np-fila', x_expand: true});
         const tile = new St.Bin({style_class: `isla-np-icono ${entry.kind}`, y_align: Clutter.ActorAlign.CENTER,
             child: new St.Icon({gicon: this.store.gicon(entry), icon_size: 18, fallback_icon_name: 'dialog-information-symbolic'})});

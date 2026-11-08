@@ -31,13 +31,7 @@ function kindOf(app, title) {
 }
 
 const appOf = source => source?.app ?? source?._app ?? null;
-const iconString = gicon => {
-    try {
-        return gicon?.to_string() ?? null;
-    } catch {
-        return null;
-    }
-};
+const iconString = gicon => gicon?.to_string() ?? null;
 
 export class NotificationStore extends Signals.EventEmitter {
     constructor(path) {
@@ -178,11 +172,10 @@ export class NotificationStore extends Signals.EventEmitter {
             return;
         entry.read = true;
         const notification = this._live.get(id);
-        if (notification) {
+        if (notification)
             notification.activate();
-        } else if (entry.appId) {
+        else if (entry.appId)
             Shell.AppSystem.get_default().lookup_app(entry.appId)?.activate();
-        }
         this._changed();
     }
 
@@ -228,22 +221,31 @@ export class NotificationStore extends Signals.EventEmitter {
     }
 
     // ---------- disk ----------
+    // Read in the background. What arrives meanwhile is newer, so it stays in front; nothing is
+    // written before the old list is in, or it would be lost.
     _load() {
-        try {
-            const [, bytes] = this._file.load_contents(null);
-            const data = JSON.parse(new TextDecoder().decode(bytes));
+        this._loadCancel = new Gio.Cancellable();
+        this._file.load_contents_async(this._loadCancel, (file, res) => {
+            let data = {};
+            try {
+                const [, bytes] = file.load_contents_finish(res);
+                data = JSON.parse(new TextDecoder().decode(bytes));
+            } catch (e) {
+                if (e.matches?.(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                    return;
+            }
+            this._loaded = true;
             // Saved actions belonged to notifications that are gone.
-            this.entries = (data.entries ?? []).map(e => ({...e, actions: []}));
-            this.history = data.history ?? [];
-        } catch {
-            this.entries = [];
-            this.history = [];
-        }
+            const saved = (data.entries ?? []).map(e => ({...e, actions: []}));
+            this.entries = [...this.entries, ...saved].slice(0, MAX_KEPT);
+            this.history = [...this.history, ...data.history ?? []].slice(0, MAX_HISTORY);
+            this._changed();
+        });
     }
 
     _changed() {
         this.emit('changed');
-        if (!this._saveId) {
+        if (this._loaded && !this._saveId) {
             this._saveId = GLib.timeout_add(GLib.PRIORITY_LOW, SAVE_DELAY, () => {
                 this._saveId = 0;
                 this._save();
@@ -253,16 +255,20 @@ export class NotificationStore extends Signals.EventEmitter {
     }
 
     _save() {
-        try {
-            GLib.mkdir_with_parents(this._file.get_parent().get_path(), 0o700);
-            const data = JSON.stringify({entries: this.entries, history: this.history});
-            this._file.replace_contents(new TextEncoder().encode(data), null, false, Gio.FileCreateFlags.PRIVATE, null);
-        } catch (e) {
-            console.warn(`isla-dock: no se pudieron guardar las notificaciones: ${e.message}`);
-        }
+        GLib.mkdir_with_parents(this._file.get_parent().get_path(), 0o700);
+        const data = new TextEncoder().encode(JSON.stringify({entries: this.entries, history: this.history}));
+        this._file.replace_contents_bytes_async(new GLib.Bytes(data), null, false, Gio.FileCreateFlags.PRIVATE, null,
+            (file, res) => {
+                try {
+                    file.replace_contents_finish(res);
+                } catch (e) {
+                    console.warn(`isla-dock: no se pudieron guardar las notificaciones: ${e.message}`);
+                }
+            });
     }
 
     destroy() {
+        this._loadCancel.cancel();
         if (this._saveId) {
             GLib.source_remove(this._saveId);
             this._saveId = 0;

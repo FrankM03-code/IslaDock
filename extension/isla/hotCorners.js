@@ -27,7 +27,7 @@ import * as Util from 'resource:///org/gnome/shell/misc/util.js';
 import {_} from './i18n.js';
 import {dockLook} from './look.js';
 
-export const CORNERS = ['sup-izq', 'sup-der', 'inf-izq', 'inf-der'];
+const CORNERS = ['sup-izq', 'sup-der', 'inf-izq', 'inf-der'];
 const BARRIER_SIZE = 10;        // px of each barrier along the edge
 const PRESSURE_TIMEOUT = 1000;  // ms to build up the pressure
 const FLASH_SIZE = 150;         // logical px
@@ -112,12 +112,7 @@ export class HotCorners {
     }
 
     _barrier(params) {
-        // GNOME 48+ takes the backend; 'display' is the older property.
-        try {
-            return new Meta.Barrier({backend: global.backend, ...params});
-        } catch {
-            return new Meta.Barrier({display: global.display, ...params});
-        }
+        return new Meta.Barrier({backend: global.backend, ...params});
     }
 
     _makeCorner(corner, monitor) {

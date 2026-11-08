@@ -75,12 +75,7 @@ export class Clipboard {
 
     // ---------- Super+V ----------
     _freeShortcut() {
-        try {
-            this._tray = new Gio.Settings({schema_id: TRAY_SCHEMA});
-        } catch {
-            this._tray = null;
-            return;
-        }
+        this._tray = new Gio.Settings({schema_id: TRAY_SCHEMA});
         const ours = this._settings.get_strv(KEY);
         const current = this._tray.get_strv(TRAY_KEY);
         const taken = current.filter(a => ours.some(b => same(a, b)));

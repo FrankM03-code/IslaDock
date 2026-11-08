@@ -88,12 +88,11 @@ const MODULES = {
 export default class IslaDockExtension extends Extension {
     enable() {
         this._settings = this.getSettings();
-        // Vidrio líquido and later Vidrio oscuro were removed (2026-10-23): their users get Clásica oscura.
+        // Skins that no longer exist: their users get Clásica oscura.
         if (['vidrio-liquido', 'vidrio-oscuro'].includes(this._settings.get_string('isla-piel'))) {
             this._settings.set_string('isla-piel', 'clasica');
             this._settings.set_boolean('isla-oscura', true);
         }
-        // The desktop clock was removed (2026-10-25): the side clock stays.
         this._resolver = new IconResolver(this.dir, this._settings);
         setDockSettings(this._settings);
         this._modules = new Map();

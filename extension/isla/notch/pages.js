@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// The pages of the open top island, compact (Frank's second design, isla-notch v2).
+// The pages of the open top island.
 // Each one: {id, title (shown in small capitals; it may change: notch.refreshTitle()),
 // actor, shown(on), minute(), destroy()}.
 //   Música        the song IslaDock follows (state.music, media.js): cover, title, artist,
@@ -191,7 +191,7 @@ export class TimerPage {
         this.id = 'temporizador';
         this.title = _('Temporizador');
         this._state = state;
-        // Ring and text together in the middle of the island (Frank: the right side looked empty).
+        // Ring and text together in the middle of the island, not leaving the right side empty.
         this.actor = hbox({style_class: 'isla-sup-pagina isla-sup-tempo', x_expand: true, x_align: Clutter.ActorAlign.CENTER});
 
         const r = ringWith(() => {

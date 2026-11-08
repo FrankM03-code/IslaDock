@@ -34,11 +34,11 @@ export class Gestures {
     _onScroll(event) {
         const dir = event.get_scroll_direction();
         let step = 0;
-        if (dir === Clutter.ScrollDirection.UP)
+        if (dir === Clutter.ScrollDirection.UP) {
             step = 1;
-        else if (dir === Clutter.ScrollDirection.DOWN)
+        } else if (dir === Clutter.ScrollDirection.DOWN) {
             step = -1;
-        else if (dir === Clutter.ScrollDirection.SMOOTH) {
+        } else if (dir === Clutter.ScrollDirection.SMOOTH) {
             // Touchpads send many small deltas: one step per notch.
             const [, dy] = event.get_scroll_delta();
             this._smooth -= dy;

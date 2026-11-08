@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// The notifications the top island shows (Frank's isla-notificaciones design): it
+// The notifications the top island shows: it
 // follows GNOME's message tray like the floating notices do and keeps the ones still
 // waiting to be seen, newest first. Same rules as GNOME's banners (wantsBanner): in do
 // not disturb only critical ones ask to be shown; the rest are just counted (the
@@ -79,11 +79,7 @@ export class NotchNotices {
     open(entry) {
         const {notification} = entry;
         this._drop(entry);
-        try {
-            notification.activate();
-        } catch (e) {
-            console.warn(`isla-dock: isla superior: ${e.message}`);
-        }
+        notification.activate();
     }
 
     // Closes it for good.

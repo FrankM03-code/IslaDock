@@ -1,10 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Lanzador Isla, "Minimal+" (~/Descargas/lanzador-isla-minimal-spec.md, 2026-10-27; the
-// first "vidrio" design is kept in ~/IslaDock/disenos/lanzador-1-vidrio): IslaDock's own
-// app drawer, in place of GNOME's app grid. The Aplicaciones button of the dock or
+// IslaDock's own app drawer, in place of GNOME's app grid. The Aplicaciones button of the dock or
 // Super+Space (key 'atajo-lanzador'; Ctrl+Space stays with the quick search) opens it.
-// One floating panel (860 px; the desktop and windows stay in sight around it, 2026-10-27)
+// One floating panel (860 px; the desktop and windows stay in sight around it)
 // that comes up out of the dock like the calendar, just above it with the time and date and the Bloquear / Suspender / Apagar
 // buttons, a pill search field, the text tabs of the categories, the four apps used last,
 // every app in six columns (just its own icon, no square behind it), and a bar with
@@ -13,8 +11,8 @@
 // preview on the right, the same card as the quick search (filePreview.js).
 // No live blur behind it (it left dark stripes on X11 with NVIDIA); light when the dock is light.
 // Typing filters live (GNOME's own app search: names, generic names, keywords). Under the
-// apps and files the last row searches the text on the internet in the default browser
-// (2026-10-28); a sum with nothing found goes to the quick search, which does the math.
+// apps and files the last row searches the text on the internet in the default browser;
+// a sum with nothing found goes to the quick search, which does the math.
 // Right click on an app: the same actions. Dragging one onto the dock pins it there
 // (apps.js accepts it).
 // GNOME uses Super+Space to switch the keyboard layout ('switch-input-source'): while
@@ -97,7 +95,7 @@ const same = (a, b) => a.toLowerCase() === b.toLowerCase();
 const repaintAll = () => global.stage.queue_redraw();
 
 // '<Super>space' -> 'Super ␣' for the little key of the search field.
-export function shortcutText(accel) {
+function shortcutText(accel) {
     if (!accel)
         return '';
     const mods = [...accel.matchAll(/<(\w+)>/g)].map(m => ({Primary: 'Ctrl', Control: 'Ctrl'}[m[1]] ?? m[1]));
@@ -107,18 +105,21 @@ export function shortcutText(accel) {
 
 // When each app was last used (seconds), from GNOME's own usage file. It is written
 // every few minutes, so a very recent use may still show the one before.
-function lastSeen() {
-    const seen = new Map();
-    try {
-        const path = GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'application_state']);
-        const [, bytes] = GLib.file_get_contents(path);
-        const text = new TextDecoder().decode(bytes);
-        for (const m of text.matchAll(/<application id="([^"]+)"[^>]*last-seen="(\d+)"/g))
+// No file yet: nothing is called, and the launcher keeps GNOME's most used apps, without times.
+function lastSeen(cancellable, done) {
+    const file = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_data_dir(), 'gnome-shell', 'application_state']));
+    file.load_contents_async(cancellable, (f, res) => {
+        let bytes;
+        try {
+            [, bytes] = f.load_contents_finish(res);
+        } catch {
+            return;
+        }
+        const seen = new Map();
+        for (const m of new TextDecoder().decode(bytes).matchAll(/<application id="([^"]+)"[^>]*last-seen="(\d+)"/g))
             seen.set(m[1], Math.max(seen.get(m[1]) ?? 0, Number(m[2])));
-    } catch {
-        // No file yet: the order of GNOME's most used apps, without times.
-    }
-    return seen;
+        done(seen);
+    });
 }
 
 function ago(seconds) {
@@ -162,12 +163,7 @@ export class Launcher {
 
     // ---------- Super+Space ----------
     _freeShortcut() {
-        try {
-            this._layouts = new Gio.Settings({schema_id: LAYOUT_SCHEMA});
-        } catch {
-            this._layouts = null;
-            return;
-        }
+        this._layouts = new Gio.Settings({schema_id: LAYOUT_SCHEMA});
         // Shift+Super+Space goes too when it is ours with Shift added: GNOME uses both.
         const ours = this._settings.get_strv(KEY);
         const kept = this._settings.get_strv(KEPT);
@@ -232,10 +228,15 @@ export class Launcher {
         this._selected = 0;
         this._tiles = new Map();
         this._found = [];
-        this._seen = lastSeen();
+        this._seen = new Map();
         this._recentFiles = [];
         this._filesCancel = new Gio.Cancellable();
         recentFiles(this._filesCancel, files => (this._recentFiles = files));
+        lastSeen(this._filesCancel, seen => {
+            this._seen = seen;
+            if (this._overlay)
+                this._refresh();
+        });
         this._build();
         this._refresh();
         this._grab = Main.pushModal(this._overlay, {actionMode: Shell.ActionMode.POPUP});
@@ -245,7 +246,7 @@ export class Launcher {
         const panel = this._column;
         this._place();
         // Opened with a shortcut the dock is still opening: the panel follows it frame by frame
-        // (placed once after 400 ms it jumped up, 2026-10-27).
+        // (placed once after 400 ms, it jumped up).
         this._follow = new Clutter.Timeline({actor: panel, duration: Math.max(ms(FOLLOW_TIME), 1)});
         this._follow.connect('new-frame', () => this._place());
         this._follow.connect('completed', () => {
@@ -356,7 +357,7 @@ export class Launcher {
         // One floating panel; the overlay around it is clear (it only catches the clicks outside).
         const width = Math.min(WIDTH * sf, mon.width - 32 * sf);
         const panel = this._panel = new St.BoxLayout({style_class: 'isla-launcher-panel', orientation: Clutter.Orientation.VERTICAL, width});
-        // The dock's own color and edge; light, as see-through as the dock (81 %, Frank 2026-10-28),
+        // The dock's own color and edge; light, as see-through as the dock (81 %),
         // dark at PANEL_ALPHA as the calendar and Ajustes. Its big shadow stays.
         const fill = look.light ? dockLook(this._state) : look;
         if (fill.style)

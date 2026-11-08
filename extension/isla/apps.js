@@ -402,24 +402,26 @@ export class AppsRow extends Signals.EventEmitter {
         }
         const inTail = entry => ['power', 'clipboard', 'notifications'].includes(entry.kind) || entry.key === 'sep-3';
         const rows = [[this.actor, entries.filter(e => !inTail(e))], [this.tail, entries.filter(inTail)]];
-        for (const [row, list] of rows) list.forEach((entry, i) => {
-            let actor = this._items.get(entry.key);
-            if (actor && entry.kind === 'app' && actor.app !== entry.app) {
-                actor.destroy();
-                actor = null;
-            }
-            if (!actor) {
-                actor = this._createItem(entry);
-                actor.configure(this._p);
-                this._items.set(entry.key, actor);
-                row.insert_child_at_index(actor, i);
-            } else if (actor.get_parent() !== row) {
-                actor.get_parent().remove_child(actor);
-                row.insert_child_at_index(actor, i);
-            } else if (row.get_child_at_index(i) !== actor) {
-                row.set_child_at_index(actor, i);
-            }
-        });
+        for (const [row, list] of rows) {
+            list.forEach((entry, i) => {
+                let actor = this._items.get(entry.key);
+                if (actor && entry.kind === 'app' && actor.app !== entry.app) {
+                    actor.destroy();
+                    actor = null;
+                }
+                if (!actor) {
+                    actor = this._createItem(entry);
+                    actor.configure(this._p);
+                    this._items.set(entry.key, actor);
+                    row.insert_child_at_index(actor, i);
+                } else if (actor.get_parent() !== row) {
+                    actor.get_parent().remove_child(actor);
+                    row.insert_child_at_index(actor, i);
+                } else if (row.get_child_at_index(i) !== actor) {
+                    row.set_child_at_index(actor, i);
+                }
+            });
+        }
         this.tail.visible = this.tail.get_n_children() > 0;
         this._appItems = [...this.actor.get_children(), ...this.tail.get_children()].filter(a => a.kind !== 'separator');
         for (const item of this._appItems)
@@ -435,15 +437,16 @@ export class AppsRow extends Signals.EventEmitter {
 
     _refreshIcons() {
         for (const item of this._appItems) {
-            if (item.kind === 'app')
+            if (item.kind === 'app') {
                 item.setGIcon(this._appIcon(item.app));
-            else if (item.kind === 'downloads')
+            } else if (item.kind === 'downloads') {
                 item.setGIcon(this._resolver.lookup('descargas', new Gio.ThemedIcon({name: 'folder-download'}), ['folder-download']));
-            else if (item.kind === 'trash')
+            } else if (item.kind === 'trash') {
                 item.setGIcon(this._trashIcon());
-            else if (item.kind === 'apps')
+            } else if (item.kind === 'apps') {
                 item.setGIcon(this._resolver.lookup('aplicaciones', new Gio.ThemedIcon({name: 'view-app-grid-symbolic'}),
                     ['view-app-grid', 'view-app-grid-symbolic', 'applications-all']));
+            }
         }
     }
 
@@ -477,9 +480,9 @@ export class AppsRow extends Signals.EventEmitter {
                     : Math.max(1, app.get_windows().filter(w => !w.skip_taskbar).length);
                 item.setRunning(windows, Shell.WindowTracker.get_default().focus_app === app);
                 this._applyBadge(item);
-            }
-            else if (item.kind === 'downloads')
+            } else if (item.kind === 'downloads') {
                 this._showDownloads(item);
+            }
             if (item.kind === 'downloads' || item.kind === 'trash')
                 item.setRunning(this._folderWindows(item.kind));
         }
@@ -511,7 +514,7 @@ export class AppsRow extends Signals.EventEmitter {
     }
 
     // The app's own counter (unread messages…) wins; otherwise, with two or more
-    // windows, how many (Frank 2026-11-02: two LibreOffice Calc = one icon with a 2).
+    // windows, how many.
     _applyBadge(item) {
         if (!item.app || !item.setBadge)
             return;
@@ -681,11 +684,11 @@ export class AppsRow extends Signals.EventEmitter {
             return Clutter.EVENT_PROPAGATE;
         const dir = event.get_scroll_direction();
         let step = 0;
-        if (dir === Clutter.ScrollDirection.UP || dir === Clutter.ScrollDirection.LEFT)
+        if (dir === Clutter.ScrollDirection.UP || dir === Clutter.ScrollDirection.LEFT) {
             step = -1;
-        else if (dir === Clutter.ScrollDirection.DOWN || dir === Clutter.ScrollDirection.RIGHT)
+        } else if (dir === Clutter.ScrollDirection.DOWN || dir === Clutter.ScrollDirection.RIGHT) {
             step = 1;
-        else if (dir === Clutter.ScrollDirection.SMOOTH) {
+        } else if (dir === Clutter.ScrollDirection.SMOOTH) {
             const [dx, dy] = event.get_scroll_delta();
             const d = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
             // A touchpad sends many small steps: one window per gesture.

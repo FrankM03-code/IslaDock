@@ -17,7 +17,7 @@ Gio._promisify(Gio.FileEnumerator.prototype, 'next_files_async');
 Gio._promisify(Gio.InputStream.prototype, 'read_bytes_async');
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async');
 
-export const INFO = 'standard::type,standard::size,standard::content-type,standard::icon,time::modified,access::can-read';
+const INFO = 'standard::type,standard::size,standard::content-type,standard::icon,time::modified,access::can-read';
 
 // ---------- names ----------
 // "Rút" and "RUT" both become "rut".
@@ -178,19 +178,15 @@ export function recentFiles(cancellable, done) {
 }
 
 function parseRecent(xml) {
-    try {
-        const files = [];
-        for (const m of xml.matchAll(/<bookmark\s[^>]*href="([^"]+)"[^>]*modified="([^"]+)"/g)) {
-            const uri = m[1].replace(/&amp;/g, '&');
-            if (!uri.startsWith('file://'))
-                continue;
-            files.push({uri, modified: m[2]});
-        }
-        files.sort((a, b) => b.modified.localeCompare(a.modified));
-        return files.map(f => Gio.File.new_for_uri(f.uri).get_path()).filter(Boolean);
-    } catch {
-        return [];
+    const files = [];
+    for (const m of xml.matchAll(/<bookmark\s[^>]*href="([^"]+)"[^>]*modified="([^"]+)"/g)) {
+        const uri = m[1].replace(/&amp;/g, '&');
+        if (!uri.startsWith('file://'))
+            continue;
+        files.push({uri, modified: m[2]});
     }
+    files.sort((a, b) => b.modified.localeCompare(a.modified));
+    return files.map(f => Gio.File.new_for_uri(f.uri).get_path()).filter(Boolean);
 }
 
 // Every place the history knows: its entries and the folders that hold them.

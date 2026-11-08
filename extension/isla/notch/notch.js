@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Isla superior ('isla-superior'): a second island at the top center of the
 // primary monitor, hanging from the screen edge like a notch.
-// Compact (Frank's second design, isla-notch v2). Folded it shows the time (or
+// Folded it shows the time (or
 // the timer's countdown), every few seconds taking turns with the weather (GNOME's
 // weather, the one the calendar shows) and, while something plays, the song: then
 // the island widens (MUSIC_W) with the cover and "Title · Artist". A new song
@@ -18,12 +18,12 @@
 // With the GNOME top bar shown it sits over the bar's clock; with it hidden it
 // takes the bar's place and hangs from a thin strip along the top edge
 // ('isla-superior-franja' px, 0 = none) in the island's own color, joined to it by
-// two small inward curves, like a MacBook's notch (Frank's isla-franja.png): island,
+// two small inward curves, like a laptop's notch: island,
 // strip and curves read as one piece. The strip keeps maximized windows under it.
-// With 0 px the curves stay, against the screen edge (Frank liked the shape).
+// With 0 px the curves stay, against the screen edge.
 // It wears the dock's own transparency (look.js dockLook), strip and curves too; the
 // frame is clipped under the strip so the island never paints twice over it.
-// Notifications ('isla-superior-avisos', Frank's isla-notificaciones design, notices.js):
+// Notifications ('isla-superior-avisos', notices.js):
 // one arriving widens the folded island sideways (NOTICE_W) with only the app's icon and
 // name and "· Nuevo mensaje" / "· 3 mensajes" (never the message), a beating dot or a
 // counter; after 6 s it folds back and the status dot keeps the notice color until they
@@ -333,7 +333,7 @@ export class TopIsland {
 
     // After a theme change: dressed again and the folded content shown afresh, as a click
     // left it. Recording while going from light to dark, the folded island stayed blank
-    // until clicked (Frank, 2026-10-30).
+    // until clicked.
     _restyled() {
         this._dress();
         const turn = this._turn ?? 'time';
@@ -885,11 +885,11 @@ export class TopIsland {
             return Clutter.EVENT_PROPAGATE;
         let d = 0;
         const dir = event.get_scroll_direction();
-        if (dir === Clutter.ScrollDirection.UP || dir === Clutter.ScrollDirection.LEFT)
+        if (dir === Clutter.ScrollDirection.UP || dir === Clutter.ScrollDirection.LEFT) {
             d = -1;
-        else if (dir === Clutter.ScrollDirection.DOWN || dir === Clutter.ScrollDirection.RIGHT)
+        } else if (dir === Clutter.ScrollDirection.DOWN || dir === Clutter.ScrollDirection.RIGHT) {
             d = 1;
-        else if (dir === Clutter.ScrollDirection.SMOOTH) {
+        } else if (dir === Clutter.ScrollDirection.SMOOTH) {
             const [dx, dy] = event.get_scroll_delta();
             this._scrollSum = (this._scrollSum ?? 0) + (Math.abs(dx) > Math.abs(dy) ? dx : dy);
             if (Math.abs(this._scrollSum) >= 1) {

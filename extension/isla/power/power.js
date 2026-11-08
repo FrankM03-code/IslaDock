@@ -71,7 +71,7 @@ const ACTIONS = {
     apagar: ['power', N_('Apagar'), N_('Apagar'), a => a.activatePowerOff(), 'can-power-off'],
 };
 
-export const PANEL_STYLES = ['agrupada', 'tarjetas', 'finas', 'anillos'];
+const PANEL_STYLES = ['agrupada', 'tarjetas', 'finas', 'anillos'];
 
 export class Power {
     constructor({state, settings, capsule, dir}) {
@@ -221,7 +221,7 @@ export class Power {
         button.visible = this._outputDevices(control).length > 1;
     }
 
-    _fillOutputs(box, control, button) {
+    _fillOutputs(box, control) {
         box.destroy_all_children();
         const active = this._activeOutput(control);
         for (const device of this._outputDevices(control)) {
@@ -411,7 +411,7 @@ export class Power {
             outputButton.connect('clicked', () => {
                 outputs.visible = !outputs.visible;
                 if (outputs.visible)
-                    this._fillOutputs(outputs, control, outputButton);
+                    this._fillOutputs(outputs, control);
                 this._place();
             });
             (row._caption ?? row).add_child(outputButton);
@@ -420,7 +420,7 @@ export class Power {
             const id = control.connect('default-sink-changed', () => {
                 this._syncOutputButton(control, outputButton);
                 if (outputs.visible)
-                    this._fillOutputs(outputs, control, outputButton);
+                    this._fillOutputs(outputs, control);
             });
             this._syncOutputButton(control, outputButton);
             this._unwatch.push(() => control.disconnect(id));
@@ -758,7 +758,7 @@ export class Power {
     }
 
     // Brightness, volume and microphone as rings; the toggles as capsules sharing one row; a line;
-    // the actions with a caption under each (estilo-anillos.html).
+    // the actions with a caption under each.
     _buildAnillos(panel, toggles) {
         const volume = this._levelRow('volume', false, true);
         panel.add_child(this._spread([this._brightnessRow(false, true), volume, this._levelRow('mic', false, true)],

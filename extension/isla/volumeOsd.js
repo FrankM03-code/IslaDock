@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Frank Molina
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Volume indicator (volumen-isla-dock.md, A2 "Solo barra", 2026-10-24): in place
-// of GNOME's volume box in the middle of the screen, a small pill 8 px over the
-// dock, 150 px long and in the dock's own colors (the user's choice over the spec): a speaker with 0–3 waves and a thin bar, no number. Muted: the speaker
+// Volume indicator: in place of GNOME's volume box in the middle of the screen, a small
+// pill 8 px over the dock, 150 px long and in the dock's own colors: a speaker with 0–3
+// waves and a thin bar, no number. Muted: the speaker
 // with a red ×. Over 100 % (amplified) the waves turn orange and the bar shows
 // the extra part in orange (the whole bar is the allowed maximum). It comes up on
 // every change (keys, the wheel, quick settings), stays 1.5 s after the last one
@@ -59,11 +59,9 @@ export class VolumeOsd {
         this._patched = [];
         const wrap = (name, takesMonitor) => {
             const original = osd[name];
-            if (typeof original !== 'function')
-                return;
             osd[name] = (...args) => {
                 const [icon, , level, maxLevel] = takesMonitor ? args.slice(1) : args;
-                if (!isVolume(icon) || level === null || level === undefined)
+                if (!isVolume(icon) || level == null)
                     return original.apply(osd, args);
                 const muted = /muted/.test(icon.get_names?.()[0] ?? '') || this._sinkMuted();
                 this._show(level, maxLevel ?? 1, muted);
@@ -71,7 +69,7 @@ export class VolumeOsd {
             };
             this._patched.push(name);
         };
-        if (typeof osd.showAll === 'function') {
+        if (osd.showAll) {
             wrap('showOne', true);
             wrap('showAll', false);
         } else {

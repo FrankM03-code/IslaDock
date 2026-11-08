@@ -6,7 +6,7 @@
 // or maximized (the top edge). Dragged away again, it takes back the size it had before.
 // 'acomodar-ventanas-llenar': after a half, the other half shows the other windows of that
 // monitor and workspace as colored tiles (icon, name, title); a click puts that one there (Esc or a click
-// outside leaves the space empty). Like Tiling Assistant's popup, which Frank used.
+// outside leaves the space empty), like Tiling Assistant's popup.
 // While on, GNOME's own edge tiling ('edge-tiling' of org.gnome.mutter) steps aside so the two
 // never draw their shadows at once; it comes back when this goes ('acomodo-liberado').
 // With the Tiling Assistant extension running, this one lets it do the job.
@@ -74,12 +74,7 @@ export class Tiling {
 
     // ---------- GNOME's own edge tiling steps aside ----------
     _lendEdgeTiling() {
-        try {
-            this._mutter = new Gio.Settings({schema_id: MUTTER});
-        } catch {
-            this._mutter = null;
-            return;
-        }
+        this._mutter = new Gio.Settings({schema_id: MUTTER});
         if (this._mutter.get_boolean(EDGE_TILING)) {
             this._settings.set_boolean(KEPT, true);
             this._mutter.set_boolean(EDGE_TILING, false);

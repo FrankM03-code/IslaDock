@@ -20,7 +20,7 @@ const PROFILES = {
 };
 const ROTATION = ['power-saver', 'balanced', 'performance'];
 // Modo activo inhibits idle only (8): the screen never blanks, but suspending
-// by hand (the menu, the power button, the lid) still works (2026-10-24, the user's wish).
+// by hand (the menu, the power button, the lid) still works.
 const INHIBIT_FLAGS = 8;
 
 function themed(name) {
@@ -29,7 +29,7 @@ function themed(name) {
 
 export function openSettings(panel) {
     try {
-        GLib.spawn_command_line_async(panel ? `gnome-control-center ${panel}` : 'gnome-control-center');
+        Gio.Subprocess.new(panel ? ['gnome-control-center', panel] : ['gnome-control-center'], Gio.SubprocessFlags.NONE);
     } catch (e) {
         Main.notifyError(_('No se pudo abrir Configuración'), e.message);
     }
@@ -44,11 +44,7 @@ class NativeToggle {
     }
 
     get _toggle() {
-        try {
-            return this._find() ?? null;
-        } catch {
-            return null;
-        }
+        return this._find() ?? null;
     }
 
     get visible() {

@@ -227,11 +227,7 @@ export class Media {
     }
 
     _metadata(entry) {
-        try {
-            return entry.player?.get_cached_property('Metadata')?.recursiveUnpack() ?? {};
-        } catch {
-            return {};
-        }
+        return entry.player?.get_cached_property('Metadata')?.recursiveUnpack() ?? {};
     }
 
     _onChanged(entry) {
@@ -293,14 +289,6 @@ export class Media {
     }
 
     _update() {
-        try {
-            this._doUpdate();
-        } catch (e) {
-            console.error(`isla-dock: música: ${e.message}\n${e.stack}`);
-        }
-    }
-
-    _doUpdate() {
         const entry = this._pick();
         this._current = entry;
         const meta = entry ? this._metadata(entry) : {};
@@ -407,24 +395,34 @@ export class Media {
         this._soup.send_and_read_async(message, GLib.PRIORITY_LOW, this._cancellable, (session, res) => {
             if (this._downloading === url)
                 this._downloading = null;
+            let bytes;
             try {
-                const bytes = session.send_and_read_finish(res);
-                const type = message.get_response_headers().get_content_type()?.[0] ?? '';
-                if (message.get_status() !== Soup.Status.OK || !type.startsWith('image/') || bytes.get_size() > MAX_COVER)
-                    return;
-                const path = this._coverPath(url);
-                GLib.mkdir_with_parents(GLib.path_get_dirname(path), 0o755);
-                GLib.file_set_contents(path, bytes.toArray());
+                bytes = session.send_and_read_finish(res);
             } catch (e) {
                 if (!e.matches?.(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                     console.warn(`isla-dock: carátula: ${e.message}`);
                 return;
             }
-            // Through _update: the top island gets the cover too.
-            if (this._coverUrl === url) {
-                this._coverShown = false;
-                this._update();
-            }
+            const type = message.get_response_headers().get_content_type()?.[0] ?? '';
+            if (message.get_status() !== Soup.Status.OK || !type.startsWith('image/') || bytes.get_size() > MAX_COVER)
+                return;
+            const path = this._coverPath(url);
+            GLib.mkdir_with_parents(GLib.path_get_dirname(path), 0o755);
+            Gio.File.new_for_path(path).replace_contents_bytes_async(bytes, null, false, Gio.FileCreateFlags.NONE,
+                this._cancellable, (file, result) => {
+                    try {
+                        file.replace_contents_finish(result);
+                    } catch (e) {
+                        if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                            console.warn(`isla-dock: carátula: ${e.message}`);
+                        return;
+                    }
+                    // Through _update: the top island gets the cover too.
+                    if (this._coverUrl === url) {
+                        this._coverShown = false;
+                        this._update();
+                    }
+                });
         });
     }
 
